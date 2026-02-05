@@ -50,7 +50,29 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
     setIsOpen(false);
   };
 
-  const selectedTeam = teams.find(t => t.id === selectedTeamId);
+  // Improved finding logic to handle assigned team even if not in current team list
+  const getSelectedTeam = () => {
+    // 1. Try finding in current teams list
+    let team = teams.find(t => t.id === selectedTeamId);
+    if (team) return team;
+
+    // 2. Fallback for assigned team if not found in list
+    if (assignedTeamId && selectedTeamId === assignedTeamId) {
+        // Simple heuristic to name it if it's t1, t2...
+        const name = assignedTeamId === 't1' ? 'TỔ 1' : 
+                     assignedTeamId === 't2' ? 'TỔ 2' : 
+                     assignedTeamId === 't3' ? 'TỔ 3' : 
+                     assignedTeamId === 't4' ? 'TỔ 4' : 'TỔ ĐÃ CHỈ ĐỊNH';
+        return { 
+            id: assignedTeamId, 
+            name: name, 
+            color: 'bg-sky-100 text-sky-700 border-sky-200' 
+        };
+    }
+    return null;
+  };
+
+  const selectedTeam = getSelectedTeam();
 
   return (
     <>
@@ -76,7 +98,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
            
            <div className="flex items-center space-x-2">
               {assignedTeamId && (
-                  <div className="flex items-center text-sky-600 bg-sky-50 px-2 py-1 rounded-lg text-[10px] font-black border border-sky-100 uppercase tracking-tighter">
+                  <div className="flex items-center text-sky-600 bg-sky-50 px-2 py-1 rounded-lg text-[10px] font-black border border-sky-100 uppercase tracking-tighter shadow-sm animate-pulse">
                       <Lock className="w-3 h-3 mr-1" />
                       <span>Cố định tổ</span>
                   </div>
@@ -90,19 +112,19 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
           className={`
               w-full min-h-[72px] rounded-xl border-2 flex items-center px-4 justify-between transition-all duration-200
               ${isDisabled ? 'bg-slate-100 border-slate-200' : 'bg-white'}
-              ${selectedTeam ? selectedTeam.color + ' border-transparent shadow-md' : 'border-slate-300 text-slate-500 border-dashed'}
+              ${selectedTeam ? selectedTeam.color + ' border-transparent shadow-md ring-2 ring-white/50' : 'border-slate-300 text-slate-500 border-dashed'}
               ${isActive && !selectedTeam ? 'animate-pulse border-sky-400 bg-sky-50' : ''}
               ${assignedTeamId ? 'cursor-default' : 'cursor-pointer'}
           `}
         >
             {selectedTeam ? (
                 <div className="flex items-center space-x-4 w-full">
-                    <div className="bg-white/40 p-2.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/20">
+                    <div className="bg-white/50 p-2.5 rounded-lg backdrop-blur-sm shadow-sm border border-white/30">
                       <Users className="w-6 h-6" />
                     </div>
                     <div className="flex flex-col items-start">
-                       <span className="text-[10px] font-black opacity-70 uppercase text-left tracking-tighter">Đơn vị thi công</span>
-                       <span className="text-xl font-black tracking-tighter leading-none mt-0.5">{selectedTeam.name}</span>
+                       <span className="text-[10px] font-black opacity-80 uppercase text-left tracking-tighter">Đơn vị thi công</span>
+                       <span className="text-2xl font-black tracking-tighter leading-none mt-0.5">{selectedTeam.name}</span>
                     </div>
                 </div>
             ) : (
