@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Team } from '../types';
-import { X, Plus, Trash2, Users } from 'lucide-react';
+import { X, Plus, Trash2, Users, Pencil, Save } from 'lucide-react';
 
 interface TeamManagerProps {
   teams: Team[];
@@ -18,24 +18,51 @@ const COLORS = [
 ];
 
 const TeamManager: React.FC<TeamManagerProps> = ({ teams, onUpdateTeams, onClose }) => {
-  const [newTeamName, setNewTeamName] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [teamName, setTeamName] = useState('');
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
 
-  const handleAddTeam = () => {
-      if (!newTeamName.trim()) return;
-      const newTeam: Team = {
-          id: `custom_${Date.now()}`,
-          name: newTeamName,
-          color: selectedColor,
-          isCustom: true
-      };
-      onUpdateTeams([...teams, newTeam]);
-      setNewTeamName('');
+  const handleStartEdit = (team: Team) => {
+      setEditingId(team.id);
+      setTeamName(team.name);
+      setSelectedColor(team.color);
+  };
+
+  const handleCancelEdit = () => {
+      setEditingId(null);
+      setTeamName('');
+      setSelectedColor(COLORS[0]);
+  };
+
+  const handleSaveTeam = () => {
+      if (!teamName.trim()) return;
+
+      if (editingId) {
+          // Update existing
+          const updatedTeams = teams.map(t => 
+              t.id === editingId 
+              ? { ...t, name: teamName, color: selectedColor } 
+              : t
+          );
+          onUpdateTeams(updatedTeams);
+      } else {
+          // Add new
+          const newTeam: Team = {
+              id: `custom_${Date.now()}`,
+              name: teamName,
+              color: selectedColor,
+              isCustom: true
+          };
+          onUpdateTeams([...teams, newTeam]);
+      }
+      
+      handleCancelEdit();
   };
 
   const handleDeleteTeam = (id: string) => {
       if (window.confirm('Bạn có chắc muốn xóa tổ này không?')) {
           onUpdateTeams(teams.filter(t => t.id !== id));
+          if (editingId === id) handleCancelEdit();
       }
   };
 
@@ -58,31 +85,50 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onUpdateTeams, onClose
           {/* List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {teams.map((team) => (
-                  <div key={team.id} className="flex items-center justify-between p-3 border border-slate-100 rounded-xl bg-white shadow-sm">
+                  <div 
+                    key={team.id} 
+                    onClick={() => handleStartEdit(team)}
+                    className={`flex items-center justify-between p-3 border rounded-xl shadow-sm transition-all cursor-pointer ${editingId === team.id ? 'bg-sky-50 border-sky-400 ring-2 ring-sky-100' : 'bg-white border-slate-100'}`}
+                  >
                       <div className="flex items-center space-x-3">
                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${team.color}`}>
                                 <span className="text-xs font-bold">{team.name.charAt(0)}</span>
                            </div>
                            <span className="font-bold text-slate-700">{team.name}</span>
                       </div>
-                      <button 
-                        onClick={() => handleDeleteTeam(team.id)}
-                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                          <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center space-x-1">
+                          <button className="p-2 text-slate-400">
+                               <Pencil className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); handleDeleteTeam(team.id); }}
+                            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                      </div>
                   </div>
               ))}
           </div>
 
-          {/* Add New Form */}
-          <div className="p-4 bg-slate-50 border-t border-slate-200 pb-safe">
-              <h3 className="text-xs font-bold uppercase text-slate-400 mb-3">Thêm tổ mới</h3>
+          {/* Add/Edit Form */}
+          <div className="p-4 bg-slate-50 border-t border-slate-200 pb-safe shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-10">
+              <div className="flex justify-between items-center mb-3">
+                   <h3 className="text-xs font-bold uppercase text-slate-400">
+                       {editingId ? 'Chỉnh sửa thông tin' : 'Thêm tổ mới'}
+                   </h3>
+                   {editingId && (
+                       <button onClick={handleCancelEdit} className="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded">
+                           Hủy
+                       </button>
+                   )}
+              </div>
+              
               <div className="space-y-3">
                   <input 
                       type="text" 
-                      value={newTeamName}
-                      onChange={(e) => setNewTeamName(e.target.value)}
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
                       placeholder="Nhập tên tổ..."
                       className="w-full p-3 border border-slate-200 rounded-xl focus:border-sky-500 focus:outline-none font-bold text-slate-700"
                   />
@@ -98,12 +144,14 @@ const TeamManager: React.FC<TeamManagerProps> = ({ teams, onUpdateTeams, onClose
                   </div>
 
                   <button 
-                      onClick={handleAddTeam}
-                      disabled={!newTeamName.trim()}
-                      className="w-full bg-sky-600 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center space-x-2 disabled:opacity-50 disabled:shadow-none"
+                      onClick={handleSaveTeam}
+                      disabled={!teamName.trim()}
+                      className={`w-full text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center space-x-2 disabled:opacity-50 disabled:shadow-none
+                        ${editingId ? 'bg-orange-500 shadow-orange-200' : 'bg-sky-600 shadow-sky-200'}
+                      `}
                   >
-                      <Plus className="w-5 h-5" />
-                      <span>Thêm Tổ</span>
+                      {editingId ? <Save className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                      <span>{editingId ? 'Lưu Thay Đổi' : 'Thêm Tổ Mới'}</span>
                   </button>
               </div>
           </div>

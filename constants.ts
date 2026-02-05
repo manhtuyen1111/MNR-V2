@@ -1,10 +1,10 @@
 import { Team } from './types';
 
 export const REPAIR_TEAMS: Team[] = [
-  { id: 't1', name: 'Tổ 1 - Cơ Khí', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  { id: 't2', name: 'Tổ 2 - Vệ Sinh', color: 'bg-green-100 text-green-700 border-green-200' },
-  { id: 't3', name: 'Tổ 3 - Sơn', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  { id: 't4', name: 'QC - Kiểm định', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  { id: 't1', name: 'TỔ 1', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  { id: 't2', name: 'TỔ 2', color: 'bg-green-100 text-green-700 border-green-200' },
+  { id: 't3', name: 'TỔ 3', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+  { id: 't4', name: 'TỔ 4', color: 'bg-purple-100 text-purple-700 border-purple-200' },
 ];
 
 export const MOCK_CONTAINER_SUGGESTIONS = [

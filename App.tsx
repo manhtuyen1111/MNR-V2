@@ -61,7 +61,6 @@ const App: React.FC = () => {
   // Auto Advance Steps Logic
   useEffect(() => {
       if (activeStep === 1 && isContainerValid) {
-          // Add small delay for user to see the "Check"
           const timer = setTimeout(() => setActiveStep(2), 500);
           return () => clearTimeout(timer);
       }
@@ -73,7 +72,6 @@ const App: React.FC = () => {
   };
 
   const handleStepClick = (step: 1 | 2 | 3) => {
-      // Logic for clicking steps manually
       if (step === 1) {
           setActiveStep(1);
       } else if (step === 2) {
@@ -229,7 +227,7 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'capture' ? (
-          <div className="flex-1 flex flex-col px-4 py-4 space-y-4 min-h-0 overflow-y-auto pb-24">
+          <div className="flex-1 flex flex-col px-4 py-4 space-y-4 min-h-0 overflow-y-auto pb-28 scroll-smooth">
                 
                 {/* STEP 1: CONTAINER */}
                 <ContainerInput 
@@ -238,7 +236,7 @@ const App: React.FC = () => {
                     isValid={isContainerValid}
                     isActive={activeStep === 1}
                     isCompleted={isContainerValid}
-                    isDisabled={false} // Step 1 is never disabled
+                    isDisabled={false} 
                     onFocus={() => handleStepClick(1)}
                 />
 
@@ -250,7 +248,7 @@ const App: React.FC = () => {
                     onManageTeams={() => setIsTeamManagerOpen(true)}
                     isActive={activeStep === 2}
                     isCompleted={isTeamSelected}
-                    isDisabled={!isContainerValid} // Disable if Step 1 invalid
+                    isDisabled={!isContainerValid}
                     onFocus={() => handleStepClick(2)}
                 />
 
@@ -261,31 +259,9 @@ const App: React.FC = () => {
                     onRemoveImage={(idx) => setImages(prev => prev.filter((_, i) => i !== idx))}
                     isActive={activeStep === 3}
                     isCompleted={images.length > 0}
-                    isDisabled={!isTeamSelected} // Disable if Step 2 not selected
+                    isDisabled={!isTeamSelected}
                     onFocus={() => handleStepClick(3)}
                 />
-
-                <div className="pt-2">
-                     <button
-                        onClick={handleSaveData}
-                        disabled={!isFormComplete || isSubmitting}
-                        className={`
-                            w-full flex items-center justify-center space-x-2 h-16 rounded-2xl font-black text-lg shadow-xl transition-all transform duration-300
-                            ${isFormComplete 
-                                ? 'bg-gradient-to-r from-sky-700 to-blue-800 text-white shadow-sky-900/20 scale-100 cursor-pointer hover:scale-[1.02]' 
-                                : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none scale-95 opacity-50'}
-                        `}
-                     >
-                        {isSubmitting ? (
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                            <>
-                                <Send className="w-6 h-6" />
-                                <span>HOÀN THÀNH & LƯU</span>
-                            </>
-                        )}
-                     </button>
-                </div>
           </div>
         ) : activeTab === 'history' ? (
             <div className="flex-1 overflow-y-auto">
@@ -296,6 +272,29 @@ const App: React.FC = () => {
              <Settings settings={settings} onSave={handleSaveSettings} />
           </div>
         )}
+
+        {/* Floating Action Button for Saving - Only appears in Capture Tab when form is complete */}
+        {activeTab === 'capture' && isFormComplete && (
+            <div className="fixed bottom-24 right-4 z-40 animate-fadeIn">
+                 <button
+                    onClick={handleSaveData}
+                    disabled={isSubmitting}
+                    className="flex items-center space-x-2 bg-gradient-to-r from-sky-600 to-blue-700 text-white px-6 py-4 rounded-2xl shadow-xl shadow-sky-900/30 hover:scale-105 active:scale-95 transition-all"
+                 >
+                    {isSubmitting ? (
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                    ) : (
+                        <>
+                            <span className="font-black text-lg">LƯU & XONG</span>
+                            <div className="bg-white/20 p-1 rounded-full">
+                                <Send className="w-5 h-5" />
+                            </div>
+                        </>
+                    )}
+                 </button>
+            </div>
+        )}
+
       </main>
 
       <BottomNav currentTab={activeTab} onChangeTab={setActiveTab} pendingCount={pendingCount} />

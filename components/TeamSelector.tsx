@@ -16,6 +16,7 @@ interface TeamSelectorProps {
 const TeamSelector: React.FC<TeamSelectorProps> = ({ 
   teams, selectedTeamId, onSelect, onManageTeams, isActive, isCompleted, isDisabled, onFocus 
 }) => {
+  // Find selected team to determine background color of the select box if needed
   const selectedTeam = teams.find(t => t.id === selectedTeamId);
 
   return (
@@ -58,7 +59,11 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
             onFocus={onFocus}
             disabled={isDisabled}
             onChange={(e) => onSelect(e.target.value)}
-            className="w-full appearance-none bg-slate-50 border-2 border-slate-300 text-slate-900 text-lg font-bold py-4 pl-12 pr-10 rounded-xl focus:outline-none focus:border-sky-600 focus:bg-white transition-colors cursor-pointer disabled:bg-slate-100"
+            className={`w-full appearance-none border-2 text-slate-900 text-lg font-bold py-4 pl-12 pr-10 rounded-xl focus:outline-none focus:border-sky-600 transition-colors cursor-pointer disabled:bg-slate-100
+                ${selectedTeamId 
+                    ? 'bg-sky-50 border-sky-200 text-sky-900' 
+                    : 'bg-slate-50 border-slate-300'}
+            `}
           >
             <option value="" disabled>-- Chạm để chọn --</option>
             {teams.map((team) => (
@@ -68,25 +73,14 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
             ))}
           </select>
           
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+          <div className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none ${selectedTeamId ? 'text-sky-600' : 'text-slate-500'}`}>
             <Users className="w-6 h-6" />
           </div>
           
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+          <div className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none ${selectedTeamId ? 'text-sky-600' : 'text-slate-500'}`}>
             <ChevronDown className="w-6 h-6" />
           </div>
       </div>
-
-      {/* Visual Feedback for Selection */}
-      {selectedTeam && (
-          <div className={`mt-3 p-3 rounded-lg border flex items-center justify-between animate-fadeIn ${selectedTeam.color.replace('bg-', 'bg-opacity-20 bg-')}`}>
-              <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full ${selectedTeam.color.split(' ')[0]}`}></div>
-                  <span className="font-bold text-sm text-slate-700">{selectedTeam.name}</span>
-              </div>
-              <Check className="w-5 h-5 text-green-600" />
-          </div>
-      )}
     </div>
   );
 };
