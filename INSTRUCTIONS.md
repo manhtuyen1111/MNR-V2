@@ -11,15 +11,13 @@
 
 ```javascript
 // --- CẤU HÌNH ---
-// ID thư mục gốc mà bạn đã cung cấp
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(10000); // Đợi tối đa 10 giây để tránh xung đột
+  lock.tryLock(5000); // Wait 5s max
 
   try {
-    // 1. Phân tích dữ liệu từ App gửi lên
     var data = JSON.parse(e.postData.contents);
     var containerNumber = data.containerNumber;
     var teamName = data.team;
@@ -27,50 +25,40 @@ function doPost(e) {
     var timestamp = new Date(data.timestamp);
     var editor = data.editor || 'unknown';
 
-    // 2. Lấy thông tin ngày tháng
     var year = timestamp.getFullYear().toString();
     var month = ("0" + (timestamp.getMonth() + 1)).slice(-2);
     var day = ("0" + timestamp.getDate()).slice(-2);
+    var fullDateString = day + "-" + month + "-" + year; // Định dạng NGÀY-THÁNG-NĂM
 
-    // 3. Xử lý thư mục theo cấu trúc: Năm / Tháng / Ngày / Tổ / Số Cont
-    // DriveApp.getFolderById cần quyền truy cập Drive
     var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
     
+    // Cấu trúc: NĂM -> THÁNG -> NGÀY-THÁNG-NĂM -> SỐ CONTAINER
     var yearFolder = getOrCreateFolder(rootFolder, year);
     var monthFolder = getOrCreateFolder(yearFolder, month);
-    var dayFolder = getOrCreateFolder(monthFolder, day);
-    var teamFolder = getOrCreateFolder(dayFolder, teamName);
-    var containerFolder = getOrCreateFolder(teamFolder, containerNumber);
+    var dateFolder = getOrCreateFolder(monthFolder, fullDateString);
+    var containerFolder = getOrCreateFolder(dateFolder, containerNumber);
 
-    // 4. Lưu hình ảnh
+    // Lưu hình ảnh (Sử dụng timestamp trong tên file để tránh trùng lặp khi up bổ sung)
+    var timeStr = timestamp.getTime().toString();
     for (var i = 0; i < images.length; i++) {
       var imageBase64 = images[i].split(',')[1];
       var decodedImage = Utilities.base64Decode(imageBase64);
-      var blob = Utilities.newBlob(decodedImage, 'image/jpeg', containerNumber + '_' + (i + 1) + '.jpg');
+      // Tên file: SO_CONT_TIMESTAMP_INDEX.jpg
+      var fileName = containerNumber + '_' + timeStr + '_' + (i + 1) + '.jpg';
+      var blob = Utilities.newBlob(decodedImage, 'image/jpeg', fileName);
       containerFolder.createFile(blob);
     }
 
-    // 5. Ghi log vào Sheet (Nếu script gắn với Google Sheet)
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       if (ss) {
         var sheet = ss.getActiveSheet();
-        // Thêm header nếu chưa có
         if (sheet.getLastRow() === 0) {
-          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh", "Link Folder"]);
+          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh gửi lên", "Link Folder"]);
         }
-        sheet.appendRow([
-          new Date(), 
-          containerNumber, 
-          teamName, 
-          editor, 
-          images.length, 
-          containerFolder.getUrl()
-        ]);
+        sheet.appendRow([new Date(), containerNumber, teamName, editor, images.length, containerFolder.getUrl()]);
       }
-    } catch(err) {
-      // Bỏ qua nếu không chạy trên Sheet
-    }
+    } catch(err) {}
 
     return ContentService.createTextOutput("success").setMimeType(ContentService.MimeType.TEXT);
 

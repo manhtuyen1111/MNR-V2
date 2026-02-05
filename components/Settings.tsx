@@ -22,46 +22,53 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
 
   const SCRIPT_CODE = `
 // --- CẤU HÌNH ---
-// ID thư mục gốc Google Drive của bạn
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.tryLock(10000); 
+  // Giảm thời gian chờ lock xuống để xử lý nhanh hơn
+  lock.tryLock(5000); 
 
   try {
     var data = JSON.parse(e.postData.contents);
     var containerNumber = data.containerNumber;
     var teamName = data.team;
-    var images = data.images; 
+    var images = data.images; // Mảng base64
     var timestamp = new Date(data.timestamp);
     var editor = data.editor || 'unknown';
 
+    // Định dạng thời gian
     var year = timestamp.getFullYear().toString();
     var month = ("0" + (timestamp.getMonth() + 1)).slice(-2);
     var day = ("0" + timestamp.getDate()).slice(-2);
+    var fullDateString = day + "-" + month + "-" + year; // Định dạng NGÀY-THÁNG-NĂM
 
     var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
     
+    // Cấu trúc: NĂM -> THÁNG -> NGÀY-THÁNG-NĂM -> SỐ CONTAINER
     var yearFolder = getOrCreateFolder(rootFolder, year);
     var monthFolder = getOrCreateFolder(yearFolder, month);
-    var dayFolder = getOrCreateFolder(monthFolder, day);
-    var teamFolder = getOrCreateFolder(dayFolder, teamName);
-    var containerFolder = getOrCreateFolder(teamFolder, containerNumber);
+    var dateFolder = getOrCreateFolder(monthFolder, fullDateString);
+    var containerFolder = getOrCreateFolder(dateFolder, containerNumber);
 
+    // Lưu hình ảnh (Sử dụng timestamp trong tên file để tránh trùng lặp khi up bổ sung)
+    var timeStr = timestamp.getTime().toString();
     for (var i = 0; i < images.length; i++) {
       var imageBase64 = images[i].split(',')[1];
       var decodedImage = Utilities.base64Decode(imageBase64);
-      var blob = Utilities.newBlob(decodedImage, 'image/jpeg', containerNumber + '_' + (i + 1) + '.jpg');
+      // Tên file: SO_CONT_TIMESTAMP_INDEX.jpg
+      var fileName = containerNumber + '_' + timeStr + '_' + (i + 1) + '.jpg';
+      var blob = Utilities.newBlob(decodedImage, 'image/jpeg', fileName);
       containerFolder.createFile(blob);
     }
 
+    // Ghi log vào Sheet
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       if (ss) {
         var sheet = ss.getActiveSheet();
         if (sheet.getLastRow() === 0) {
-          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh", "Link Folder"]);
+          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh gửi lên", "Link Folder"]);
         }
         sheet.appendRow([new Date(), containerNumber, teamName, editor, images.length, containerFolder.getUrl()]);
       }

@@ -141,7 +141,12 @@ const App: React.FC = () => {
       setImages(prev => [...prev, compressed]);
   };
 
-  const syncRecordToSheet = async (record: RepairRecord): Promise<boolean> => {
+  /**
+   * Sync data to Google Script.
+   * @param record The full record
+   * @param specificImages If provided, only upload these images (for incremental updates). Otherwise uploads record.images.
+   */
+  const syncRecordToSheet = async (record: RepairRecord, specificImages?: string[]): Promise<boolean> => {
       if (!settings.googleScriptUrl) return false;
       try {
         const payload = {
@@ -149,11 +154,10 @@ const App: React.FC = () => {
             timestamp: new Date(record.timestamp).toISOString(),
             containerNumber: record.containerNumber,
             team: record.teamName,
-            images: record.images,
-            editor: user?.username || 'unknown' // Track who edited
+            images: specificImages || record.images, // Only send what is needed
+            editor: user?.username || 'unknown'
         };
         
-        // Use default 'cors' mode. The script must output text/plain content.
         const response = await fetch(settings.googleScriptUrl, {
             method: 'POST',
             body: JSON.stringify(payload)
@@ -209,6 +213,7 @@ const App: React.FC = () => {
         }
 
         try {
+            // New record: Send ALL images
             const success = await syncRecordToSheet(newRecord);
             if (success) {
                 const syncedRecord = { ...newRecord, status: 'synced' as const };
@@ -242,6 +247,7 @@ const App: React.FC = () => {
       setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
       setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
 
+      // Retry: Send ALL images (since we don't track which ones failed, we assume all needed)
       const success = await syncRecordToSheet(record);
       if (success) {
         const updated = { ...record, status: 'synced' as const };
@@ -264,25 +270,31 @@ const App: React.FC = () => {
   };
 
   // Called when adding photos to an existing history record
-  const handleUpdateRecord = async (updatedRecord: RepairRecord) => {
+  const handleUpdateRecord = async (updatedRecord: RepairRecord, newImagesOnly: string[] = []) => {
       try {
-          // Update DB
+          // Update DB with FULL image list
           await dbService.saveRecord(updatedRecord);
           // Update State
           setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
           
-          // Try to sync update
+          if (newImagesOnly.length === 0) return;
+
+          // Try to sync ONLY new images
           if (settings.googleScriptUrl) {
-              const success = await syncRecordToSheet(updatedRecord);
+              setToast({ message: `Đang gửi thêm ${newImagesOnly.length} ảnh...`, type: 'warning' });
+              
+              const success = await syncRecordToSheet(updatedRecord, newImagesOnly);
+              
               if (success) {
                    const finalRecord = { ...updatedRecord, status: 'synced' as const };
                    await dbService.saveRecord(finalRecord);
                    setRecords(prev => prev.map(r => r.id === updatedRecord.id ? finalRecord : r));
+                   setToast({ message: 'Đã bổ sung ảnh thành công!', type: 'success' });
               } else {
-                  // Keep as pending/error if failed
                    const errorRecord = { ...updatedRecord, status: 'error' as const };
                    await dbService.saveRecord(errorRecord);
                    setRecords(prev => prev.map(r => r.id === updatedRecord.id ? errorRecord : r));
+                   setToast({ message: 'Lỗi gửi ảnh bổ sung.', type: 'error' });
               }
           }
       } catch (e) {
@@ -302,9 +314,9 @@ const App: React.FC = () => {
       <Header />
       
       {/* User Info Bar */}
-      <div className="bg-slate-800 text-white px-4 py-1 text-xs font-bold flex justify-between items-center shadow-md z-30">
+      <div className="bg-[#0f172a] text-white px-4 py-1 text-xs font-bold flex justify-between items-center shadow-md z-30 border-b border-slate-700">
           <span>Xin chào, {user.name}</span>
-          <button onClick={() => setUser(null)} className="text-sky-300 hover:text-white transition-colors">Đăng xuất</button>
+          <button onClick={() => setUser(null)} className="text-sky-400 hover:text-white transition-colors">Đăng xuất</button>
       </div>
 
       <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto">

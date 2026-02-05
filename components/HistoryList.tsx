@@ -7,7 +7,7 @@ interface HistoryListProps {
   records: RepairRecord[];
   onRetry: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdateRecord: (updatedRecord: RepairRecord) => void; // Call back to update DB
+  onUpdateRecord: (updatedRecord: RepairRecord, newImagesOnly: string[]) => void; // Update signature
 }
 
 const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, onUpdateRecord }) => {
@@ -105,10 +105,10 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
             <ImageViewer 
                 record={viewingRecord} 
                 onClose={() => setViewingRecord(null)} 
-                onUpdate={(newImgs) => {
-                    const updated = { ...viewingRecord, images: newImgs, status: 'pending' as const };
+                onUpdate={(newTotalImages, newOnlyImages) => {
+                    const updated = { ...viewingRecord, images: newTotalImages, status: 'pending' as const };
                     setViewingRecord(updated); // Update local view
-                    onUpdateRecord(updated); // Propagate to DB
+                    onUpdateRecord(updated, newOnlyImages); // Propagate to DB & Sync
                 }}
             />
         )}
@@ -120,10 +120,11 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
 const ImageViewer: React.FC<{ 
     record: RepairRecord, 
     onClose: () => void,
-    onUpdate: (newImages: string[]) => void
+    onUpdate: (allImages: string[], newImages: string[]) => void
 }> = ({ record, onClose, onUpdate }) => {
     const [mode, setMode] = useState<'view' | 'camera'>('view');
     const [tempImages, setTempImages] = useState<string[]>(record.images);
+    const [newlyAdded, setNewlyAdded] = useState<string[]>([]);
     
     // Camera Logic embedded
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -167,9 +168,18 @@ const ImageViewer: React.FC<{
                 ctx.drawImage(v, 0, 0);
                 const raw = c.toDataURL('image/jpeg', 0.8);
                 const compressed = await compressImage(raw);
-                const newImgList = [...tempImages, compressed];
-                setTempImages(newImgList);
-                onUpdate(newImgList); // Save immediately
+                
+                const newTotal = [...tempImages, compressed];
+                const newBatch = [...newlyAdded, compressed];
+                
+                setTempImages(newTotal);
+                setNewlyAdded(newBatch);
+                
+                // Real-time save: Pass BOTH total list and new items list
+                // We pass `[compressed]` here so it uploads one by one or we can wait till close?
+                // Better UX: Upload immediately upon capture or batch at close? 
+                // Implementation: Pass cumulative updates.
+                onUpdate(newTotal, [compressed]); 
             }
         }
     };
@@ -257,7 +267,7 @@ const ImageViewer: React.FC<{
                          </div>
                     </div>
                     <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
-                        Đang chụp bổ sung: {tempImages.length + 1}
+                        Đang chụp bổ sung: {newlyAdded.length + 1}
                     </div>
                 </div>
             )}
