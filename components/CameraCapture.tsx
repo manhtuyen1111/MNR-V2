@@ -1,125 +1,196 @@
-import React, { useRef } from 'react';
-import { Camera, X, Plus } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Camera, X, Check } from 'lucide-react';
 
 interface CameraCaptureProps {
   images: string[];
   onAddImage: (imageData: string) => void;
   onRemoveImage: (index: number) => void;
   isActive: boolean;
+  isCompleted: boolean;
+  isDisabled: boolean;
   onFocus: () => void;
 }
 
 const CameraCapture: React.FC<CameraCaptureProps> = ({ 
-  images, onAddImage, onRemoveImage, isActive, onFocus 
+  images, onAddImage, onRemoveImage, isActive, isCompleted, isDisabled, onFocus 
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const files = e.target.files;
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (reader.result) {
-             onAddImage(reader.result as string);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-      if (fileInputRef.current) fileInputRef.current.value = '';
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Start Camera Stream
+  const startCamera = async () => {
+    if (isDisabled) return;
+    onFocus();
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: 'environment',
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        } 
+      });
+      setStream(mediaStream);
+      setIsCameraOpen(true);
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Không thể mở camera. Vui lòng kiểm tra quyền truy cập.");
     }
   };
 
-  const triggerCamera = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onFocus();
-    fileInputRef.current?.click();
+  // Stop Camera Stream
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setIsCameraOpen(false);
   };
 
+  // Capture Photo from Video Stream
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        onAddImage(dataUrl);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isCameraOpen && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [isCameraOpen, stream]);
+
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  // --- FULL SCREEN CAMERA MODE ---
+  if (isCameraOpen) {
+    return (
+        <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+            <canvas ref={canvasRef} className="hidden" />
+            <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/60 to-transparent">
+                <span className="text-white font-bold text-sm tracking-wider shadow-sm drop-shadow-md">
+                    {images.length} ẢNH
+                </span>
+                <button onClick={stopCamera} className="p-2 bg-white/20 backdrop-blur-md rounded-full text-white">
+                    <X className="w-6 h-6" />
+                </button>
+            </div>
+            <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+                <video 
+                    ref={videoRef} 
+                    autoPlay 
+                    playsInline 
+                    muted 
+                    className="absolute w-full h-full object-cover"
+                />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/30 rounded-lg pointer-events-none">
+                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-sky-400"></div>
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-sky-400"></div>
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-sky-400"></div>
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-sky-400"></div>
+                </div>
+            </div>
+            <div className="h-48 bg-black/90 pb-safe flex flex-col shrink-0">
+                <div className="h-20 flex items-center px-4 space-x-3 overflow-x-auto scrollbar-hide bg-white/5 border-t border-white/10">
+                    {images.map((img, idx) => (
+                        <div key={idx} className="relative w-14 h-14 rounded overflow-hidden shrink-0 border border-white/30">
+                            <img src={img} className="w-full h-full object-cover" />
+                            <div className="absolute top-0 right-0 bg-red-500 w-4 h-4 flex items-center justify-center" onClick={(e) => {e.stopPropagation(); onRemoveImage(idx);}}>
+                                <X className="w-3 h-3 text-white" />
+                            </div>
+                        </div>
+                    ))}
+                    {images.length === 0 && <span className="text-white/40 text-xs pl-2">Chưa có ảnh nào...</span>}
+                </div>
+                <div className="flex-1 flex items-center justify-between px-8">
+                    <div className="w-12"></div>
+                    <button 
+                        onClick={capturePhoto}
+                        className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center active:scale-95 transition-transform"
+                    >
+                        <div className="w-16 h-16 bg-white rounded-full"></div>
+                    </button>
+                    <button 
+                        onClick={stopCamera}
+                        className="w-16 h-12 bg-sky-600 rounded-xl flex items-center justify-center space-x-1 shadow-lg active:scale-95 transition-transform"
+                    >
+                        <span className="text-white font-black text-sm">OK</span>
+                        <Check className="w-4 h-4 text-white" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+  }
+
+  // --- DEFAULT VIEW ---
   return (
     <div 
-      onClick={onFocus}
+      onClick={!isDisabled ? startCamera : undefined}
       className={`
-        flex-1 flex flex-col min-h-0 transition-all duration-300 ease-out rounded-2xl p-3 border-2
+        transition-all duration-500 ease-out rounded-xl p-4 border-2 bg-white flex flex-col min-h-[160px] cursor-pointer
         ${isActive 
-          ? 'bg-white border-sky-600 shadow-[0_10px_40px_-10px_rgba(14,165,233,0.3)] scale-[1.02] z-20 translate-y-[-4px]' 
-          : 'bg-white border-slate-200 shadow-sm scale-100 opacity-90'
+          ? 'scale-105 shadow-2xl z-20 border-sky-600 ring-4 ring-sky-100 translate-y-[-5px]' 
+          : isDisabled
+            ? 'opacity-40 grayscale scale-95 border-slate-200 pointer-events-none'
+            : 'border-green-500 shadow-sm opacity-90 scale-100' // Completed
         }
       `}
     >
-      <div className="flex items-center justify-between mb-2 shrink-0">
-        <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded-md ${isActive ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                <span className="text-[10px] font-bold px-1">03</span>
-            </div>
-            <label className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-sky-700' : 'text-slate-500'}`}>
-               Hình Ảnh ({images.length})
+      <div className="flex items-center justify-between mb-2">
+         <div className="flex items-center space-x-2">
+            <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold transition-colors ${isActive ? 'bg-sky-600 text-white' : isCompleted ? 'bg-green-600 text-white' : 'bg-slate-300 text-slate-500'}`}>3</span>
+            <label className={`text-sm font-black uppercase tracking-wider ${isActive ? 'text-sky-700' : isCompleted ? 'text-green-700' : 'text-slate-500'}`}>
+            HÌNH ẢNH ({images.length})
             </label>
-        </div>
+         </div>
+         {isCompleted && !isActive && <Check className="w-6 h-6 text-green-500" />}
       </div>
 
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        multiple 
-        className="hidden"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-      />
-
-      {/* Content Area - Flex Grow */}
-      <div className="flex-1 flex flex-col justify-center min-h-0 space-y-3">
-          
-          {/* Main Camera Button */}
-          <button
-            onClick={triggerCamera}
-            className={`
-                w-full relative overflow-hidden group transition-all duration-300
-                ${images.length === 0 ? 'h-24' : 'h-16'}
-                rounded-xl bg-slate-900 flex items-center justify-center space-x-3 shadow-lg shadow-slate-300
-            `}
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-600 to-blue-700 opacity-90 group-hover:opacity-100 transition-opacity"></div>
-            <div className="relative z-10 p-2 bg-white/20 rounded-full backdrop-blur-sm">
-                <Camera className="w-5 h-5 text-white" />
-            </div>
-            <div className="relative z-10 text-left">
-                <span className="block text-sm font-black text-white uppercase tracking-wider">CHỤP ẢNH</span>
-                <span className="block text-[10px] text-sky-100 font-medium">Camera chính</span>
-            </div>
-          </button>
-
-          {/* Horizontal Gallery */}
-          {images.length > 0 ? (
-            <div className="flex space-x-2 overflow-x-auto pb-2 h-24 shrink-0 scrollbar-hide">
-                {images.map((img, index) => (
-                    <div key={index} className="relative aspect-square h-full rounded-lg overflow-hidden border border-slate-200 shadow-sm shrink-0">
-                        <img src={img} alt={`Img ${index}`} className="w-full h-full object-cover" />
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onRemoveImage(index); }}
-                            className="absolute top-1 right-1 bg-white/90 text-red-600 rounded-full p-1 shadow-sm"
-                        >
-                            <X className="w-3 h-3" />
-                        </button>
-                        <div className="absolute bottom-0 left-0 bg-slate-900/60 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-tr-md">
-                            #{index + 1}
+      <div className="flex-1 flex flex-col justify-center items-center space-y-3">
+         {images.length === 0 ? (
+             <div className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 bg-slate-50 hover:bg-sky-50 hover:border-sky-400 hover:text-sky-600 transition-colors">
+                <Camera className="w-10 h-10 mb-2 opacity-50" />
+                <span className="font-bold text-sm">NHẤN ĐỂ CHỤP ẢNH</span>
+             </div>
+         ) : (
+             <div className="w-full">
+                <div className="grid grid-cols-4 gap-2 mb-3">
+                    {images.slice(0, 4).map((img, idx) => (
+                        <div key={idx} className="aspect-square rounded-lg overflow-hidden border border-slate-200 relative">
+                             <img src={img} className="w-full h-full object-cover" />
+                             {idx === 3 && images.length > 4 && (
+                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-xs">
+                                     +{images.length - 4}
+                                 </div>
+                             )}
                         </div>
-                    </div>
-                ))}
-                 <button 
-                    onClick={triggerCamera}
-                    className="aspect-square h-full rounded-lg border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:text-sky-600 hover:bg-sky-50 transition-colors shrink-0"
-                 >
-                    <Plus className="w-6 h-6" />
-                 </button>
-            </div>
-          ) : (
-              <div className="flex-1 rounded-xl border-2 border-dashed border-slate-100 bg-slate-50 flex items-center justify-center">
-                  <span className="text-xs text-slate-400 font-medium">Chưa có ảnh</span>
-              </div>
-          )}
+                    ))}
+                </div>
+                <button className="w-full py-3 bg-sky-100 text-sky-700 rounded-lg font-bold text-sm flex items-center justify-center space-x-2 hover:bg-sky-200">
+                    <Camera className="w-5 h-5" />
+                    <span>CHỤP THÊM</span>
+                </button>
+             </div>
+         )}
       </div>
     </div>
   );

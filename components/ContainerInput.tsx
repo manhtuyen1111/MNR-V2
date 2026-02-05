@@ -1,19 +1,22 @@
-import React, { useRef } from 'react';
-import { CheckCircle, AlertCircle, ScanLine, X } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { Check, X, AlertTriangle } from 'lucide-react';
 
 interface ContainerInputProps {
   value: string;
   onChange: (value: string) => void;
   isValid: boolean;
   isActive: boolean;
+  isCompleted: boolean;
+  isDisabled: boolean;
   onFocus: () => void;
 }
 
-const ContainerInput: React.FC<ContainerInputProps> = ({ value, onChange, isValid, isActive, onFocus }) => {
+const ContainerInput: React.FC<ContainerInputProps> = ({ 
+  value, onChange, isValid, isActive, isCompleted, isDisabled, onFocus 
+}) => {
   const prefixRef = useRef<HTMLInputElement>(null);
   const numberRef = useRef<HTMLInputElement>(null);
 
-  // Split value into prefix (first 4) and number (rest)
   const prefix = value.slice(0, 4);
   const numberPart = value.slice(4);
 
@@ -33,96 +36,106 @@ const ContainerInput: React.FC<ContainerInputProps> = ({ value, onChange, isVali
   const handleClear = (e: React.MouseEvent) => {
       e.stopPropagation();
       onChange('');
-      prefixRef.current?.focus();
+      if (prefixRef.current) prefixRef.current.focus();
   };
+
+  // Focus effect logic
+  useEffect(() => {
+      if (isActive && value === '' && prefixRef.current && !isDisabled) {
+          prefixRef.current.focus();
+      }
+  }, [isActive, value, isDisabled]);
 
   return (
     <div 
-      onClick={onFocus}
+      onClick={!isDisabled ? onFocus : undefined}
       className={`
-        transition-all duration-300 ease-out rounded-2xl p-3 border-2 relative
+        transition-all duration-500 ease-out rounded-xl p-4 border-2 relative bg-white
         ${isActive 
-          ? 'bg-white border-sky-600 shadow-[0_10px_40px_-10px_rgba(14,165,233,0.3)] scale-[1.02] z-30 translate-y-[-4px]' 
-          : 'bg-white border-slate-200 shadow-sm scale-100 opacity-90'
+          ? 'scale-105 shadow-2xl z-20 border-sky-600 ring-4 ring-sky-100 translate-y-[-5px]' 
+          : isDisabled
+            ? 'opacity-40 grayscale scale-95 border-slate-200 pointer-events-none'
+            : 'border-green-500 shadow-sm opacity-90 scale-100' // Completed state
         }
       `}
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded-md ${isActive ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
-                 <span className="text-[10px] font-bold px-1">01</span>
-            </div>
-            <label className={`text-xs font-bold uppercase tracking-wider ${isActive ? 'text-sky-700' : 'text-slate-500'}`}>
-              Số Container
-            </label>
-        </div>
+      <div className="flex items-center justify-between mb-3">
+        <label className={`text-sm font-black uppercase tracking-wider flex items-center ${isActive ? 'text-sky-700' : isCompleted ? 'text-green-700' : 'text-slate-500'}`}>
+            <span className={`w-6 h-6 rounded flex items-center justify-center mr-2 text-xs font-bold transition-colors ${isActive ? 'bg-sky-600 text-white' : isCompleted ? 'bg-green-600 text-white' : 'bg-slate-300 text-slate-500'}`}>1</span>
+            SỐ CONTAINER
+        </label>
         
-        {/* Header Actions */}
-        <div className="flex items-center space-x-2">
-            {value.length > 0 && (
-                <button onClick={handleClear} className="p-1 rounded-full bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
-                    <X className="w-4 h-4" />
-                </button>
-            )}
-            {isValid ? (
-                <CheckCircle className="w-5 h-5 text-green-500 fill-green-100" />
-            ) : (
-                <button className="flex items-center space-x-1 px-2 py-1 bg-slate-100 rounded-md text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors">
-                    <ScanLine className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase">Scan</span>
-                </button>
-            )}
-        </div>
+        {value.length > 0 && isActive && (
+             <button 
+                onClick={handleClear} 
+                className="p-1.5 bg-slate-100 rounded-full text-slate-500 hover:bg-red-100 hover:text-red-600"
+            >
+                <X className="w-4 h-4" />
+            </button>
+        )}
+        {isCompleted && !isActive && <Check className="w-6 h-6 text-green-500" />}
       </div>
 
-      <div className="flex items-center space-x-3">
+      <div className="flex items-start space-x-2">
         {/* Prefix Input */}
-        <div className="w-28 relative">
-            <input
-            ref={prefixRef}
-            type="text"
-            value={prefix}
-            onChange={handlePrefixChange}
-            onFocus={onFocus}
-            placeholder="ABCD"
-            className={`
-                w-full text-center text-2xl font-black font-mono py-3 rounded-xl border-2 outline-none transition-colors uppercase placeholder-slate-200
-                ${isActive ? 'border-sky-200 bg-sky-50 text-sky-900 focus:border-sky-500' : 'border-slate-100 bg-slate-50 text-slate-700'}
-            `}
-            />
-            <span className="absolute -bottom-4 left-0 w-full text-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tiếp đầu ngữ</span>
-        </div>
-
-        {/* Dash Separator */}
-        <div className="h-1 w-3 bg-slate-300 rounded-full"></div>
-
-        {/* Number Input */}
         <div className="flex-1 relative">
             <input
-            ref={numberRef}
-            type="tel"
-            value={numberPart}
-            onChange={handleNumberChange}
-            onFocus={onFocus}
-            placeholder="1234567"
-            className={`
-                w-full text-center text-2xl font-black font-mono py-3 rounded-xl border-2 outline-none transition-colors tracking-widest placeholder-slate-200
-                ${isActive ? 'border-sky-200 bg-sky-50 text-sky-900 focus:border-sky-500' : 'border-slate-100 bg-slate-50 text-slate-700'}
-            `}
+                ref={prefixRef}
+                type="text"
+                value={prefix}
+                onChange={handlePrefixChange}
+                onFocus={onFocus}
+                disabled={isDisabled}
+                placeholder="ABCD"
+                className={`
+                    w-full text-center text-3xl font-black font-mono py-4 rounded-lg border-2 outline-none uppercase placeholder-slate-200 shadow-inner transition-colors
+                    ${prefix.length === 4 
+                        ? 'border-sky-500 bg-sky-50 text-sky-900' 
+                        : 'border-slate-300 bg-white text-slate-800 focus:border-sky-500'}
+                `}
             />
-            <span className="absolute -bottom-4 left-0 w-full text-center text-[9px] font-bold text-slate-400 uppercase tracking-wider">7 Số cuối</span>
+            <div className={`text-[10px] font-bold mt-1 text-center flex justify-center items-center ${prefix.length === 4 ? 'text-green-600' : 'text-slate-400'}`}>
+                {prefix.length === 4 && <Check className="w-3 h-3 mr-1" />}
+                <span>{prefix.length}/4 CHỮ</span>
+            </div>
+        </div>
+
+        {/* Separator */}
+        <div className="pt-6">
+            <div className="w-2 h-1 bg-slate-300"></div>
+        </div>
+
+        {/* Number Input */}
+        <div className="flex-[1.5] relative">
+            <input
+                ref={numberRef}
+                type="tel"
+                value={numberPart}
+                onChange={handleNumberChange}
+                onFocus={onFocus}
+                disabled={isDisabled}
+                placeholder="1234567"
+                className={`
+                    w-full text-center text-3xl font-black font-mono py-4 rounded-lg border-2 outline-none tracking-widest placeholder-slate-200 shadow-inner transition-colors
+                    ${numberPart.length === 7 
+                        ? 'border-sky-500 bg-sky-50 text-sky-900' 
+                        : 'border-slate-300 bg-white text-slate-800 focus:border-sky-500'}
+                `}
+            />
+            <div className={`text-[10px] font-bold mt-1 text-center flex justify-center items-center ${numberPart.length === 7 ? 'text-green-600' : 'text-slate-400'}`}>
+                 {numberPart.length === 7 && <Check className="w-3 h-3 mr-1" />}
+                <span>{numberPart.length}/7 SỐ</span>
+            </div>
         </div>
       </div>
       
-      {/* Validation Message */}
-      <div className="h-4 mt-4 flex justify-center">
-         {value.length > 0 && !isValid && (
-             <div className="flex items-center text-[10px] font-bold text-red-500 animate-pulse">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                <span>Yêu cầu: 4 chữ + 7 số</span>
-             </div>
-         )}
-      </div>
+      {/* Validation Warning */}
+      {value.length > 0 && !isValid && isActive && (
+         <div className="mt-2 flex items-center justify-center text-xs font-bold text-orange-600 bg-orange-50 py-2 rounded-lg border border-orange-100">
+            <AlertTriangle className="w-4 h-4 mr-1.5" />
+            <span>Chưa đủ định dạng (4 chữ + 7 số)</span>
+         </div>
+      )}
     </div>
   );
 };
