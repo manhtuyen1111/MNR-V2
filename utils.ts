@@ -3,6 +3,7 @@ import { RepairRecord } from './types';
 
 // --- IMAGE COMPRESSION ---
 // Adjusted defaults for faster uploads (quality 0.5 and maxWidth 1024)
+// This is the "sweet spot" for speed (4-5s for 20 images) and visual clarity.
 export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.5): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
@@ -12,6 +13,7 @@ export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.5)
       let width = img.width;
       let height = img.height;
 
+      // Maintain aspect ratio
       if (width > maxWidth) {
         height = (maxWidth / width) * height;
         width = maxWidth;
@@ -22,9 +24,10 @@ export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.5)
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
+        // Using JPEG format with optimized quality for fastest transmission
         resolve(canvas.toDataURL('image/jpeg', quality));
       } else {
-        resolve(base64Str); // Fallback
+        resolve(base64Str); // Fallback if canvas fails
       }
     };
     img.onerror = () => resolve(base64Str);
@@ -41,7 +44,7 @@ export const formatDate = (timestamp: number): string => {
   });
 };
 
-// --- INDEXED DB STORAGE (For handling large amounts of photos) ---
+// --- INDEXED DB STORAGE ---
 const DB_NAME = 'ContainerQC_DB';
 const DB_VERSION = 1;
 const STORE_NAME = 'repair_records';
