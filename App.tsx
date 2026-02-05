@@ -198,7 +198,7 @@ const App: React.FC = () => {
   const pendingCount = records.filter(r => r.status === 'error' || r.status === 'pending').length;
 
   return (
-    <div className="h-[100dvh] bg-slate-100 font-sans text-slate-900 flex flex-col overflow-hidden">
+    <div className="h-[100dvh] bg-slate-100 font-sans text-slate-900 flex flex-col overflow-hidden select-none">
       <Header />
 
       <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto">
@@ -227,7 +227,7 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'capture' ? (
-          <div className="flex-1 flex flex-col px-4 py-4 space-y-4 min-h-0 overflow-y-auto pb-28 scroll-smooth">
+          <div className="flex-1 flex flex-col px-4 py-4 space-y-5 min-h-0 overflow-y-auto pb-32 scrollbar-hide">
                 
                 {/* STEP 1: CONTAINER */}
                 <ContainerInput 
@@ -264,29 +264,29 @@ const App: React.FC = () => {
                 />
           </div>
         ) : activeTab === 'history' ? (
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
                 <HistoryList records={records} onRetry={handleRetry} onDelete={handleDeleteRecord} />
             </div>
         ) : (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto scrollbar-hide">
              <Settings settings={settings} onSave={handleSaveSettings} />
           </div>
         )}
 
-        {/* Floating Action Button for Saving - Only appears in Capture Tab when form is complete */}
+        {/* Floating Action Button for Saving */}
         {activeTab === 'capture' && isFormComplete && (
             <div className="fixed bottom-24 right-4 z-40 animate-fadeIn">
                  <button
                     onClick={handleSaveData}
                     disabled={isSubmitting}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-sky-600 to-blue-700 text-white px-6 py-4 rounded-2xl shadow-xl shadow-sky-900/30 hover:scale-105 active:scale-95 transition-all"
+                    className="flex items-center space-x-2 bg-gradient-to-tr from-sky-600 to-blue-700 text-white px-6 py-4 rounded-2xl shadow-xl shadow-sky-900/30 hover:scale-105 active:scale-95 transition-all border-2 border-white/20"
                  >
                     {isSubmitting ? (
                         <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
                         <>
                             <span className="font-black text-lg">LƯU & XONG</span>
-                            <div className="bg-white/20 p-1 rounded-full">
+                            <div className="bg-white/20 p-1.5 rounded-full">
                                 <Send className="w-5 h-5" />
                             </div>
                         </>

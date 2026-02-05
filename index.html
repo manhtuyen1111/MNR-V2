@@ -9,17 +9,30 @@
       body {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-color: #f8fafc;
+        background-color: #f1f5f9; /* Slate-100 */
+        overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
       }
       .pb-safe {
         padding-bottom: env(safe-area-inset-bottom);
       }
+      /* Hide Scrollbar but keep functionality */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
       @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
+        from { opacity: 0; transform: translateY(5px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .animate-fadeIn {
-        animation: fadeIn 0.3s ease-out forwards;
+        animation: fadeIn 0.2s ease-out forwards;
+      }
+      /* Better touch tap highlight */
+      * {
+        -webkit-tap-highlight-color: transparent;
       }
     </style>
   <script type="importmap">
