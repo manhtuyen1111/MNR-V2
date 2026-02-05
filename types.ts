@@ -5,13 +5,16 @@ export interface Team {
   isCustom?: boolean;
 }
 
+export type SyncStatus = 'pending' | 'synced' | 'error';
+
 export interface RepairRecord {
   id: string;
   containerNumber: string;
   teamId: string;
-  images: string[]; // Changed from single string to array
+  teamName: string;
+  images: string[];
   timestamp: number;
-  synced?: boolean;
+  status: SyncStatus;
 }
 
 export type TabView = 'capture' | 'history' | 'settings';

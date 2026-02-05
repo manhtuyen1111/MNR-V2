@@ -5,9 +5,11 @@ import TeamSelector from './components/TeamSelector';
 import CameraCapture from './components/CameraCapture';
 import BottomNav from './components/BottomNav';
 import Settings from './components/Settings';
-import { TabView, Team, AppSettings } from './types';
+import HistoryList from './components/HistoryList';
+import { TabView, Team, AppSettings, RepairRecord } from './types';
 import { REPAIR_TEAMS } from './constants';
-import { Check, AlertTriangle, Send, Loader2 } from 'lucide-react';
+import { compressImage } from './utils';
+import { Check, AlertTriangle, Send, Loader2, WifiOff } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabView>('capture');
@@ -24,11 +26,23 @@ const App: React.FC = () => {
   const [containerNum, setContainerNum] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  
+  // Records State (Offline First)
+  const [records, setRecords] = useState<RepairRecord[]>(() => {
+      const saved = localStorage.getItem('repairRecords');
+      return saved ? JSON.parse(saved) : [];
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'warning'} | null>(null);
 
   const isContainerValid = /^[A-Z]{4}\d{7}$/.test(containerNum);
   const isFormComplete = isContainerValid && selectedTeamId !== '' && images.length > 0;
+  
+  // Persist records
+  useEffect(() => {
+      localStorage.setItem('repairRecords', JSON.stringify(records));
+  }, [records]);
 
   useEffect(() => {
      if (toast) {
@@ -55,53 +69,123 @@ const App: React.FC = () => {
       setSelectedTeamId(newTeam.id);
   };
 
-  const handleSaveData = async () => {
-    if (!isFormComplete) return;
-    if (!settings.googleScriptUrl) {
-        setToast({ message: 'Thiếu URL cấu hình!', type: 'error' });
-        setActiveTab('settings');
-        return;
-    }
-    setIsSubmitting(true);
-    const payload = {
-        timestamp: new Date().toISOString(),
-        containerNumber: containerNum,
-        team: teams.find(t => t.id === selectedTeamId)?.name || 'Unknown',
-        images: images,
-    };
+  const handleAddImage = async (imgData: string) => {
+      // Compress image before adding to state
+      const compressed = await compressImage(imgData);
+      setImages(prev => [...prev, compressed]);
+  };
 
-    try {
+  const syncRecordToSheet = async (record: RepairRecord): Promise<boolean> => {
+      if (!settings.googleScriptUrl) return false;
+      try {
+        const payload = {
+            timestamp: new Date(record.timestamp).toISOString(),
+            containerNumber: record.containerNumber,
+            team: record.teamName,
+            images: record.images,
+        };
         await fetch(settings.googleScriptUrl, {
             method: 'POST',
             mode: 'no-cors', 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
-        setToast({ message: 'Lưu thành công!', type: 'success' });
-        setContainerNum('');
-        setSelectedTeamId('');
-        setImages([]);
-        setActiveStep(1);
+        return true;
+      } catch (e) {
+        console.error("Sync error", e);
+        return false;
+      }
+  };
+
+  const handleSaveData = async () => {
+    if (!isFormComplete) return;
+    
+    setIsSubmitting(true);
+
+    const teamName = teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
+    const newRecord: RepairRecord = {
+        id: Date.now().toString(),
+        containerNumber: containerNum,
+        teamId: selectedTeamId,
+        teamName,
+        images: images,
+        timestamp: Date.now(),
+        status: 'pending' // Default to pending
+    };
+
+    // 1. Save locally first (Optimistic UI)
+    const updatedRecords = [...records, newRecord];
+    setRecords(updatedRecords);
+
+    // Reset Form immediately
+    setContainerNum('');
+    setSelectedTeamId('');
+    setImages([]);
+    setActiveStep(1);
+
+    // 2. Try to Sync
+    if (!settings.googleScriptUrl) {
+        setToast({ message: 'Đã lưu offline (Chưa cấu hình URL)', type: 'warning' });
+        setIsSubmitting(false);
+        return;
+    }
+
+    try {
+        const success = await syncRecordToSheet(newRecord);
+        if (success) {
+            setRecords(prev => prev.map(r => r.id === newRecord.id ? { ...r, status: 'synced' } : r));
+            setToast({ message: 'Đã lưu và gửi dữ liệu thành công!', type: 'success' });
+        } else {
+             setRecords(prev => prev.map(r => r.id === newRecord.id ? { ...r, status: 'error' } : r));
+             setToast({ message: 'Gửi thất bại. Đã lưu offline.', type: 'warning' });
+        }
     } catch (error) {
-        setToast({ message: 'Lỗi gửi dữ liệu!', type: 'error' });
+         setRecords(prev => prev.map(r => r.id === newRecord.id ? { ...r, status: 'error' } : r));
+         setToast({ message: 'Lỗi mạng. Đã lưu offline.', type: 'warning' });
     } finally {
         setIsSubmitting(false);
     }
   };
 
+  const handleRetry = async (id: string) => {
+      const record = records.find(r => r.id === id);
+      if (!record || !settings.googleScriptUrl) return;
+
+      setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
+      setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
+
+      const success = await syncRecordToSheet(record);
+      if (success) {
+        setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'synced' } : r));
+        setToast({ message: 'Gửi lại thành công!', type: 'success' });
+      } else {
+        setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'error' } : r));
+        setToast({ message: 'Vẫn chưa gửi được.', type: 'error' });
+      }
+  };
+
+  const handleDeleteRecord = (id: string) => {
+      if (window.confirm('Bạn có chắc muốn xóa hồ sơ này?')) {
+          setRecords(prev => prev.filter(r => r.id !== id));
+      }
+  };
+
+  const pendingCount = records.filter(r => r.status === 'error' || r.status === 'pending').length;
+
   return (
-    // Main Container: 100dvh for full mobile viewport without scroll
     <div className="h-[100dvh] bg-slate-50 font-sans text-slate-900 flex flex-col overflow-hidden">
       <Header />
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto">
         
-        {/* Toast */}
         {toast && (
             <div className="absolute top-4 left-4 right-4 z-[100] animate-fadeIn">
-                <div className={`px-4 py-3 rounded-lg shadow-xl flex items-center space-x-3 text-white font-bold text-sm ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>
-                    {toast.type === 'success' ? <Check className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                <div className={`px-4 py-3 rounded-lg shadow-xl flex items-center space-x-3 text-white font-bold text-sm ${
+                    toast.type === 'success' ? 'bg-green-600' : 
+                    toast.type === 'error' ? 'bg-red-600' : 'bg-orange-500'
+                }`}>
+                    {toast.type === 'success' ? <Check className="w-4 h-4" /> : 
+                     toast.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : <WifiOff className="w-4 h-4"/>}
                     <span>{toast.message}</span>
                 </div>
             </div>
@@ -109,7 +193,6 @@ const App: React.FC = () => {
 
         {activeTab === 'capture' ? (
           <div className="flex-1 flex flex-col px-4 py-2 space-y-3 min-h-0">
-            {/* Steps Container */}
             <div className="flex-1 flex flex-col space-y-3 min-h-0">
                 <ContainerInput 
                     value={containerNum} 
@@ -130,14 +213,13 @@ const App: React.FC = () => {
 
                 <CameraCapture 
                     images={images}
-                    onAddImage={(img) => setImages(prev => [...prev, img])}
+                    onAddImage={handleAddImage}
                     onRemoveImage={(idx) => setImages(prev => prev.filter((_, i) => i !== idx))}
                     isActive={activeStep === 3}
                     onFocus={() => setActiveStep(3)}
                 />
             </div>
 
-            {/* Sticky Action Button inside Main */}
             <div className="shrink-0 pb-20 pt-2">
                  <button
                     onClick={handleSaveData}
@@ -160,6 +242,10 @@ const App: React.FC = () => {
                  </button>
             </div>
           </div>
+        ) : activeTab === 'history' ? (
+            <div className="flex-1 overflow-y-auto">
+                <HistoryList records={records} onRetry={handleRetry} onDelete={handleDeleteRecord} />
+            </div>
         ) : (
           <div className="flex-1 overflow-y-auto">
              <Settings settings={settings} onSave={handleSaveSettings} />
@@ -167,7 +253,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <BottomNav currentTab={activeTab} onChangeTab={setActiveTab} />
+      <BottomNav currentTab={activeTab} onChangeTab={setActiveTab} pendingCount={pendingCount} />
     </div>
   );
 };

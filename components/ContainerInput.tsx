@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { CheckCircle, AlertCircle, Container } from 'lucide-react';
+import { CheckCircle, AlertCircle, ScanLine, X } from 'lucide-react';
 
 interface ContainerInputProps {
   value: string;
@@ -20,7 +20,6 @@ const ContainerInput: React.FC<ContainerInputProps> = ({ value, onChange, isVali
   const handlePrefixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
     onChange(val + numberPart);
-    // Auto jump to number input if prefix is full
     if (val.length === 4 && numberRef.current) {
         numberRef.current.focus();
     }
@@ -31,11 +30,17 @@ const ContainerInput: React.FC<ContainerInputProps> = ({ value, onChange, isVali
     onChange(prefix + val);
   };
 
+  const handleClear = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onChange('');
+      prefixRef.current?.focus();
+  };
+
   return (
     <div 
       onClick={onFocus}
       className={`
-        transition-all duration-300 ease-out rounded-2xl p-3 border-2
+        transition-all duration-300 ease-out rounded-2xl p-3 border-2 relative
         ${isActive 
           ? 'bg-white border-sky-600 shadow-[0_10px_40px_-10px_rgba(14,165,233,0.3)] scale-[1.02] z-30 translate-y-[-4px]' 
           : 'bg-white border-slate-200 shadow-sm scale-100 opacity-90'
@@ -51,7 +56,23 @@ const ContainerInput: React.FC<ContainerInputProps> = ({ value, onChange, isVali
               Số Container
             </label>
         </div>
-        {isValid && <CheckCircle className="w-5 h-5 text-green-500 fill-green-100" />}
+        
+        {/* Header Actions */}
+        <div className="flex items-center space-x-2">
+            {value.length > 0 && (
+                <button onClick={handleClear} className="p-1 rounded-full bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                    <X className="w-4 h-4" />
+                </button>
+            )}
+            {isValid ? (
+                <CheckCircle className="w-5 h-5 text-green-500 fill-green-100" />
+            ) : (
+                <button className="flex items-center space-x-1 px-2 py-1 bg-slate-100 rounded-md text-slate-500 hover:bg-sky-50 hover:text-sky-600 transition-colors">
+                    <ScanLine className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase">Scan</span>
+                </button>
+            )}
+        </div>
       </div>
 
       <div className="flex items-center space-x-3">
@@ -79,7 +100,7 @@ const ContainerInput: React.FC<ContainerInputProps> = ({ value, onChange, isVali
         <div className="flex-1 relative">
             <input
             ref={numberRef}
-            type="tel" // Keypad for numbers
+            type="tel"
             value={numberPart}
             onChange={handleNumberChange}
             onFocus={onFocus}
