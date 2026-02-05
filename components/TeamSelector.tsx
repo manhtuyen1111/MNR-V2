@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Team } from '../types';
 import { Check, Settings2, Plus, Users, Lock, X } from 'lucide-react';
@@ -19,15 +20,16 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    if (isDisabled) setIsOpen(false);
-  }, [isDisabled]);
-
+  // Auto-select and lock team if assigned to user
   useEffect(() => {
     if (assignedTeamId && selectedTeamId !== assignedTeamId) {
       onSelect(assignedTeamId);
     }
   }, [assignedTeamId, onSelect, selectedTeamId]);
+
+  useEffect(() => {
+    if (isDisabled) setIsOpen(false);
+  }, [isDisabled]);
 
   useEffect(() => {
     if (isActive && !selectedTeamId && !isDisabled && !assignedTeamId) {
@@ -74,9 +76,9 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
            
            <div className="flex items-center space-x-2">
               {assignedTeamId && (
-                  <div className="flex items-center text-slate-400 bg-slate-100 px-2 py-1 rounded text-xs font-bold">
+                  <div className="flex items-center text-sky-600 bg-sky-50 px-2 py-1 rounded-lg text-[10px] font-black border border-sky-100 uppercase tracking-tighter">
                       <Lock className="w-3 h-3 mr-1" />
-                      <span>Cố định</span>
+                      <span>Cố định tổ</span>
                   </div>
               )}
               {isCompleted && !isActive && <Check className="w-8 h-8 text-green-600 stroke-[3]" />}
@@ -90,6 +92,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
               ${isDisabled ? 'bg-slate-100 border-slate-200' : 'bg-white'}
               ${selectedTeam ? selectedTeam.color + ' border-transparent shadow-md' : 'border-slate-300 text-slate-500 border-dashed'}
               ${isActive && !selectedTeam ? 'animate-pulse border-sky-400 bg-sky-50' : ''}
+              ${assignedTeamId ? 'cursor-default' : 'cursor-pointer'}
           `}
         >
             {selectedTeam ? (
@@ -98,8 +101,8 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
                       <Users className="w-6 h-6" />
                     </div>
                     <div className="flex flex-col items-start">
-                       <span className="text-xs font-bold opacity-70 uppercase text-left">Đơn vị thi công</span>
-                       <span className="text-xl font-black tracking-tight leading-none mt-0.5">{selectedTeam.name}</span>
+                       <span className="text-[10px] font-black opacity-70 uppercase text-left tracking-tighter">Đơn vị thi công</span>
+                       <span className="text-xl font-black tracking-tighter leading-none mt-0.5">{selectedTeam.name}</span>
                     </div>
                 </div>
             ) : (
@@ -110,7 +113,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
         </button>
       </div>
 
-      {/* TEAM SELECTION MODAL - 2x2 Grid Centered */}
+      {/* TEAM SELECTION MODAL */}
       {isOpen && !isDisabled && !assignedTeamId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fadeIn">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>

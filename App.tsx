@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import ContainerInput from './components/ContainerInput';
@@ -46,21 +47,10 @@ const App: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'warning'} | null>(null);
 
-  // --- CHECK LOGIN SESSION (Optional persistence) ---
-  // For now, we require login on refresh as per typical industry app security or just keep in memory.
-  // We won't persist user to localStorage to ensure security unless requested.
-
   // --- USER TEAM LOCK LOGIC ---
   useEffect(() => {
       if (user && user.assignedTeamId) {
           setSelectedTeamId(user.assignedTeamId);
-          // If a team is assigned, auto move to step 3 IF container is valid
-          if (/^[A-Z]{4}\d{7}$/.test(containerNum)) {
-               // Logic handled in auto-advance effect below
-          }
-      } else {
-          // If logging out or changing users (not implemented but good practice), reset team selection if needed
-          // But here we keep selectedTeamId if user is admin
       }
   }, [user]);
 
@@ -100,15 +90,13 @@ const App: React.FC = () => {
   // Auto Advance from Team to Camera
   useEffect(() => {
       if (activeStep === 2 && isTeamSelected) {
-           // If user has assigned team, they might skip this step visually, 
-           // but logically we wait for container to be valid first.
            const timer = setTimeout(() => setActiveStep(3), 400);
            return () => clearTimeout(timer);
       }
   }, [selectedTeamId, activeStep, isTeamSelected]);
 
   const handleSelectTeam = (id: string) => {
-      if (user?.assignedTeamId && id !== user.assignedTeamId) return; // Prevent selection if locked
+      if (user?.assignedTeamId && id !== user.assignedTeamId) return; 
       setSelectedTeamId(id);
   };
 
@@ -141,11 +129,6 @@ const App: React.FC = () => {
       setImages(prev => [...prev, compressed]);
   };
 
-  /**
-   * Sync data to Google Script.
-   * @param record The full record
-   * @param specificImages If provided, only upload these images (for incremental updates). Otherwise uploads record.images.
-   */
   const syncRecordToSheet = async (record: RepairRecord, specificImages?: string[]): Promise<boolean> => {
       if (!settings.googleScriptUrl) return false;
       try {
@@ -154,7 +137,7 @@ const App: React.FC = () => {
             timestamp: new Date(record.timestamp).toISOString(),
             containerNumber: record.containerNumber,
             team: record.teamName,
-            images: specificImages || record.images, // Only send what is needed
+            images: specificImages || record.images, 
             editor: user?.username || 'unknown'
         };
         
@@ -181,7 +164,6 @@ const App: React.FC = () => {
     try {
         const teamName = teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
         
-        // Construct new record
         const newRecord: RepairRecord = {
             id: Date.now().toString(),
             containerNumber: containerNum,
@@ -189,23 +171,23 @@ const App: React.FC = () => {
             teamName,
             images: images,
             timestamp: Date.now(),
-            status: 'pending' // Default to pending
+            status: 'pending' 
         };
 
-        // 1. Save to IndexedDB
         await dbService.saveRecord(newRecord);
         setRecords(prev => [...prev, newRecord]);
 
-        // Reset Form
         setContainerNum('');
-        // Do NOT reset team if assigned
-        if (!user?.assignedTeamId) {
-            setSelectedTeamId('');
-        }
         setImages([]);
         setActiveStep(1);
+        
+        // Always ensure assigned team is re-selected after form reset
+        if (user?.assignedTeamId) {
+            setSelectedTeamId(user.assignedTeamId);
+        } else {
+            setSelectedTeamId('');
+        }
 
-        // 2. Sync
         if (!settings.googleScriptUrl) {
             setToast({ message: 'Đã lưu offline (Chưa cấu hình URL)', type: 'warning' });
             setIsSubmitting(false);
@@ -213,7 +195,6 @@ const App: React.FC = () => {
         }
 
         try {
-            // New record: Send ALL images
             const success = await syncRecordToSheet(newRecord);
             if (success) {
                 const syncedRecord = { ...newRecord, status: 'synced' as const };
@@ -247,7 +228,6 @@ const App: React.FC = () => {
       setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
       setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
 
-      // Retry: Send ALL images (since we don't track which ones failed, we assume all needed)
       const success = await syncRecordToSheet(record);
       if (success) {
         const updated = { ...record, status: 'synced' as const };
@@ -269,17 +249,13 @@ const App: React.FC = () => {
       }
   };
 
-  // Called when adding photos to an existing history record
   const handleUpdateRecord = async (updatedRecord: RepairRecord, newImagesOnly: string[] = []) => {
       try {
-          // Update DB with FULL image list
           await dbService.saveRecord(updatedRecord);
-          // Update State
           setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
           
           if (newImagesOnly.length === 0) return;
 
-          // Try to sync ONLY new images
           if (settings.googleScriptUrl) {
               setToast({ message: `Đang gửi thêm ${newImagesOnly.length} ảnh...`, type: 'warning' });
               
@@ -302,7 +278,6 @@ const App: React.FC = () => {
       }
   };
 
-  // --- RENDER LOGIN IF NOT AUTHENTICATED ---
   if (!user) {
       return <Login onLogin={setUser} />;
   }
@@ -314,9 +289,12 @@ const App: React.FC = () => {
       <Header />
       
       {/* User Info Bar */}
-      <div className="bg-[#0f172a] text-white px-4 py-1 text-xs font-bold flex justify-between items-center shadow-md z-30 border-b border-slate-700">
-          <span>Xin chào, {user.name}</span>
-          <button onClick={() => setUser(null)} className="text-sky-400 hover:text-white transition-colors">Đăng xuất</button>
+      <div className="bg-[#0f172a] text-white px-4 py-2 text-[10px] font-black uppercase tracking-widest flex justify-between items-center shadow-lg z-30 border-b border-white/5">
+          <div className="flex items-center space-x-2">
+             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+             <span>NHÂN VIÊN: {user.name}</span>
+          </div>
+          <button onClick={() => setUser(null)} className="text-sky-400 font-black hover:text-white transition-colors border-l border-white/10 pl-3">ĐĂNG XUẤT</button>
       </div>
 
       <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto">
@@ -324,18 +302,17 @@ const App: React.FC = () => {
         {/* Toast Notification */}
         {toast && (
             <div className="absolute top-4 left-4 right-4 z-[100] animate-fadeIn">
-                <div className={`px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 text-white font-bold text-sm border border-white/20 backdrop-blur-md ${
-                    toast.type === 'success' ? 'bg-green-600/95' : 
-                    toast.type === 'error' ? 'bg-red-600/95' : 'bg-orange-500/95'
+                <div className={`px-4 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 text-white font-black text-xs border border-white/10 backdrop-blur-xl ${
+                    toast.type === 'success' ? 'bg-green-600/90' : 
+                    toast.type === 'error' ? 'bg-red-600/90' : 'bg-orange-500/90'
                 }`}>
                     {toast.type === 'success' ? <Check className="w-5 h-5" /> : 
                      toast.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : <WifiOff className="w-5 h-5"/>}
-                    <span className="drop-shadow-sm">{toast.message}</span>
+                    <span className="uppercase tracking-tight">{toast.message}</span>
                 </div>
             </div>
         )}
 
-        {/* Team Manager Modal (Only allow for admins or unassigned users if strictly needed, but logic here allows admin/qc) */}
         {isTeamManagerOpen && (
             <TeamManager 
                 teams={teams}
@@ -346,8 +323,6 @@ const App: React.FC = () => {
 
         {activeTab === 'capture' ? (
           <div className="flex-1 flex flex-col px-4 py-4 space-y-5 min-h-0 overflow-y-auto pb-32 scrollbar-hide">
-                
-                {/* STEP 1: CONTAINER */}
                 <ContainerInput 
                     value={containerNum} 
                     onChange={setContainerNum}
@@ -358,7 +333,6 @@ const App: React.FC = () => {
                     onFocus={() => handleStepClick(1)}
                 />
 
-                {/* STEP 2: TEAM */}
                 <TeamSelector 
                     teams={teams}
                     selectedTeamId={selectedTeamId}
@@ -371,7 +345,6 @@ const App: React.FC = () => {
                     assignedTeamId={user.assignedTeamId}
                 />
 
-                {/* STEP 3: CAMERA */}
                 <CameraCapture 
                     images={images}
                     onAddImage={handleAddImage}
@@ -400,19 +373,18 @@ const App: React.FC = () => {
             </div>
         ) : (
           <div className="flex-1 overflow-y-auto scrollbar-hide">
-             {/* CHECK PERMISSION FOR SETTINGS */}
              {user.role === 'admin' ? (
                  <Settings settings={settings} onSave={handleSaveSettings} />
              ) : (
                  <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center animate-fadeIn">
-                    <div className="bg-slate-200 p-6 rounded-full mb-6 shadow-inner">
+                    <div className="bg-slate-200 p-6 rounded-full mb-6 shadow-inner border border-white">
                         <ShieldAlert className="w-16 h-16 text-slate-500" />
                     </div>
                     <h3 className="text-xl font-black text-slate-700 uppercase tracking-tight">Quyền hạn hạn chế</h3>
                     <p className="text-sm mt-3 text-slate-500 max-w-[250px] leading-relaxed">
                         Chỉ tài khoản <span className="font-bold text-slate-800">Admin</span> mới được phép thay đổi cấu hình hệ thống.
                     </p>
-                    <div className="mt-8 px-4 py-2 bg-slate-200/50 rounded-lg text-xs font-mono text-slate-500">
+                    <div className="mt-8 px-4 py-2 bg-slate-200/50 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-300/30">
                         User Role: {user.role.toUpperCase()}
                     </div>
                  </div>
@@ -420,19 +392,18 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Floating Action Button for Saving */}
         {activeTab === 'capture' && isFormComplete && (
             <div className="fixed bottom-24 right-4 z-40 animate-fadeIn">
                  <button
                     onClick={handleSaveData}
                     disabled={isSubmitting}
-                    className="flex items-center space-x-2 bg-gradient-to-tr from-sky-600 to-blue-700 text-white px-6 py-4 rounded-2xl shadow-xl shadow-sky-900/30 hover:scale-105 active:scale-95 transition-all border-2 border-white/20"
+                    className="flex items-center space-x-2 bg-gradient-to-tr from-sky-600 to-blue-700 text-white px-6 py-4.5 rounded-2xl shadow-2xl shadow-sky-900/40 hover:scale-105 active:scale-95 transition-all border-2 border-white/20"
                  >
                     {isSubmitting ? (
                         <Loader2 className="w-6 h-6 animate-spin" />
                     ) : (
                         <>
-                            <span className="font-black text-lg">LƯU & XONG</span>
+                            <span className="font-black text-lg uppercase tracking-tight">Hoàn tất lưu</span>
                             <div className="bg-white/20 p-1.5 rounded-full">
                                 <Send className="w-5 h-5" />
                             </div>
