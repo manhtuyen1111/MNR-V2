@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RepairRecord } from '../types';
 import { formatDate, compressImage } from '../utils';
-import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Check } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Check, Save } from 'lucide-react';
 
 interface HistoryListProps {
   records: RepairRecord[];
   onRetry: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdateRecord: (updatedRecord: RepairRecord, newImagesOnly: string[]) => void; // Update signature
+  onUpdateRecord: (updatedRecord: RepairRecord, newImagesOnly: string[]) => void;
 }
 
 const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, onUpdateRecord }) => {
@@ -25,7 +25,6 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
     );
   }
 
-  // Sort by newest first
   const sortedRecords = [...records].sort((a, b) => b.timestamp - a.timestamp);
 
   return (
@@ -42,14 +41,12 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
                 onClick={() => setViewingRecord(record)}
                 className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-slate-100 flex items-center justify-between group active:scale-[0.98] transition-transform cursor-pointer relative overflow-hidden"
             >
-                {/* Decoration bar on left */}
                 <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
                      record.status === 'synced' ? 'bg-green-500' :
                      record.status === 'error' ? 'bg-red-500' : 'bg-amber-400'
                 }`}></div>
 
                 <div className="flex items-center space-x-4 overflow-hidden pl-2">
-                    {/* Icon Box */}
                     <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center border-2 ${
                         record.status === 'synced' ? 'bg-green-50 border-green-100 text-green-600' :
                         record.status === 'error' ? 'bg-red-50 border-red-100 text-red-600' :
@@ -100,15 +97,14 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
         ))}
         </div>
 
-        {/* PROFESSIONAL IMAGE VIEWER */}
         {viewingRecord && (
             <ImageViewer 
                 record={viewingRecord} 
                 onClose={() => setViewingRecord(null)} 
                 onUpdate={(newTotalImages, newOnlyImages) => {
                     const updated = { ...viewingRecord, images: newTotalImages, status: 'pending' as const };
-                    setViewingRecord(updated); // Update local view
-                    onUpdateRecord(updated, newOnlyImages); // Propagate to DB & Sync
+                    setViewingRecord(updated);
+                    onUpdateRecord(updated, newOnlyImages);
                 }}
             />
         )}
@@ -116,7 +112,6 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
   );
 };
 
-// --- IMAGE VIEWER WITH CAMERA ---
 const ImageViewer: React.FC<{ 
     record: RepairRecord, 
     onClose: () => void,
@@ -124,9 +119,8 @@ const ImageViewer: React.FC<{
 }> = ({ record, onClose, onUpdate }) => {
     const [mode, setMode] = useState<'view' | 'camera'>('view');
     const [tempImages, setTempImages] = useState<string[]>(record.images);
-    const [newlyAdded, setNewlyAdded] = useState<string[]>([]);
+    const [stagedImages, setStagedImages] = useState<string[]>([]);
     
-    // Camera Logic embedded
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
@@ -168,27 +162,24 @@ const ImageViewer: React.FC<{
                 ctx.drawImage(v, 0, 0);
                 const raw = c.toDataURL('image/jpeg', 0.8);
                 const compressed = await compressImage(raw);
-                
-                const newTotal = [...tempImages, compressed];
-                const newBatch = [...newlyAdded, compressed];
-                
-                setTempImages(newTotal);
-                setNewlyAdded(newBatch);
-                
-                // Real-time save: Pass BOTH total list and new items list
-                // We pass `[compressed]` here so it uploads one by one or we can wait till close?
-                // Better UX: Upload immediately upon capture or batch at close? 
-                // Implementation: Pass cumulative updates.
-                onUpdate(newTotal, [compressed]); 
+                setStagedImages(prev => [...prev, compressed]);
             }
         }
+    };
+
+    const handleConfirmUpdate = () => {
+        if (stagedImages.length === 0) return;
+        const newTotal = [...tempImages, ...stagedImages];
+        setTempImages(newTotal);
+        onUpdate(newTotal, stagedImages);
+        setStagedImages([]);
+        stopCamera();
     };
 
     return (
         <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-fadeIn">
             {mode === 'view' ? (
                 <>
-                    {/* Header */}
                     <div className="h-16 flex items-center justify-between px-4 bg-white/10 backdrop-blur-md border-b border-white/10 shrink-0">
                         <div className="flex flex-col">
                             <span className="text-white font-black font-mono text-xl tracking-wider">
@@ -205,30 +196,27 @@ const ImageViewer: React.FC<{
                         </button>
                     </div>
                     
-                    {/* Grid View */}
                     <div className="flex-1 overflow-y-auto p-1 bg-[#121212]">
-                        <div className="grid grid-cols-2 gap-1">
+                        <div className="grid grid-cols-4 gap-1">
                             {tempImages.map((img, idx) => (
-                                <div key={idx} className="aspect-square relative group bg-gray-900 overflow-hidden">
+                                <div key={idx} className="aspect-square relative group bg-gray-900 overflow-hidden rounded-md">
                                     <img src={img} className="w-full h-full object-cover" loading="lazy" />
-                                    <div className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded backdrop-blur-sm">
+                                    <div className="absolute bottom-0.5 right-0.5 bg-black/60 text-white text-[8px] font-bold px-1 py-0.5 rounded backdrop-blur-sm">
                                         #{idx + 1}
                                     </div>
                                 </div>
                             ))}
                             
-                            {/* Add Photo Button in Grid */}
                             <button 
                                 onClick={startCamera}
-                                className="aspect-square bg-white/5 border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-white/50 hover:bg-white/10 hover:text-white hover:border-white/50 transition-all"
+                                className="aspect-square bg-white/5 border border-dashed border-white/20 rounded-md flex flex-col items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all"
                             >
-                                <Camera className="w-8 h-8 mb-2" />
-                                <span className="text-xs font-bold uppercase">Thêm ảnh</span>
+                                <Camera className="w-5 h-5 mb-1" />
+                                <span className="text-[8px] font-bold uppercase">Thêm</span>
                             </button>
                         </div>
                     </div>
 
-                    {/* Bottom Action */}
                     <div className="p-4 bg-black border-t border-white/10 pb-safe">
                         <button 
                             onClick={startCamera}
@@ -240,34 +228,60 @@ const ImageViewer: React.FC<{
                     </div>
                 </>
             ) : (
-                /* CAMERA OVERLAY FOR VIEW MODE */
                 <div className="flex flex-col h-full bg-black relative">
                     <canvas ref={canvasRef} className="hidden" />
                     <video ref={videoRef} autoPlay playsInline muted className="flex-1 w-full h-full object-cover" />
                     
-                    <button onClick={stopCamera} className="absolute top-4 right-4 p-3 bg-black/50 text-white rounded-full backdrop-blur-md">
-                        <X className="w-6 h-6" />
-                    </button>
+                    <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+                        <div className="flex flex-col">
+                            <span className="text-white text-xs font-bold bg-sky-600 px-3 py-1 rounded-full shadow-lg">ĐANG CHỤP BỔ SUNG</span>
+                            {stagedImages.length > 0 && (
+                                <span className="text-white text-[10px] font-bold mt-2 ml-1">Đã chụp: {stagedImages.length} ảnh mới</span>
+                            )}
+                        </div>
+                        <button onClick={stopCamera} className="p-2 bg-black/50 text-white rounded-full backdrop-blur-md">
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
 
-                    <div className="h-32 bg-black/80 absolute bottom-0 left-0 right-0 flex items-center justify-center pb-safe border-t border-white/10">
-                         <div className="flex items-center space-x-12">
-                             <div className="w-12"></div> {/* Spacer */}
+                    <div className="h-44 bg-black/90 absolute bottom-0 left-0 right-0 flex flex-col border-t border-white/10">
+                         {/* Staged photos preview */}
+                         <div className="h-14 flex items-center px-4 space-x-2 overflow-x-auto scrollbar-hide py-2">
+                             {stagedImages.map((img, idx) => (
+                                 <div key={idx} className="h-full aspect-square rounded border border-white/20 overflow-hidden shrink-0 relative">
+                                     <img src={img} className="w-full h-full object-cover" />
+                                     <button 
+                                        onClick={() => setStagedImages(prev => prev.filter((_, i) => i !== idx))}
+                                        className="absolute top-0 right-0 bg-red-600 p-0.5"
+                                     >
+                                        <X className="w-3 h-3 text-white" />
+                                     </button>
+                                 </div>
+                             ))}
+                             {stagedImages.length === 0 && <span className="text-white/30 text-[10px] italic">Chưa có ảnh mới nào được chụp...</span>}
+                         </div>
+
+                         <div className="flex-1 flex items-center justify-between px-8 pb-safe">
+                             <div className="w-12"></div>
                              <button 
                                 onClick={capture}
-                                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center active:scale-90 transition-transform"
+                                className="w-20 h-20 rounded-full border-4 border-white/30 flex items-center justify-center active:scale-90 transition-transform"
                              >
                                  <div className="w-16 h-16 bg-white rounded-full"></div>
                              </button>
-                             <button 
-                                onClick={stopCamera}
-                                className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white font-bold"
-                             >
-                                 <Check className="w-6 h-6" />
-                             </button>
+                             
+                             <div className="w-12">
+                                {stagedImages.length > 0 && (
+                                    <button 
+                                        onClick={handleConfirmUpdate}
+                                        className="w-12 h-12 rounded-2xl bg-green-600 flex flex-col items-center justify-center text-white shadow-lg shadow-green-900/40 animate-fadeIn"
+                                    >
+                                        <Save className="w-5 h-5 mb-0.5" />
+                                        <span className="text-[8px] font-black">LƯU</span>
+                                    </button>
+                                )}
+                             </div>
                          </div>
-                    </div>
-                    <div className="absolute top-4 left-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md">
-                        Đang chụp bổ sung: {newlyAdded.length + 1}
                     </div>
                 </div>
             )}
