@@ -1,0 +1,7 @@
+{
+  "name": "ContainerQC - Nghiệm thu Sửa chữa",
+  "description": "Ứng dụng chụp ảnh nghiệm thu sửa chữa container tại hiện trường. Hỗ trợ nhập số container, chọn tổ đội và chụp ảnh lưu trữ.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
