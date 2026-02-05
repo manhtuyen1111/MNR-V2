@@ -152,13 +152,17 @@ const App: React.FC = () => {
             images: record.images,
             editor: user?.username || 'unknown' // Track who edited
         };
-        await fetch(settings.googleScriptUrl, {
+        
+        // Use default 'cors' mode. The script must output text/plain content.
+        const response = await fetch(settings.googleScriptUrl, {
             method: 'POST',
-            mode: 'no-cors', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify(payload)
         });
-        return true;
+        
+        if (response.ok) {
+            return true;
+        }
+        return false;
       } catch (e) {
         console.error("Sync error", e);
         return false;
