@@ -11,7 +11,7 @@ import Login from './components/Login';
 import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
-import { Check, AlertTriangle, Send, Loader2, WifiOff } from 'lucide-react';
+import { Check, AlertTriangle, Send, Loader2, WifiOff, Lock, ShieldAlert } from 'lucide-react';
 
 const App: React.FC = () => {
   // --- AUTHENTICATION STATE ---
@@ -388,7 +388,23 @@ const App: React.FC = () => {
             </div>
         ) : (
           <div className="flex-1 overflow-y-auto scrollbar-hide">
-             <Settings settings={settings} onSave={handleSaveSettings} />
+             {/* CHECK PERMISSION FOR SETTINGS */}
+             {user.role === 'admin' ? (
+                 <Settings settings={settings} onSave={handleSaveSettings} />
+             ) : (
+                 <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center animate-fadeIn">
+                    <div className="bg-slate-200 p-6 rounded-full mb-6 shadow-inner">
+                        <ShieldAlert className="w-16 h-16 text-slate-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-slate-700 uppercase tracking-tight">Quyền hạn hạn chế</h3>
+                    <p className="text-sm mt-3 text-slate-500 max-w-[250px] leading-relaxed">
+                        Chỉ tài khoản <span className="font-bold text-slate-800">Admin</span> mới được phép thay đổi cấu hình hệ thống.
+                    </p>
+                    <div className="mt-8 px-4 py-2 bg-slate-200/50 rounded-lg text-xs font-mono text-slate-500">
+                        User Role: {user.role.toUpperCase()}
+                    </div>
+                 </div>
+             )}
           </div>
         )}
 
@@ -416,7 +432,12 @@ const App: React.FC = () => {
 
       </main>
 
-      <BottomNav currentTab={activeTab} onChangeTab={setActiveTab} pendingCount={pendingCount} />
+      <BottomNav 
+        currentTab={activeTab} 
+        onChangeTab={setActiveTab} 
+        pendingCount={pendingCount} 
+        userRole={user.role}
+      />
     </div>
   );
 };
