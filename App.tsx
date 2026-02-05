@@ -9,19 +9,19 @@ import HistoryList from './components/HistoryList';
 import TeamManager from './components/TeamManager';
 import { TabView, Team, AppSettings, RepairRecord } from './types';
 import { REPAIR_TEAMS } from './constants';
-import { compressImage } from './utils';
+import { compressImage, dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff } from 'lucide-react';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabView>('capture');
   
-  // Settings
+  // Settings (Small data -> Keep in LocalStorage)
   const [settings, setSettings] = useState<AppSettings>(() => {
      const saved = localStorage.getItem('appSettings');
      return saved ? JSON.parse(saved) : { googleScriptUrl: '' };
   });
 
-  // Data State
+  // Teams (Small data -> Keep in LocalStorage)
   const [teams, setTeams] = useState<Team[]>(() => {
       const saved = localStorage.getItem('repairTeams');
       return saved ? JSON.parse(saved) : REPAIR_TEAMS;
@@ -40,20 +40,29 @@ const App: React.FC = () => {
   const isTeamSelected = selectedTeamId !== '';
   const isFormComplete = isContainerValid && isTeamSelected && images.length > 0;
   
-  // Records State (Offline First)
-  const [records, setRecords] = useState<RepairRecord[]>(() => {
-      const saved = localStorage.getItem('repairRecords');
-      return saved ? JSON.parse(saved) : [];
-  });
+  // Records State (Large data -> Use IndexedDB)
+  const [records, setRecords] = useState<RepairRecord[]>([]);
+  const [isLoadingRecords, setIsLoadingRecords] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'warning'} | null>(null);
 
-  // Persist Data
+  // Load Records from IndexedDB on startup
   useEffect(() => {
-      localStorage.setItem('repairRecords', JSON.stringify(records));
-  }, [records]);
+    const loadData = async () => {
+      try {
+        const savedRecords = await dbService.getAllRecords();
+        setRecords(savedRecords);
+      } catch (err) {
+        console.error("Failed to load records from DB", err);
+      } finally {
+        setIsLoadingRecords(false);
+      }
+    };
+    loadData();
+  }, []);
 
+  // Persist Teams & Settings (LocalStorage)
   useEffect(() => {
       localStorage.setItem('repairTeams', JSON.stringify(teams));
   }, [teams]);
@@ -96,6 +105,7 @@ const App: React.FC = () => {
   };
 
   const handleAddImage = async (imgData: string) => {
+      // Compress immediately upon capture to save memory
       const compressed = await compressImage(imgData);
       setImages(prev => [...prev, compressed]);
   };
@@ -126,47 +136,62 @@ const App: React.FC = () => {
     if (!isFormComplete) return;
     
     setIsSubmitting(true);
-
-    const teamName = teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
-    const newRecord: RepairRecord = {
-        id: Date.now().toString(),
-        containerNumber: containerNum,
-        teamId: selectedTeamId,
-        teamName,
-        images: images,
-        timestamp: Date.now(),
-        status: 'pending' // Default to pending
-    };
-
-    // 1. Save locally
-    const updatedRecords = [...records, newRecord];
-    setRecords(updatedRecords);
-
-    // Reset Form
-    setContainerNum('');
-    setSelectedTeamId('');
-    setImages([]);
-    setActiveStep(1);
-
-    // 2. Try to Sync
-    if (!settings.googleScriptUrl) {
-        setToast({ message: 'Đã lưu offline (Chưa cấu hình URL)', type: 'warning' });
-        setIsSubmitting(false);
-        return;
-    }
-
+    
     try {
-        const success = await syncRecordToSheet(newRecord);
-        if (success) {
-            setRecords(prev => prev.map(r => r.id === newRecord.id ? { ...r, status: 'synced' } : r));
-            setToast({ message: 'Đã lưu và gửi dữ liệu thành công!', type: 'success' });
-        } else {
-             setRecords(prev => prev.map(r => r.id === newRecord.id ? { ...r, status: 'error' } : r));
-             setToast({ message: 'Gửi thất bại. Đã lưu offline.', type: 'warning' });
+        const teamName = teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
+        
+        // Construct new record
+        const newRecord: RepairRecord = {
+            id: Date.now().toString(),
+            containerNumber: containerNum,
+            teamId: selectedTeamId,
+            teamName,
+            images: images,
+            timestamp: Date.now(),
+            status: 'pending' // Default to pending
+        };
+
+        // 1. Save to IndexedDB (Critical for large images)
+        await dbService.saveRecord(newRecord);
+        
+        // Update UI State
+        setRecords(prev => [...prev, newRecord]);
+
+        // Reset Form Immediately
+        setContainerNum('');
+        setSelectedTeamId('');
+        setImages([]);
+        setActiveStep(1);
+
+        // 2. Try to Sync to Google Sheets
+        if (!settings.googleScriptUrl) {
+            setToast({ message: 'Đã lưu offline (Chưa cấu hình URL)', type: 'warning' });
+            setIsSubmitting(false);
+            return;
         }
-    } catch (error) {
-         setRecords(prev => prev.map(r => r.id === newRecord.id ? { ...r, status: 'error' } : r));
-         setToast({ message: 'Lỗi mạng. Đã lưu offline.', type: 'warning' });
+
+        try {
+            const success = await syncRecordToSheet(newRecord);
+            if (success) {
+                const syncedRecord = { ...newRecord, status: 'synced' as const };
+                await dbService.saveRecord(syncedRecord); // Update DB
+                setRecords(prev => prev.map(r => r.id === newRecord.id ? syncedRecord : r));
+                setToast({ message: 'Đã lưu và gửi dữ liệu thành công!', type: 'success' });
+            } else {
+                const errorRecord = { ...newRecord, status: 'error' as const };
+                await dbService.saveRecord(errorRecord); // Update DB
+                setRecords(prev => prev.map(r => r.id === newRecord.id ? errorRecord : r));
+                setToast({ message: 'Gửi thất bại. Đã lưu offline.', type: 'warning' });
+            }
+        } catch (error) {
+             const errorRecord = { ...newRecord, status: 'error' as const };
+             await dbService.saveRecord(errorRecord); // Update DB
+             setRecords(prev => prev.map(r => r.id === newRecord.id ? errorRecord : r));
+             setToast({ message: 'Lỗi mạng. Đã lưu offline.', type: 'warning' });
+        }
+    } catch (criticalError) {
+        console.error("CRITICAL SAVE ERROR", criticalError);
+        setToast({ message: 'Lỗi nghiêm trọng: Không thể lưu dữ liệu (Bộ nhớ đầy?)', type: 'error' });
     } finally {
         setIsSubmitting(false);
     }
@@ -176,21 +201,27 @@ const App: React.FC = () => {
       const record = records.find(r => r.id === id);
       if (!record || !settings.googleScriptUrl) return;
 
+      // Optimistic update UI
       setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
       setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
 
       const success = await syncRecordToSheet(record);
       if (success) {
-        setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'synced' } : r));
+        const updated = { ...record, status: 'synced' as const };
+        await dbService.saveRecord(updated);
+        setRecords(prev => prev.map(r => r.id === id ? updated : r));
         setToast({ message: 'Gửi lại thành công!', type: 'success' });
       } else {
-        setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'error' } : r));
+        const updated = { ...record, status: 'error' as const };
+        await dbService.saveRecord(updated);
+        setRecords(prev => prev.map(r => r.id === id ? updated : r));
         setToast({ message: 'Vẫn chưa gửi được.', type: 'error' });
       }
   };
 
-  const handleDeleteRecord = (id: string) => {
+  const handleDeleteRecord = async (id: string) => {
       if (window.confirm('Bạn có chắc muốn xóa hồ sơ này?')) {
+          await dbService.deleteRecord(id);
           setRecords(prev => prev.filter(r => r.id !== id));
       }
   };
@@ -265,7 +296,14 @@ const App: React.FC = () => {
           </div>
         ) : activeTab === 'history' ? (
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-                <HistoryList records={records} onRetry={handleRetry} onDelete={handleDeleteRecord} />
+                {isLoadingRecords ? (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                        <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                        <span className="text-xs">Đang tải dữ liệu...</span>
+                    </div>
+                ) : (
+                    <HistoryList records={records} onRetry={handleRetry} onDelete={handleDeleteRecord} />
+                )}
             </div>
         ) : (
           <div className="flex-1 overflow-y-auto scrollbar-hide">

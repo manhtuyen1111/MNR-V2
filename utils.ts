@@ -1,4 +1,7 @@
-export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.7): Promise<string> => {
+import { RepairRecord } from './types';
+
+// --- IMAGE COMPRESSION ---
+export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.6): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -17,6 +20,7 @@ export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.7)
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
+        // Reduce quality slightly to 0.6 for better performance with many images
         resolve(canvas.toDataURL('image/jpeg', quality));
       } else {
         resolve(base64Str); // Fallback
@@ -33,4 +37,68 @@ export const formatDate = (timestamp: number): string => {
     day: '2-digit',
     month: '2-digit',
   });
+};
+
+// --- INDEXED DB STORAGE (For handling large amounts of photos) ---
+const DB_NAME = 'ContainerQC_DB';
+const DB_VERSION = 1;
+const STORE_NAME = 'repair_records';
+
+const openDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+      }
+    };
+  });
+};
+
+export const dbService = {
+  getAllRecords: async (): Promise<RepairRecord[]> => {
+    try {
+      const db = await openDB();
+      return new Promise((resolve, reject) => {
+        const transaction = db.transaction(STORE_NAME, 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    } catch (error) {
+      console.error('DB Error:', error);
+      return [];
+    }
+  },
+
+  saveRecord: async (record: RepairRecord): Promise<void> => {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put(record);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  },
+
+  deleteRecord: async (id: string): Promise<void> => {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.delete(id);
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
 };
