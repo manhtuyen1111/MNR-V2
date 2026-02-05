@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { Camera, X, Plus, Image as ImageIcon } from 'lucide-react';
+import { Camera, X, Plus } from 'lucide-react';
 
 interface CameraCaptureProps {
   images: string[];

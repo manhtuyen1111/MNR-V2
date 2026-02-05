@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Wifi } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
