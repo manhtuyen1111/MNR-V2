@@ -60,9 +60,9 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
        <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl">
             <h3 className="font-bold text-blue-800 text-sm mb-2">Hướng dẫn nhanh:</h3>
             <ul className="list-disc list-inside text-xs text-blue-700 space-y-1">
-                <li>Mở Google Sheet -> Extensions -> Apps Script.</li>
-                <li>Deploy dạng Web App.</li>
-                <li>Quyền truy cập: "Anyone" (Bất kỳ ai).</li>
+                <li>Mở Google Sheet &rarr; Extensions &rarr; Apps Script.</li>
+                <li>Deploy dạng Web App (Triển khai ứng dụng web).</li>
+                <li>Quyền truy cập: &quot;Anyone&quot; (Bất kỳ ai).</li>
                 <li>Copy URL và dán vào ô trên.</li>
             </ul>
        </div>
