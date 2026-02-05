@@ -50,26 +50,37 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
     setIsOpen(false);
   };
 
-  // Improved finding logic to handle assigned team even if not in current team list
+  /**
+   * FIX: Ưu tiên sử dụng mapping ID từ tài khoản người dùng để hiển thị tên.
+   * Điều này đảm bảo khi đăng nhập bằng qc02 (t2), hệ thống luôn hiện "TỔ 2" 
+   * kể cả khi danh sách teams trong localStorage bị thay đổi hoặc trống.
+   */
   const getSelectedTeam = () => {
-    // 1. Try finding in current teams list
-    let team = teams.find(t => t.id === selectedTeamId);
-    if (team) return team;
+    const currentId = assignedTeamId || selectedTeamId;
+    if (!currentId) return null;
 
-    // 2. Fallback for assigned team if not found in list
-    if (assignedTeamId && selectedTeamId === assignedTeamId) {
-        // Simple heuristic to name it if it's t1, t2...
-        const name = assignedTeamId === 't1' ? 'TỔ 1' : 
-                     assignedTeamId === 't2' ? 'TỔ 2' : 
-                     assignedTeamId === 't3' ? 'TỔ 3' : 
-                     assignedTeamId === 't4' ? 'TỔ 4' : 'TỔ ĐÃ CHỈ ĐỊNH';
-        return { 
-            id: assignedTeamId, 
-            name: name, 
-            color: 'bg-sky-100 text-sky-700 border-sky-200' 
+    // Mapping chuẩn cho các ID hệ thống
+    const systemTeamNames: Record<string, string> = {
+        't1': 'TỔ 1',
+        't2': 'TỔ 2',
+        't3': 'TỔ 3',
+        't4': 'TỔ 4'
+    };
+
+    // 1. Nếu là ID hệ thống (t1, t2...), trả về object chuẩn ngay lập tức
+    if (systemTeamNames[currentId]) {
+        return {
+            id: currentId,
+            name: systemTeamNames[currentId],
+            color: currentId === 't1' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                   currentId === 't2' ? 'bg-green-100 text-green-700 border-green-200' :
+                   currentId === 't3' ? 'bg-orange-100 text-orange-700 border-orange-200' :
+                   'bg-purple-100 text-purple-700 border-purple-200'
         };
     }
-    return null;
+
+    // 2. Nếu không phải ID hệ thống, tìm trong danh sách tùy chỉnh
+    return teams.find(t => t.id === currentId) || null;
   };
 
   const selectedTeam = getSelectedTeam();
@@ -98,7 +109,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
            
            <div className="flex items-center space-x-2">
               {assignedTeamId && (
-                  <div className="flex items-center text-sky-600 bg-sky-50 px-2 py-1 rounded-lg text-[10px] font-black border border-sky-100 uppercase tracking-tighter shadow-sm animate-pulse">
+                  <div className="flex items-center text-sky-600 bg-sky-50 px-2 py-1 rounded-lg text-[10px] font-black border border-sky-100 uppercase tracking-tighter shadow-sm">
                       <Lock className="w-3 h-3 mr-1" />
                       <span>Cố định tổ</span>
                   </div>
