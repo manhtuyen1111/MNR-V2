@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RepairRecord } from '../types';
 import { formatDate, compressImage } from '../utils';
-import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Check, Save } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Save } from 'lucide-react';
 
 interface HistoryListProps {
   records: RepairRecord[];
@@ -149,6 +149,7 @@ const ImageViewer: React.FC<{
         if (stream) stream.getTracks().forEach(t => t.stop());
         setStream(null);
         setMode('view');
+        setStagedImages([]);
     };
 
     const capture = async () => {
@@ -163,6 +164,7 @@ const ImageViewer: React.FC<{
                 const raw = c.toDataURL('image/jpeg', 0.8);
                 const compressed = await compressImage(raw);
                 setStagedImages(prev => [...prev, compressed]);
+                if (navigator.vibrate) navigator.vibrate(30);
             }
         }
     };
@@ -182,7 +184,7 @@ const ImageViewer: React.FC<{
                 <>
                     <div className="h-16 flex items-center justify-between px-4 bg-white/10 backdrop-blur-md border-b border-white/10 shrink-0">
                         <div className="flex flex-col">
-                            <span className="text-white font-black font-mono text-xl tracking-wider">
+                            <span className="text-white font-black font-mono text-xl tracking-wider uppercase">
                                 {record.containerNumber}
                             </span>
                             <div className="flex items-center space-x-2 text-white/60 text-xs font-bold uppercase">
@@ -196,10 +198,11 @@ const ImageViewer: React.FC<{
                         </button>
                     </div>
                     
+                    {/* GRID VIEW: 4 images per row */}
                     <div className="flex-1 overflow-y-auto p-1 bg-[#121212]">
                         <div className="grid grid-cols-4 gap-1">
                             {tempImages.map((img, idx) => (
-                                <div key={idx} className="aspect-square relative group bg-gray-900 overflow-hidden rounded-md">
+                                <div key={idx} className="aspect-square relative group bg-gray-900 overflow-hidden rounded-md border border-white/5">
                                     <img src={img} className="w-full h-full object-cover" loading="lazy" />
                                     <div className="absolute bottom-0.5 right-0.5 bg-black/60 text-white text-[8px] font-bold px-1 py-0.5 rounded backdrop-blur-sm">
                                         #{idx + 1}
@@ -212,7 +215,7 @@ const ImageViewer: React.FC<{
                                 className="aspect-square bg-white/5 border border-dashed border-white/20 rounded-md flex flex-col items-center justify-center text-white/50 hover:bg-white/10 hover:text-white transition-all"
                             >
                                 <Camera className="w-5 h-5 mb-1" />
-                                <span className="text-[8px] font-bold uppercase">Thêm</span>
+                                <span className="text-[8px] font-black uppercase">Thêm</span>
                             </button>
                         </div>
                     </div>
@@ -220,9 +223,9 @@ const ImageViewer: React.FC<{
                     <div className="p-4 bg-black border-t border-white/10 pb-safe">
                         <button 
                             onClick={startCamera}
-                            className="w-full bg-sky-600 text-white font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center space-x-2 active:scale-95 transition-transform"
+                            className="w-full bg-sky-600 text-white font-black py-4 rounded-2xl shadow-lg flex items-center justify-center space-x-3 active:scale-95 transition-transform"
                         >
-                            <Camera className="w-5 h-5" />
+                            <Camera className="w-6 h-6" />
                             <span>CHỤP BỔ SUNG</span>
                         </button>
                     </div>
@@ -234,50 +237,50 @@ const ImageViewer: React.FC<{
                     
                     <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
                         <div className="flex flex-col">
-                            <span className="text-white text-xs font-bold bg-sky-600 px-3 py-1 rounded-full shadow-lg">ĐANG CHỤP BỔ SUNG</span>
+                            <span className="text-white text-xs font-black bg-sky-600 px-4 py-1.5 rounded-full shadow-lg border border-sky-400">CHỤP BỔ SUNG</span>
                             {stagedImages.length > 0 && (
-                                <span className="text-white text-[10px] font-bold mt-2 ml-1">Đã chụp: {stagedImages.length} ảnh mới</span>
+                                <span className="text-white text-[10px] font-black mt-2 ml-1 drop-shadow-md">Ảnh mới: {stagedImages.length}</span>
                             )}
                         </div>
-                        <button onClick={stopCamera} className="p-2 bg-black/50 text-white rounded-full backdrop-blur-md">
+                        <button onClick={stopCamera} className="p-2.5 bg-black/50 text-white rounded-full backdrop-blur-md">
                             <X className="w-6 h-6" />
                         </button>
                     </div>
 
                     <div className="h-44 bg-black/90 absolute bottom-0 left-0 right-0 flex flex-col border-t border-white/10">
                          {/* Staged photos preview */}
-                         <div className="h-14 flex items-center px-4 space-x-2 overflow-x-auto scrollbar-hide py-2">
+                         <div className="h-16 flex items-center px-4 space-x-2 overflow-x-auto scrollbar-hide py-2 bg-white/5">
                              {stagedImages.map((img, idx) => (
-                                 <div key={idx} className="h-full aspect-square rounded border border-white/20 overflow-hidden shrink-0 relative">
+                                 <div key={idx} className="h-full aspect-square rounded-lg border border-white/20 overflow-hidden shrink-0 relative">
                                      <img src={img} className="w-full h-full object-cover" />
                                      <button 
                                         onClick={() => setStagedImages(prev => prev.filter((_, i) => i !== idx))}
-                                        className="absolute top-0 right-0 bg-red-600 p-0.5"
+                                        className="absolute top-0 right-0 bg-red-600/80 p-1 backdrop-blur-sm rounded-bl-lg"
                                      >
                                         <X className="w-3 h-3 text-white" />
                                      </button>
                                  </div>
                              ))}
-                             {stagedImages.length === 0 && <span className="text-white/30 text-[10px] italic">Chưa có ảnh mới nào được chụp...</span>}
+                             {stagedImages.length === 0 && <span className="text-white/30 text-[10px] italic font-bold">Vui lòng chụp ảnh mới...</span>}
                          </div>
 
                          <div className="flex-1 flex items-center justify-between px-8 pb-safe">
-                             <div className="w-12"></div>
+                             <div className="w-14"></div>
                              <button 
                                 onClick={capture}
-                                className="w-20 h-20 rounded-full border-4 border-white/30 flex items-center justify-center active:scale-90 transition-transform"
+                                className="w-20 h-20 rounded-full border-[6px] border-white/20 flex items-center justify-center active:scale-90 transition-transform bg-transparent"
                              >
-                                 <div className="w-16 h-16 bg-white rounded-full"></div>
+                                 <div className="w-16 h-16 bg-white rounded-full shadow-[0_0_20px_rgba(255,255,255,0.4)]"></div>
                              </button>
                              
-                             <div className="w-12">
+                             <div className="w-14">
                                 {stagedImages.length > 0 && (
                                     <button 
                                         onClick={handleConfirmUpdate}
-                                        className="w-12 h-12 rounded-2xl bg-green-600 flex flex-col items-center justify-center text-white shadow-lg shadow-green-900/40 animate-fadeIn"
+                                        className="w-14 h-14 rounded-2xl bg-green-600 flex flex-col items-center justify-center text-white shadow-xl shadow-green-900/40 animate-fadeIn border border-green-400"
                                     >
-                                        <Save className="w-5 h-5 mb-0.5" />
-                                        <span className="text-[8px] font-black">LƯU</span>
+                                        <Save className="w-6 h-6 mb-0.5" />
+                                        <span className="text-[8px] font-black uppercase text-center leading-[1]">Cập nhật<br/>bổ sung</span>
                                     </button>
                                 )}
                              </div>

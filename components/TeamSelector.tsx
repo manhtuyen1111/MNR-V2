@@ -110,17 +110,17 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
         </button>
       </div>
 
-      {/* TEAM SELECTION MODAL - Centered for Mobile */}
+      {/* TEAM SELECTION MODAL - 2x2 Grid Centered */}
       {isOpen && !isDisabled && !assignedTeamId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fadeIn">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>
           <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl relative z-10 overflow-hidden">
-            <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
               <h3 className="font-black text-slate-800 tracking-tight flex items-center">
                 <Users className="w-5 h-5 mr-2 text-sky-600" />
                 CHỌN TỔ ĐỘI
               </h3>
-              <button onClick={() => setIsOpen(false)} className="p-2 bg-slate-100 rounded-full text-slate-500">
+              <button onClick={() => setIsOpen(false)} className="p-2 bg-slate-200 rounded-full text-slate-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -141,7 +141,7 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
                         }
                       `}
                     >
-                      <span className="text-lg uppercase">{team.name}</span>
+                      <span className="text-lg uppercase font-black">{team.name}</span>
                       {isSelected && <Check className="w-5 h-5 mt-1" />}
                     </button>
                   );
