@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User } from '../types';
 import { USERS } from '../constants';
-import { ShieldCheck, User as UserIcon, Lock, ArrowRight, Loader2, Container } from 'lucide-react';
+import { User as UserIcon, Lock, ArrowRight, Loader2, Container } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (user: User) => void;

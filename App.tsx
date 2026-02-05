@@ -11,7 +11,7 @@ import Login from './components/Login';
 import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
-import { Check, AlertTriangle, Send, Loader2, WifiOff, Lock, ShieldAlert } from 'lucide-react';
+import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert } from 'lucide-react';
 
 const App: React.FC = () => {
   // --- AUTHENTICATION STATE ---
