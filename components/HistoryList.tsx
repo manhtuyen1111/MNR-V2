@@ -1,7 +1,9 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { RepairRecord } from '../types';
 import { formatDate, compressImage } from '../utils';
-import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Save } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Save, Filter, Calendar, Users } from 'lucide-react';
+import { REPAIR_TEAMS } from '../constants';
 
 interface HistoryListProps {
   records: RepairRecord[];
@@ -12,6 +14,46 @@ interface HistoryListProps {
 
 const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, onUpdateRecord }) => {
   const [viewingRecord, setViewingRecord] = useState<RepairRecord | null>(null);
+  const [filterTeam, setFilterTeam] = useState<string>('all');
+  const [filterDateRange, setFilterDateRange] = useState<{start: string, end: string}>({start: '', end: ''});
+  const [quickDate, setQuickDate] = useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filtering logic
+  const filteredRecords = records.filter(record => {
+    // Team Filter
+    if (filterTeam !== 'all' && record.teamId !== filterTeam) return false;
+
+    // Date Filter
+    const recordDate = new Date(record.timestamp);
+    recordDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    if (quickDate === 'today') {
+      if (recordDate.getTime() !== today.getTime()) return false;
+    } else if (quickDate === 'yesterday') {
+      if (recordDate.getTime() !== yesterday.getTime()) return false;
+    } else if (quickDate === 'custom') {
+      if (filterDateRange.start) {
+        const start = new Date(filterDateRange.start);
+        start.setHours(0, 0, 0, 0);
+        if (recordDate < start) return false;
+      }
+      if (filterDateRange.end) {
+        const end = new Date(filterDateRange.end);
+        end.setHours(23, 59, 59, 999);
+        if (recordDate > end) return false;
+      }
+    }
+
+    return true;
+  });
+
+  const sortedRecords = [...filteredRecords].sort((a, b) => b.timestamp - a.timestamp);
 
   if (records.length === 0) {
     return (
@@ -25,76 +67,176 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
     );
   }
 
-  const sortedRecords = [...records].sort((a, b) => b.timestamp - a.timestamp);
-
   return (
     <>
         <div className="p-4 space-y-4 pb-24 animate-fadeIn">
-        <div className="flex items-center justify-between mb-2 px-1">
-            <h2 className="text-sm font-black text-slate-600 uppercase tracking-wider">Lịch sử gần đây</h2>
-            <span className="text-xs font-bold bg-slate-200 text-slate-600 px-2 py-1 rounded-lg">{records.length} hồ sơ</span>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 mb-2">
+            <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xs font-black text-slate-600 uppercase tracking-wider flex items-center">
+                    <Filter className="w-3.5 h-3.5 mr-1.5 text-sky-600" />
+                    Bộ lọc tìm kiếm
+                </h2>
+                <button 
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded"
+                >
+                    {showFilters ? 'Thu gọn' : 'Mở rộng'}
+                </button>
+            </div>
+
+            {/* Quick Date Filters */}
+            <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-2">
+                {[
+                    {id: 'all', label: 'Tất cả'},
+                    {id: 'today', label: 'Hôm nay'},
+                    {id: 'yesterday', label: 'Hôm qua'},
+                    {id: 'custom', label: 'Tùy chọn'}
+                ].map(item => (
+                    <button
+                        key={item.id}
+                        onClick={() => setQuickDate(item.id as any)}
+                        className={`shrink-0 px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${quickDate === item.id ? 'bg-sky-600 border-sky-600 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'}`}
+                    >
+                        {item.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Expanded Filters */}
+            {showFilters && (
+                <div className="mt-3 pt-3 border-t border-slate-100 space-y-3 animate-fadeIn">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black uppercase text-slate-400 flex items-center">
+                                <Users className="w-3 h-3 mr-1" /> Tổ đội
+                            </label>
+                            <select 
+                                value={filterTeam}
+                                onChange={(e) => setFilterTeam(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-bold text-slate-700 outline-none focus:border-sky-500"
+                            >
+                                <option value="all">Tất cả tổ</option>
+                                {REPAIR_TEAMS.map(team => (
+                                    <option key={team.id} value={team.id}>{team.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black uppercase text-slate-400 flex items-center">
+                                <Calendar className="w-3 h-3 mr-1" /> Từ ngày
+                            </label>
+                            <input 
+                                type="date"
+                                value={filterDateRange.start}
+                                onChange={(e) => {
+                                    setQuickDate('custom');
+                                    setFilterDateRange(prev => ({...prev, start: e.target.value}));
+                                }}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500"
+                            />
+                        </div>
+                    </div>
+                    {quickDate === 'custom' && (
+                        <div className="grid grid-cols-2 gap-3">
+                             <div className="space-y-1">
+                                <label className="text-[9px] font-black uppercase text-slate-400 flex items-center">
+                                    <Calendar className="w-3 h-3 mr-1" /> Đến ngày
+                                </label>
+                                <input 
+                                    type="date"
+                                    value={filterDateRange.end}
+                                    onChange={(e) => setFilterDateRange(prev => ({...prev, end: e.target.value}))}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500"
+                                />
+                            </div>
+                            <div className="flex items-end">
+                                <button 
+                                    onClick={() => {
+                                        setQuickDate('all');
+                                        setFilterTeam('all');
+                                        setFilterDateRange({start: '', end: ''});
+                                    }}
+                                    className="w-full bg-slate-200 text-slate-600 font-bold py-2 rounded-lg text-[10px] hover:bg-slate-300"
+                                >
+                                    Đặt lại bộ lọc
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
 
-        {sortedRecords.map((record) => (
-            <div 
-                key={record.id} 
-                onClick={() => setViewingRecord(record)}
-                className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-slate-100 flex items-center justify-between group active:scale-[0.98] transition-transform cursor-pointer relative overflow-hidden"
-            >
-                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                     record.status === 'synced' ? 'bg-green-500' :
-                     record.status === 'error' ? 'bg-red-500' : 'bg-amber-400'
-                }`}></div>
+        <div className="flex items-center justify-between mb-2 px-1">
+            <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">KẾT QUẢ ({sortedRecords.length})</h2>
+        </div>
 
-                <div className="flex items-center space-x-4 overflow-hidden pl-2">
-                    <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center border-2 ${
-                        record.status === 'synced' ? 'bg-green-50 border-green-100 text-green-600' :
-                        record.status === 'error' ? 'bg-red-50 border-red-100 text-red-600' :
-                        'bg-amber-50 border-amber-100 text-amber-600'
-                    }`}>
-                        {record.status === 'synced' && <CheckCircle className="w-6 h-6" />}
-                        {record.status === 'error' && <AlertTriangle className="w-6 h-6" />}
-                        {record.status === 'pending' && <Clock className="w-6 h-6" />}
-                    </div>
-
-                    <div className="flex flex-col min-w-0">
-                        <div className="flex items-baseline space-x-2">
-                             <span className="font-black text-lg text-slate-800 font-mono tracking-tighter">
-                                {record.containerNumber.slice(0, 4)}
-                                <span className="text-red-600">{record.containerNumber.slice(4)}</span>
-                            </span>
-                        </div>
-                        
-                        <div className="flex items-center text-xs text-slate-500 space-x-2 font-bold mt-1">
-                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 border border-slate-200">{record.teamName}</span>
-                            <span className="flex items-center text-sky-600 bg-sky-50 px-2 py-0.5 rounded border border-sky-100">
-                                <ImageIcon className="w-3 h-3 mr-1" /> {record.images.length}
-                            </span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-medium mt-1 pl-0.5">
-                            {formatDate(record.timestamp)}
-                        </span>
-                    </div>
-                </div>
-
-                <div className="flex items-center space-x-2 pl-2">
-                    {record.status === 'error' && (
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onRetry(record.id); }}
-                            className="p-3 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 border border-sky-100 shadow-sm"
-                        >
-                            <RefreshCw className="w-5 h-5" />
-                        </button>
-                    )}
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); onDelete(record.id); }}
-                        className="p-3 bg-white text-slate-300 rounded-xl border border-slate-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 shadow-sm"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                    </button>
-                </div>
+        {sortedRecords.length === 0 ? (
+            <div className="text-center py-10 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 text-xs font-bold">
+                Không tìm thấy dữ liệu phù hợp
             </div>
-        ))}
+        ) : (
+            sortedRecords.map((record) => (
+                <div 
+                    key={record.id} 
+                    onClick={() => setViewingRecord(record)}
+                    className="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-slate-100 flex items-center justify-between group active:scale-[0.98] transition-transform cursor-pointer relative overflow-hidden"
+                >
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                         record.status === 'synced' ? 'bg-green-500' :
+                         record.status === 'error' ? 'bg-red-500' : 'bg-amber-400'
+                    }`}></div>
+
+                    <div className="flex items-center space-x-4 overflow-hidden pl-2">
+                        <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center border-2 ${
+                            record.status === 'synced' ? 'bg-green-50 border-green-100 text-green-600' :
+                            record.status === 'error' ? 'bg-red-50 border-red-100 text-red-600' :
+                            'bg-amber-50 border-amber-100 text-amber-600'
+                        }`}>
+                            {record.status === 'synced' && <CheckCircle className="w-6 h-6" />}
+                            {record.status === 'error' && <AlertTriangle className="w-6 h-6" />}
+                            {record.status === 'pending' && <Clock className="w-6 h-6" />}
+                        </div>
+
+                        <div className="flex flex-col min-w-0">
+                            <div className="flex items-baseline space-x-2">
+                                 <span className="font-black text-lg text-slate-800 font-mono tracking-tighter">
+                                    {record.containerNumber.slice(0, 4)}
+                                    <span className="text-red-600">{record.containerNumber.slice(4)}</span>
+                                </span>
+                            </div>
+                            
+                            <div className="flex items-center text-xs text-slate-500 space-x-2 font-bold mt-1">
+                                <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 border border-slate-200">{record.teamName}</span>
+                                <span className="flex items-center text-sky-600 bg-sky-50 px-2 py-0.5 rounded border border-sky-100">
+                                    <ImageIcon className="w-3 h-3 mr-1" /> {record.images.length}
+                                </span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-medium mt-1 pl-0.5">
+                                {formatDate(record.timestamp)}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 pl-2">
+                        {record.status === 'error' && (
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onRetry(record.id); }}
+                                className="p-3 bg-sky-50 text-sky-600 rounded-xl hover:bg-sky-100 border border-sky-100 shadow-sm"
+                            >
+                                <RefreshCw className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onDelete(record.id); }}
+                            className="p-3 bg-white text-slate-300 rounded-xl border border-slate-100 hover:bg-red-50 hover:text-red-500 hover:border-red-100 shadow-sm"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            ))
+        )}
         </div>
 
         {viewingRecord && (
@@ -129,7 +271,7 @@ const ImageViewer: React.FC<{
         setMode('camera');
         try {
             const ms = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+                video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
             });
             setStream(ms);
         } catch (e) {
@@ -161,8 +303,8 @@ const ImageViewer: React.FC<{
             const ctx = c.getContext('2d');
             if (ctx) {
                 ctx.drawImage(v, 0, 0);
-                const raw = c.toDataURL('image/jpeg', 0.8);
-                const compressed = await compressImage(raw);
+                const raw = c.toDataURL('image/jpeg', 0.6); // Slightly lower quality for faster transmission
+                const compressed = await compressImage(raw, 1024, 0.6);
                 setStagedImages(prev => [...prev, compressed]);
                 if (navigator.vibrate) navigator.vibrate(30);
             }
@@ -198,7 +340,6 @@ const ImageViewer: React.FC<{
                         </button>
                     </div>
                     
-                    {/* GRID VIEW: 4 images per row */}
                     <div className="flex-1 overflow-y-auto p-1 bg-[#121212]">
                         <div className="grid grid-cols-4 gap-1">
                             {tempImages.map((img, idx) => (

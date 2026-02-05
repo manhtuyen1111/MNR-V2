@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User } from '../types';
 import { USERS } from '../constants';
@@ -39,16 +40,16 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         
         <div className="bg-white rounded-3xl w-full max-w-sm shadow-[0_20px_50px_rgba(0,0,0,0.15)] relative z-10 overflow-hidden flex flex-col">
             
-            {/* Header Section */}
-            <div className="bg-[#0f172a] p-8 pb-10 text-center relative">
+            {/* Header Section - Pushed up slightly */}
+            <div className="bg-[#0f172a] p-8 pb-14 text-center relative">
                 <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg transform rotate-45 border-4 border-slate-100">
                     <div className="transform -rotate-45">
                         <Container className="w-10 h-10 text-[#0f172a]" />
                     </div>
                 </div>
                 
-                <h1 className="text-2xl font-black text-white tracking-tight mt-2">MATRAN MNR</h1>
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Hệ thống nghiệm thu</p>
+                <h1 className="text-2xl font-black text-white tracking-tight -mt-2">MATRAN MNR</h1>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Hệ thống nghiệm thu sửa chữa</p>
             </div>
 
             {/* Form Section */}

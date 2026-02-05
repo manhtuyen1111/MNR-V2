@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp } from 'lucide-react';
@@ -27,7 +28,7 @@ var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 function doPost(e) {
   var lock = LockService.getScriptLock();
   // Giảm thời gian chờ lock xuống để xử lý nhanh hơn
-  lock.tryLock(5000); 
+  lock.tryLock(10000); 
 
   try {
     var data = JSON.parse(e.postData.contents);
@@ -41,18 +42,24 @@ function doPost(e) {
     var year = timestamp.getFullYear().toString();
     var month = ("0" + (timestamp.getMonth() + 1)).slice(-2);
     var day = ("0" + timestamp.getDate()).slice(-2);
-    var fullDateString = day + "-" + month + "-" + year; // Định dạng NGÀY-THÁNG-NĂM
+    
+    // Tên thư mục theo yêu cầu: 2026 - Tháng 02
+    var yearMonthFolderLabel = year + " - Tháng " + month;
+    // Tên thư mục ngày: 05-02-2026
+    var fullDateString = day + "-" + month + "-" + year; 
 
     var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
     
-    // Cấu trúc: NĂM -> THÁNG -> NGÀY-THÁNG-NĂM -> SỐ CONTAINER
-    var yearFolder = getOrCreateFolder(rootFolder, year);
-    var monthFolder = getOrCreateFolder(yearFolder, month);
-    var dateFolder = getOrCreateFolder(monthFolder, fullDateString);
-    var containerFolder = getOrCreateFolder(dateFolder, containerNumber);
+    // Cấu trúc mới: Năm - Tháng -> Ngày-Tháng-Năm -> Tổ -> Số Container
+    var yearMonthFolder = getOrCreateFolder(rootFolder, yearMonthFolderLabel);
+    var dateFolder = getOrCreateFolder(yearMonthFolder, fullDateString);
+    var teamFolder = getOrCreateFolder(dateFolder, teamName);
+    var containerFolder = getOrCreateFolder(teamFolder, containerNumber);
 
-    // Lưu hình ảnh (Sử dụng timestamp trong tên file để tránh trùng lặp khi up bổ sung)
+    // Lưu hình ảnh tối ưu
     var timeStr = timestamp.getTime().toString();
+    var blobs = [];
+    
     for (var i = 0; i < images.length; i++) {
       var imageBase64 = images[i].split(',')[1];
       var decodedImage = Utilities.base64Decode(imageBase64);
@@ -68,7 +75,7 @@ function doPost(e) {
       if (ss) {
         var sheet = ss.getActiveSheet();
         if (sheet.getLastRow() === 0) {
-          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh gửi lên", "Link Folder"]);
+          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh", "Link Folder"]);
         }
         sheet.appendRow([new Date(), containerNumber, teamName, editor, images.length, containerFolder.getUrl()]);
       }
@@ -118,7 +125,7 @@ function getOrCreateFolder(parentFolder, folderName) {
           {!url ? (
              <div className="flex items-start space-x-2 mt-3 text-amber-600 text-xs bg-amber-50 p-3 rounded-xl border border-amber-100">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>Vui lòng triển khai Google Apps Script và dán URL vào đây để kích hoạt tính năng lưu ảnh.</span>
+                <span>Vui lòng triển khai Google Apps Script mới và dán URL vào đây để kích hoạt tính năng lưu ảnh theo cấu trúc thư mục mới.</span>
              </div>
           ) : (
              <div className="flex items-center space-x-2 mt-3 text-green-600 text-xs bg-green-50 p-3 rounded-xl border border-green-100">
@@ -143,18 +150,19 @@ function getOrCreateFolder(parentFolder, folderName) {
             <h3 className="font-bold text-lg mb-4 flex items-center justify-between">
                 <div className="flex items-center">
                     <FileCode className="w-5 h-5 mr-2 text-sky-400" />
-                    Hướng dẫn & Mã Script
+                    Hướng dẫn & Mã Script Tối Ưu
                 </div>
             </h3>
 
             <div className="space-y-4 text-sm text-slate-300">
+                <p className="text-[10px] text-sky-400 font-bold bg-sky-950/50 p-2 rounded-lg border border-sky-900/50">Lưu ý: Script này đã được tối ưu để lưu ảnh theo cấu trúc thư mục Năm-Tháng/Ngày/Tổ/Cont và xử lý nhanh hơn.</p>
                 <div className="flex space-x-3">
                     <span className="bg-slate-700 w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs shrink-0">1</span>
                     <p>Truy cập <a href="https://script.google.com" target="_blank" className="text-sky-400 underline decoration-sky-400/30">script.google.com</a>, tạo dự án mới.</p>
                 </div>
                 <div className="flex space-x-3">
                     <span className="bg-slate-700 w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs shrink-0">2</span>
-                    <p>Copy mã bên dưới và dán vào file <code>Code.gs</code> (xóa mã cũ).</p>
+                    <p>Copy mã tối ưu bên dưới và dán vào file <code>Code.gs</code>.</p>
                 </div>
                 
                 {/* Script Code Block Toggle */}
@@ -163,7 +171,7 @@ function getOrCreateFolder(parentFolder, folderName) {
                         onClick={() => setShowScript(!showScript)}
                         className="w-full flex items-center justify-between p-3 bg-slate-800 hover:bg-slate-700 transition-colors"
                     >
-                        <span className="text-xs font-mono text-sky-300 font-bold">Xem Mã Script (Code.gs)</span>
+                        <span className="text-xs font-mono text-sky-300 font-bold">Xem Mã Script Tối Ưu (Code.gs)</span>
                         {showScript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                     </button>
                     
@@ -185,19 +193,7 @@ function getOrCreateFolder(parentFolder, folderName) {
 
                 <div className="flex space-x-3">
                     <span className="bg-slate-700 w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs shrink-0">3</span>
-                    <p>Nhấn <strong>Deploy</strong> &rarr; <strong>New deployment</strong>.</p>
-                </div>
-                <div className="flex space-x-3">
-                    <span className="bg-slate-700 w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs shrink-0">4</span>
-                    <p>Chọn loại <strong>Web app</strong>.</p>
-                </div>
-                 <div className="flex space-x-3">
-                    <span className="bg-slate-700 w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs shrink-0">5</span>
-                    <p>Cấu hình <strong>Execute as: Me</strong> và <strong>Who has access: Anyone</strong>.</p>
-                </div>
-                <div className="flex space-x-3">
-                    <span className="bg-slate-700 w-6 h-6 flex items-center justify-center rounded-full font-bold text-xs shrink-0">6</span>
-                    <p>Copy URL và dán vào ô bên trên.</p>
+                    <p>Nhấn <strong>Deploy</strong> &rarr; <strong>New deployment</strong> (Web App, Me, Anyone).</p>
                 </div>
             </div>
        </div>

@@ -1,7 +1,9 @@
+
 import { RepairRecord } from './types';
 
 // --- IMAGE COMPRESSION ---
-export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.6): Promise<string> => {
+// Adjusted defaults for faster uploads (quality 0.5 and maxWidth 1024)
+export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.5): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -20,7 +22,6 @@ export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.6)
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
-        // Reduce quality slightly to 0.6 for better performance with many images
         resolve(canvas.toDataURL('image/jpeg', quality));
       } else {
         resolve(base64Str); // Fallback
@@ -36,6 +37,7 @@ export const formatDate = (timestamp: number): string => {
     minute: '2-digit',
     day: '2-digit',
     month: '2-digit',
+    year: 'numeric'
   });
 };
 
