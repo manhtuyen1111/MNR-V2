@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RepairRecord } from '../types';
 import { formatDate } from '../utils';
-import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X } from 'lucide-react';
 
 interface HistoryListProps {
   records: RepairRecord[];
