@@ -162,7 +162,16 @@ const App: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-        const teamName = teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
+        // --- FIX: Logic lấy tên tổ đội chính xác để lưu trữ (Giống logic trong TeamSelector) ---
+        const systemTeamNames: Record<string, string> = {
+            't1': 'TỔ 1',
+            't2': 'TỔ 2',
+            't3': 'TỔ 3',
+            't4': 'TỔ 4'
+        };
+        
+        // Ưu tiên mapping cứng cho ID hệ thống, sau đó mới tìm trong danh sách tùy chỉnh
+        const teamName = systemTeamNames[selectedTeamId] || teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
         
         const newRecord: RepairRecord = {
             id: Date.now().toString(),
