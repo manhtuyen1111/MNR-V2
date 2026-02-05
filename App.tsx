@@ -7,12 +7,16 @@ import BottomNav from './components/BottomNav';
 import Settings from './components/Settings';
 import HistoryList from './components/HistoryList';
 import TeamManager from './components/TeamManager';
-import { TabView, Team, AppSettings, RepairRecord } from './types';
+import Login from './components/Login';
+import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff } from 'lucide-react';
 
 const App: React.FC = () => {
+  // --- AUTHENTICATION STATE ---
+  const [user, setUser] = useState<User | null>(null);
+
   const [activeTab, setActiveTab] = useState<TabView>('capture');
   
   // Settings (Small data -> Keep in LocalStorage)
@@ -35,17 +39,35 @@ const App: React.FC = () => {
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
 
-  // Validation
-  const isContainerValid = /^[A-Z]{4}\d{7}$/.test(containerNum);
-  const isTeamSelected = selectedTeamId !== '';
-  const isFormComplete = isContainerValid && isTeamSelected && images.length > 0;
-  
   // Records State (Large data -> Use IndexedDB)
   const [records, setRecords] = useState<RepairRecord[]>([]);
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'warning'} | null>(null);
+
+  // --- CHECK LOGIN SESSION (Optional persistence) ---
+  // For now, we require login on refresh as per typical industry app security or just keep in memory.
+  // We won't persist user to localStorage to ensure security unless requested.
+
+  // --- USER TEAM LOCK LOGIC ---
+  useEffect(() => {
+      if (user && user.assignedTeamId) {
+          setSelectedTeamId(user.assignedTeamId);
+          // If a team is assigned, auto move to step 3 IF container is valid
+          if (/^[A-Z]{4}\d{7}$/.test(containerNum)) {
+               // Logic handled in auto-advance effect below
+          }
+      } else {
+          // If logging out or changing users (not implemented but good practice), reset team selection if needed
+          // But here we keep selectedTeamId if user is admin
+      }
+  }, [user]);
+
+  // Validation
+  const isContainerValid = /^[A-Z]{4}\d{7}$/.test(containerNum);
+  const isTeamSelected = selectedTeamId !== '';
+  const isFormComplete = isContainerValid && isTeamSelected && images.length > 0;
 
   // Load Records from IndexedDB on startup
   useEffect(() => {
@@ -70,14 +92,24 @@ const App: React.FC = () => {
   // Auto Advance Steps Logic
   useEffect(() => {
       if (activeStep === 1 && isContainerValid) {
-          const timer = setTimeout(() => setActiveStep(2), 500);
+          const timer = setTimeout(() => setActiveStep(2), 400);
           return () => clearTimeout(timer);
       }
   }, [containerNum, isContainerValid]);
 
+  // Auto Advance from Team to Camera
+  useEffect(() => {
+      if (activeStep === 2 && isTeamSelected) {
+           // If user has assigned team, they might skip this step visually, 
+           // but logically we wait for container to be valid first.
+           const timer = setTimeout(() => setActiveStep(3), 400);
+           return () => clearTimeout(timer);
+      }
+  }, [selectedTeamId, activeStep, isTeamSelected]);
+
   const handleSelectTeam = (id: string) => {
+      if (user?.assignedTeamId && id !== user.assignedTeamId) return; // Prevent selection if locked
       setSelectedTeamId(id);
-      setTimeout(() => setActiveStep(3), 300);
   };
 
   const handleStepClick = (step: 1 | 2 | 3) => {
@@ -105,7 +137,6 @@ const App: React.FC = () => {
   };
 
   const handleAddImage = async (imgData: string) => {
-      // Compress immediately upon capture to save memory
       const compressed = await compressImage(imgData);
       setImages(prev => [...prev, compressed]);
   };
@@ -114,10 +145,12 @@ const App: React.FC = () => {
       if (!settings.googleScriptUrl) return false;
       try {
         const payload = {
+            id: record.id,
             timestamp: new Date(record.timestamp).toISOString(),
             containerNumber: record.containerNumber,
             team: record.teamName,
             images: record.images,
+            editor: user?.username || 'unknown' // Track who edited
         };
         await fetch(settings.googleScriptUrl, {
             method: 'POST',
@@ -151,19 +184,20 @@ const App: React.FC = () => {
             status: 'pending' // Default to pending
         };
 
-        // 1. Save to IndexedDB (Critical for large images)
+        // 1. Save to IndexedDB
         await dbService.saveRecord(newRecord);
-        
-        // Update UI State
         setRecords(prev => [...prev, newRecord]);
 
-        // Reset Form Immediately
+        // Reset Form
         setContainerNum('');
-        setSelectedTeamId('');
+        // Do NOT reset team if assigned
+        if (!user?.assignedTeamId) {
+            setSelectedTeamId('');
+        }
         setImages([]);
         setActiveStep(1);
 
-        // 2. Try to Sync to Google Sheets
+        // 2. Sync
         if (!settings.googleScriptUrl) {
             setToast({ message: 'Đã lưu offline (Chưa cấu hình URL)', type: 'warning' });
             setIsSubmitting(false);
@@ -174,24 +208,24 @@ const App: React.FC = () => {
             const success = await syncRecordToSheet(newRecord);
             if (success) {
                 const syncedRecord = { ...newRecord, status: 'synced' as const };
-                await dbService.saveRecord(syncedRecord); // Update DB
+                await dbService.saveRecord(syncedRecord);
                 setRecords(prev => prev.map(r => r.id === newRecord.id ? syncedRecord : r));
                 setToast({ message: 'Đã lưu và gửi dữ liệu thành công!', type: 'success' });
             } else {
                 const errorRecord = { ...newRecord, status: 'error' as const };
-                await dbService.saveRecord(errorRecord); // Update DB
+                await dbService.saveRecord(errorRecord);
                 setRecords(prev => prev.map(r => r.id === newRecord.id ? errorRecord : r));
                 setToast({ message: 'Gửi thất bại. Đã lưu offline.', type: 'warning' });
             }
         } catch (error) {
              const errorRecord = { ...newRecord, status: 'error' as const };
-             await dbService.saveRecord(errorRecord); // Update DB
+             await dbService.saveRecord(errorRecord);
              setRecords(prev => prev.map(r => r.id === newRecord.id ? errorRecord : r));
              setToast({ message: 'Lỗi mạng. Đã lưu offline.', type: 'warning' });
         }
     } catch (criticalError) {
         console.error("CRITICAL SAVE ERROR", criticalError);
-        setToast({ message: 'Lỗi nghiêm trọng: Không thể lưu dữ liệu (Bộ nhớ đầy?)', type: 'error' });
+        setToast({ message: 'Lỗi nghiêm trọng: Không thể lưu dữ liệu', type: 'error' });
     } finally {
         setIsSubmitting(false);
     }
@@ -201,7 +235,6 @@ const App: React.FC = () => {
       const record = records.find(r => r.id === id);
       if (!record || !settings.googleScriptUrl) return;
 
-      // Optimistic update UI
       setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
       setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
 
@@ -226,11 +259,49 @@ const App: React.FC = () => {
       }
   };
 
+  // Called when adding photos to an existing history record
+  const handleUpdateRecord = async (updatedRecord: RepairRecord) => {
+      try {
+          // Update DB
+          await dbService.saveRecord(updatedRecord);
+          // Update State
+          setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
+          
+          // Try to sync update
+          if (settings.googleScriptUrl) {
+              const success = await syncRecordToSheet(updatedRecord);
+              if (success) {
+                   const finalRecord = { ...updatedRecord, status: 'synced' as const };
+                   await dbService.saveRecord(finalRecord);
+                   setRecords(prev => prev.map(r => r.id === updatedRecord.id ? finalRecord : r));
+              } else {
+                  // Keep as pending/error if failed
+                   const errorRecord = { ...updatedRecord, status: 'error' as const };
+                   await dbService.saveRecord(errorRecord);
+                   setRecords(prev => prev.map(r => r.id === updatedRecord.id ? errorRecord : r));
+              }
+          }
+      } catch (e) {
+          console.error("Failed to update record", e);
+      }
+  };
+
+  // --- RENDER LOGIN IF NOT AUTHENTICATED ---
+  if (!user) {
+      return <Login onLogin={setUser} />;
+  }
+
   const pendingCount = records.filter(r => r.status === 'error' || r.status === 'pending').length;
 
   return (
     <div className="h-[100dvh] bg-slate-100 font-sans text-slate-900 flex flex-col overflow-hidden select-none">
       <Header />
+      
+      {/* User Info Bar */}
+      <div className="bg-slate-800 text-white px-4 py-1 text-xs font-bold flex justify-between items-center shadow-md z-30">
+          <span>Xin chào, {user.name}</span>
+          <button onClick={() => setUser(null)} className="text-sky-300 hover:text-white transition-colors">Đăng xuất</button>
+      </div>
 
       <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto">
         
@@ -248,7 +319,7 @@ const App: React.FC = () => {
             </div>
         )}
 
-        {/* Team Manager Modal */}
+        {/* Team Manager Modal (Only allow for admins or unassigned users if strictly needed, but logic here allows admin/qc) */}
         {isTeamManagerOpen && (
             <TeamManager 
                 teams={teams}
@@ -281,6 +352,7 @@ const App: React.FC = () => {
                     isCompleted={isTeamSelected}
                     isDisabled={!isContainerValid}
                     onFocus={() => handleStepClick(2)}
+                    assignedTeamId={user.assignedTeamId}
                 />
 
                 {/* STEP 3: CAMERA */}
@@ -295,14 +367,19 @@ const App: React.FC = () => {
                 />
           </div>
         ) : activeTab === 'history' ? (
-            <div className="flex-1 overflow-y-auto scrollbar-hide">
+            <div className="flex-1 overflow-y-auto scrollbar-hide bg-slate-50">
                 {isLoadingRecords ? (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400">
                         <Loader2 className="w-8 h-8 animate-spin mb-2" />
                         <span className="text-xs">Đang tải dữ liệu...</span>
                     </div>
                 ) : (
-                    <HistoryList records={records} onRetry={handleRetry} onDelete={handleDeleteRecord} />
+                    <HistoryList 
+                        records={records} 
+                        onRetry={handleRetry} 
+                        onDelete={handleDeleteRecord} 
+                        onUpdateRecord={handleUpdateRecord}
+                    />
                 )}
             </div>
         ) : (

@@ -22,3 +22,10 @@ export type TabView = 'capture' | 'history' | 'settings';
 export interface AppSettings {
   googleScriptUrl: string;
 }
+
+export interface User {
+  username: string;
+  name: string;
+  role: 'admin' | 'qc' | 'worker';
+  assignedTeamId?: string; // If set, user is locked to this team
+}

@@ -1,4 +1,4 @@
-import { Team } from './types';
+import { Team, User } from './types';
 
 export const REPAIR_TEAMS: Team[] = [
   { id: 't1', name: 'TỔ 1', color: 'bg-blue-100 text-blue-700 border-blue-200' },
@@ -16,3 +16,12 @@ export const MOCK_CONTAINER_SUGGESTIONS = [
   'TRHU4561230',
   'PONU9988776'
 ];
+
+export const USERS: Record<string, User> = {
+  'admin': { username: 'admin', name: 'Administrator', role: 'admin' },
+  'qc': { username: 'qc', name: 'QC Manager', role: 'qc' },
+  'qc01': { username: 'qc01', name: 'QC Tổ 1', role: 'worker', assignedTeamId: 't1' },
+  'qc02': { username: 'qc02', name: 'QC Tổ 2', role: 'worker', assignedTeamId: 't2' },
+  'qc03': { username: 'qc03', name: 'QC Tổ 3', role: 'worker', assignedTeamId: 't3' },
+  'qc04': { username: 'qc04', name: 'QC Tổ 4', role: 'worker', assignedTeamId: 't4' },
+};
