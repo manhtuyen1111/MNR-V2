@@ -16,9 +16,7 @@ interface TeamSelectorProps {
 const TeamSelector: React.FC<TeamSelectorProps> = ({ 
   teams, selectedTeamId, onSelect, onManageTeams, isActive, isCompleted, isDisabled, onFocus 
 }) => {
-  // Find selected team to determine background color of the select box if needed
-  const selectedTeam = teams.find(t => t.id === selectedTeamId);
-
+  
   return (
     <div 
       onClick={!isDisabled ? onFocus : undefined}
