@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { RepairRecord } from '../types';
-import { formatDate, compressImage } from '../utils';
+import { formatDate } from '../utils';
 import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Save, Filter, Calendar, Users, ChevronDown } from 'lucide-react';
 import { REPAIR_TEAMS } from '../constants';
 
