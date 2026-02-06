@@ -15,8 +15,12 @@ import { compressImage, dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert, Zap } from 'lucide-react';
 
 const App: React.FC = () => {
-  // --- AUTHENTICATION STATE ---
-  const [user, setUser] = useState<User | null>(null);
+  // --- AUTHENTICATION STATE (Modified for Persistence) ---
+  const [user, setUser] = useState<User | null>(() => {
+      // Kiểm tra xem có phiên đăng nhập cũ trong bộ nhớ không
+      const savedUser = localStorage.getItem('currentUser');
+      return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   const [activeTab, setActiveTab] = useState<TabView>('capture');
   
@@ -95,6 +99,16 @@ const App: React.FC = () => {
            return () => clearTimeout(timer);
       }
   }, [selectedTeamId, activeStep, isTeamSelected]);
+
+  const handleLogin = (userData: User) => {
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      setUser(userData);
+  };
+
+  const handleLogout = () => {
+      localStorage.removeItem('currentUser');
+      setUser(null);
+  };
 
   const handleSelectTeam = (id: string) => {
       if (user?.assignedTeamId && id !== user.assignedTeamId) return; 
@@ -296,7 +310,7 @@ const App: React.FC = () => {
   };
 
   if (!user) {
-      return <Login onLogin={setUser} />;
+      return <Login onLogin={handleLogin} />;
   }
 
   const pendingCount = records.filter(r => r.status === 'error' || r.status === 'pending').length;
@@ -311,7 +325,7 @@ const App: React.FC = () => {
              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
              <span>NHÂN VIÊN: {user.name}</span>
           </div>
-          <button onClick={() => setUser(null)} className="text-sky-400 font-black hover:text-white transition-colors border-l border-white/10 pl-3">ĐĂNG XUẤT</button>
+          <button onClick={handleLogout} className="text-sky-400 font-black hover:text-white transition-colors border-l border-white/10 pl-3">ĐĂNG XUẤT</button>
       </div>
 
       <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto overflow-hidden">
