@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, Check } from 'lucide-react';
 
@@ -142,12 +143,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     );
   }
 
-  // --- DEFAULT VIEW ---
+  // --- DEFAULT VIEW (COMPACT) ---
   return (
     <div 
       onClick={!isDisabled ? startCamera : undefined}
       className={`
-        transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] rounded-2xl p-5 border flex flex-col min-h-[180px] cursor-pointer bg-white
+        transition-all duration-300 ease-[cubic-bezier(0.25,0.8,0.25,1)] rounded-2xl p-4 border flex flex-col cursor-pointer bg-white
         ${isActive 
           ? 'scale-[1.03] shadow-[0_10px_40px_-15px_rgba(2,132,199,0.3)] z-20 border-sky-600 ring-4 ring-sky-50' 
           : isDisabled
@@ -155,8 +156,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             : 'border-green-500 shadow-sm opacity-100' // Completed
         }
       `}
+      style={{ minHeight: images.length > 0 ? 'auto' : '100px' }}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
          <div className="flex items-center space-x-2">
             <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black shadow-sm transition-colors ${isActive ? 'bg-sky-600 text-white' : isCompleted ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-500'}`}>3</span>
             <label className={`text-sm font-black uppercase tracking-wider ${isActive ? 'text-sky-700' : isCompleted ? 'text-green-700' : 'text-slate-500'}`}>
@@ -166,32 +168,27 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
          {isCompleted && !isActive && <Check className="w-8 h-8 text-green-500 stroke-[3]" />}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center items-center space-y-4">
+      <div className="flex-1 flex flex-col justify-center">
          {images.length === 0 ? (
-             <div className="w-full h-32 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center text-slate-400 bg-slate-50 hover:bg-sky-50 hover:border-sky-400 hover:text-sky-600 transition-colors group">
-                <div className="p-3 bg-white rounded-full shadow-sm mb-2 group-hover:scale-110 transition-transform">
-                    <Camera className="w-8 h-8 opacity-60" />
+             <div className="w-full py-4 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center space-x-3 text-slate-400 bg-slate-50 hover:bg-sky-50 hover:border-sky-400 hover:text-sky-600 transition-colors group">
+                <div className="p-2 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
+                    <Camera className="w-5 h-5 opacity-60 group-hover:opacity-100 group-hover:text-sky-600" />
                 </div>
                 <span className="font-bold text-sm">CHẠM ĐỂ CHỤP ẢNH</span>
              </div>
          ) : (
              <div className="w-full">
-                <div className="grid grid-cols-4 gap-2 mb-3">
-                    {images.slice(0, 4).map((img, idx) => (
-                        <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-slate-200 relative shadow-sm">
+                {/* Compact Grid: Just 1 row of thumbnails */}
+                <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide">
+                    {images.map((img, idx) => (
+                        <div key={idx} className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 relative shadow-sm shrink-0">
                              <img src={img} className="w-full h-full object-cover" />
-                             {idx === 3 && images.length > 4 && (
-                                 <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center text-white font-black text-sm backdrop-blur-sm">
-                                     +{images.length - 4}
-                                 </div>
-                             )}
                         </div>
                     ))}
+                    <div className="w-16 h-16 rounded-xl border-2 border-dashed border-sky-200 bg-sky-50 flex items-center justify-center text-sky-500 shrink-0">
+                        <Camera className="w-6 h-6" />
+                    </div>
                 </div>
-                <button className="w-full py-3 bg-sky-50 text-sky-700 border border-sky-100 rounded-xl font-bold text-sm flex items-center justify-center space-x-2 hover:bg-sky-100 hover:border-sky-200 transition-colors shadow-sm">
-                    <Camera className="w-5 h-5" />
-                    <span>CHỤP THÊM ẢNH</span>
-                </button>
              </div>
          )}
       </div>

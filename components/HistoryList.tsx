@@ -17,7 +17,6 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterDateRange, setFilterDateRange] = useState<{start: string, end: string}>({start: '', end: ''});
   const [quickDate, setQuickDate] = useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
-  const [showFilters, setShowFilters] = useState(false);
 
   // Filtering logic
   const filteredRecords = records.filter(record => {
@@ -71,101 +70,71 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
     <>
         <div className="p-4 space-y-4 pb-24 animate-fadeIn">
         
-        {/* ADVANCED FILTER BOX */}
+        {/* OPTIMIZED FILTER BAR */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 mb-2">
-            <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-[10px] font-black text-slate-600 uppercase tracking-widest flex items-center">
-                    <Filter className="w-3.5 h-3.5 mr-1.5 text-sky-600" />
-                    Bộ lọc tìm kiếm
-                </h2>
-                <button 
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`text-[10px] font-black px-3 py-1 rounded-lg transition-colors flex items-center ${showFilters ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-500'}`}
-                >
-                    {showFilters ? 'ĐÓNG LỌC' : 'MỞ LỌC'}
-                    <ChevronDown className={`w-3 h-3 ml-1.5 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                </button>
+            <div className="flex items-center space-x-2 mb-2">
+                <Filter className="w-3.5 h-3.5 text-sky-600" />
+                <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Bộ lọc</span>
             </div>
 
-            {/* Quick Date Filters */}
-            <div className="flex space-x-2 overflow-x-auto scrollbar-hide pb-1">
-                {[
-                    {id: 'all', label: 'Tất cả'},
-                    {id: 'today', label: 'Hôm nay'},
-                    {id: 'yesterday', label: 'Hôm qua'},
-                    {id: 'custom', label: 'Tùy chọn ngày'}
-                ].map(item => (
-                    <button
-                        key={item.id}
-                        onClick={() => setQuickDate(item.id as any)}
-                        className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight border-2 transition-all ${quickDate === item.id ? 'bg-sky-50 border-sky-600 text-sky-700' : 'bg-slate-50 border-slate-100 text-slate-400'}`}
+            <div className="grid grid-cols-2 gap-3">
+                {/* Team Selector Dropdown */}
+                <div className="relative">
+                    <select 
+                        value={filterTeam}
+                        onChange={(e) => setFilterTeam(e.target.value)}
+                        className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-xl py-2.5 pl-3 pr-8 text-[11px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
                     >
-                        {item.label}
-                    </button>
-                ))}
+                        <option value="all">Tất cả tổ đội</option>
+                        {REPAIR_TEAMS.map(team => (
+                            <option key={team.id} value={team.id}>{team.name}</option>
+                        ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+
+                {/* Date Type Selector Dropdown */}
+                <div className="relative">
+                    <select 
+                        value={quickDate}
+                        onChange={(e) => {
+                            setQuickDate(e.target.value as any);
+                            if (e.target.value !== 'custom') {
+                                setFilterDateRange({start: '', end: ''});
+                            }
+                        }}
+                        className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-xl py-2.5 pl-3 pr-8 text-[11px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
+                    >
+                        <option value="all">Tất cả thời gian</option>
+                        <option value="today">Hôm nay</option>
+                        <option value="yesterday">Hôm qua</option>
+                        <option value="custom">Tùy chọn ngày...</option>
+                    </select>
+                    <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
             </div>
 
-            {/* Expanded Filter UI */}
-            {showFilters && (
-                <div className="mt-4 pt-4 border-t border-slate-50 space-y-4 animate-fadeIn">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1.5">
-                            <label className="text-[9px] font-black uppercase text-slate-400 flex items-center px-1">
-                                <Users className="w-3 h-3 mr-1.5" /> Tổ đội sửa chữa
-                            </label>
-                            <select 
-                                value={filterTeam}
-                                onChange={(e) => setFilterTeam(e.target.value)}
-                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 text-xs font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
-                            >
-                                <option value="all">Tất cả các tổ</option>
-                                {REPAIR_TEAMS.map(team => (
-                                    <option key={team.id} value={team.id}>{team.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[9px] font-black uppercase text-slate-400 flex items-center px-1">
-                                <Calendar className="w-3 h-3 mr-1.5" /> Từ ngày
-                            </label>
-                            <input 
-                                type="date"
-                                value={filterDateRange.start}
-                                onChange={(e) => {
-                                    setQuickDate('custom');
-                                    setFilterDateRange(prev => ({...prev, start: e.target.value}));
-                                }}
-                                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-2.5 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
-                            />
-                        </div>
+            {/* Custom Date Inputs (Only visible if 'custom' is selected) */}
+            {quickDate === 'custom' && (
+                <div className="mt-3 pt-3 border-t border-slate-50 grid grid-cols-2 gap-3 animate-fadeIn">
+                     <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase text-slate-400 pl-1">Từ ngày</label>
+                        <input 
+                            type="date"
+                            value={filterDateRange.start}
+                            onChange={(e) => setFilterDateRange(prev => ({...prev, start: e.target.value}))}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-2 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
+                        />
                     </div>
-                    {quickDate === 'custom' && (
-                        <div className="grid grid-cols-2 gap-4">
-                             <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase text-slate-400 flex items-center px-1">
-                                    <Calendar className="w-3 h-3 mr-1.5" /> Đến ngày
-                                </label>
-                                <input 
-                                    type="date"
-                                    value={filterDateRange.end}
-                                    onChange={(e) => setFilterDateRange(prev => ({...prev, end: e.target.value}))}
-                                    className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-2.5 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
-                                />
-                            </div>
-                            <div className="flex items-end">
-                                <button 
-                                    onClick={() => {
-                                        setQuickDate('all');
-                                        setFilterTeam('all');
-                                        setFilterDateRange({start: '', end: ''});
-                                    }}
-                                    className="w-full bg-slate-100 text-slate-500 font-black py-3 rounded-xl text-[9px] uppercase tracking-widest hover:bg-red-50 hover:text-red-500 transition-colors border border-transparent hover:border-red-100"
-                                >
-                                    Đặt lại mặc định
-                                </button>
-                            </div>
-                        </div>
-                    )}
+                    <div className="space-y-1">
+                        <label className="text-[9px] font-black uppercase text-slate-400 pl-1">Đến ngày</label>
+                        <input 
+                            type="date"
+                            value={filterDateRange.end}
+                            onChange={(e) => setFilterDateRange(prev => ({...prev, end: e.target.value}))}
+                            className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-2 text-[10px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
+                        />
+                    </div>
                 </div>
             )}
         </div>
