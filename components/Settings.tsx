@@ -25,54 +25,56 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
   };
 
   const SCRIPT_CODE = `
-// --- CẤU HÌNH ---
-// ID của thư mục mẹ chứa tất cả dữ liệu
+// --- CẤU HÌNH v2.0 (Optimized Speed) ---
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
 function doPost(e) {
+  // Chỉ khóa đoạn logic tạo thư mục để tránh xung đột
+  // Việc ghi file sẽ được mở khóa để chạy song song
   var lock = LockService.getScriptLock();
-  // Giảm thời gian chờ lock để tối ưu tốc độ xử lý đồng thời
   lock.tryLock(10000); 
 
   try {
     var data = JSON.parse(e.postData.contents);
     var containerNumber = data.containerNumber;
     var teamName = data.team;
-    var images = data.images; // Mảng base64
+    var images = data.images; 
     var timestamp = new Date(data.timestamp);
     var editor = data.editor || 'unknown';
 
-    // Định dạng thời gian
+    // 1. Tạo Cấu Trúc Thư Mục (Cần Lock)
     var year = timestamp.getFullYear().toString();
     var month = ("0" + (timestamp.getMonth() + 1)).slice(-2);
     var day = ("0" + timestamp.getDate()).slice(-2);
     
-    // Tên thư mục theo yêu cầu: 2026 - Tháng 02
     var yearMonthFolderLabel = year + " - Tháng " + month;
-    // Tên thư mục ngày: 05-02-2026
     var fullDateString = day + "-" + month + "-" + year; 
 
     var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
     
-    // Cấu trúc phân cấp: Năm - Tháng -> Ngày -> Tổ -> Số Container
+    // Tìm thư mục (Logic tuần tự)
     var yearMonthFolder = getOrCreateFolder(rootFolder, yearMonthFolderLabel);
     var dateFolder = getOrCreateFolder(yearMonthFolder, fullDateString);
     var teamFolder = getOrCreateFolder(dateFolder, teamName);
     var containerFolder = getOrCreateFolder(teamFolder, containerNumber);
+    
+    // QUAN TRỌNG: Nhả khóa ngay khi đã có thư mục đích
+    // Để các yêu cầu khác có thể bắt đầu xử lý ngay lập tức
+    lock.releaseLock(); 
 
-    // Xử lý lưu hình ảnh
+    // 2. Lưu Hình Ảnh (Chạy song song, không cần Lock)
     var timeStr = timestamp.getTime().toString();
     
     for (var i = 0; i < images.length; i++) {
       var imageBase64 = images[i].split(',')[1];
       var decodedImage = Utilities.base64Decode(imageBase64);
-      // Tên file: SO_CONT_TIMESTAMP_INDEX.jpg
       var fileName = containerNumber + '_' + timeStr + '_' + (i + 1) + '.jpg';
-      var blob = Utilities.newBlob(decodedImage, 'image/jpeg', fileName);
-      containerFolder.createFile(blob);
+      
+      // Tạo file trực tiếp vào folder
+      containerFolder.createFile(fileName, decodedImage, 'image/jpeg');
     }
 
-    // Ghi log vào Spreadsheet để theo dõi
+    // 3. Ghi Log (Có thể chậm, nhưng chạy cuối cùng)
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       if (ss) {
@@ -88,8 +90,6 @@ function doPost(e) {
 
   } catch (error) {
     return ContentService.createTextOutput("error: " + error.toString()).setMimeType(ContentService.MimeType.TEXT);
-  } finally {
-    lock.releaseLock();
   }
 }
 
@@ -191,12 +191,12 @@ function getOrCreateFolder(parentFolder, folderName) {
                         
                         <h3 className="font-black text-lg mb-5 flex items-center border-b border-white/10 pb-4">
                             <FileCode className="w-6 h-6 mr-3 text-purple-400" />
-                            <span className="tracking-tight">Mã Nguồn Script</span>
+                            <span className="tracking-tight">Mã Nguồn Script v2.0</span>
                         </h3>
 
                         <div className="space-y-4">
                             <p className="text-[10px] text-purple-300 font-bold bg-purple-900/20 p-3 rounded-xl border border-purple-500/20 uppercase tracking-widest leading-relaxed">
-                                Sử dụng mã này trong file <code>Code.gs</code> để tối ưu tốc độ và cấu trúc thư mục.
+                                Đã tối ưu tốc độ. Vui lòng cập nhật đè lên mã cũ trong Google Apps Script.
                             </p>
                             
                             {/* Script Code Block Toggle */}

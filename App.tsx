@@ -12,7 +12,7 @@ import Login from './components/Login';
 import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
-import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert } from 'lucide-react';
+import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert, Zap } from 'lucide-react';
 
 const App: React.FC = () => {
   // --- AUTHENTICATION STATE ---
@@ -45,7 +45,7 @@ const App: React.FC = () => {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'warning'} | null>(null);
+  const [toast, setToast] = useState<{message: string, type: 'success' | 'error' | 'warning' | 'info'} | null>(null);
 
   // --- USER TEAM LOCK LOGIC ---
   useEffect(() => {
@@ -159,18 +159,16 @@ const App: React.FC = () => {
   const handleSaveData = async () => {
     if (!isFormComplete) return;
     
+    // BLOCK UI ONLY FOR DB SAVE (FAST)
     setIsSubmitting(true);
     
     try {
-        // --- FIX: Logic lấy tên tổ đội chính xác để lưu trữ (Giống logic trong TeamSelector) ---
         const systemTeamNames: Record<string, string> = {
             't1': 'TỔ 1',
             't2': 'TỔ 2',
             't3': 'TỔ 3',
             't4': 'TỔ 4'
         };
-        
-        // Ưu tiên mapping cứng cho ID hệ thống, sau đó mới tìm trong danh sách tùy chỉnh
         const teamName = systemTeamNames[selectedTeamId] || teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
         
         const newRecord: RepairRecord = {
@@ -183,49 +181,55 @@ const App: React.FC = () => {
             status: 'pending' 
         };
 
+        // 1. SAVE TO LOCAL DB
         await dbService.saveRecord(newRecord);
-        setRecords(prev => [...prev, newRecord]);
+        // Prepend to top of list
+        setRecords(prev => [newRecord, ...prev]);
 
+        // 2. RESET UI IMMEDIATELY
         setContainerNum('');
         setImages([]);
         setActiveStep(1);
-        
-        // Always ensure assigned team is re-selected after form reset
         if (user?.assignedTeamId) {
             setSelectedTeamId(user.assignedTeamId);
         } else {
             setSelectedTeamId('');
         }
 
+        // 3. UNBLOCK UI
+        setIsSubmitting(false);
+
+        // 4. BACKGROUND UPLOAD
         if (!settings.googleScriptUrl) {
             setToast({ message: 'Đã lưu offline (Chưa cấu hình URL)', type: 'warning' });
-            setIsSubmitting(false);
             return;
         }
 
-        try {
-            const success = await syncRecordToSheet(newRecord);
+        // Notify user but let them continue
+        setToast({ message: 'Đã lưu! Đang gửi ngầm...', type: 'info' });
+
+        // Trigger Sync asynchronously (Fire and Forget from UI perspective)
+        syncRecordToSheet(newRecord).then(async (success) => {
             if (success) {
                 const syncedRecord = { ...newRecord, status: 'synced' as const };
                 await dbService.saveRecord(syncedRecord);
                 setRecords(prev => prev.map(r => r.id === newRecord.id ? syncedRecord : r));
-                setToast({ message: 'Đã lưu và gửi dữ liệu thành công!', type: 'success' });
+                // Optional: Silent success or small indicator, don't spam toast if user is typing
             } else {
                 const errorRecord = { ...newRecord, status: 'error' as const };
                 await dbService.saveRecord(errorRecord);
                 setRecords(prev => prev.map(r => r.id === newRecord.id ? errorRecord : r));
-                setToast({ message: 'Gửi thất bại. Đã lưu offline.', type: 'warning' });
+                setToast({ message: 'Lỗi gửi ngầm. Đã lưu offline.', type: 'warning' });
             }
-        } catch (error) {
+        }).catch(async () => {
              const errorRecord = { ...newRecord, status: 'error' as const };
              await dbService.saveRecord(errorRecord);
              setRecords(prev => prev.map(r => r.id === newRecord.id ? errorRecord : r));
-             setToast({ message: 'Lỗi mạng. Đã lưu offline.', type: 'warning' });
-        }
+        });
+
     } catch (criticalError) {
         console.error("CRITICAL SAVE ERROR", criticalError);
         setToast({ message: 'Lỗi nghiêm trọng: Không thể lưu dữ liệu', type: 'error' });
-    } finally {
         setIsSubmitting(false);
     }
   };
@@ -237,18 +241,20 @@ const App: React.FC = () => {
       setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
       setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
 
-      const success = await syncRecordToSheet(record);
-      if (success) {
-        const updated = { ...record, status: 'synced' as const };
-        await dbService.saveRecord(updated);
-        setRecords(prev => prev.map(r => r.id === id ? updated : r));
-        setToast({ message: 'Gửi lại thành công!', type: 'success' });
-      } else {
-        const updated = { ...record, status: 'error' as const };
-        await dbService.saveRecord(updated);
-        setRecords(prev => prev.map(r => r.id === id ? updated : r));
-        setToast({ message: 'Vẫn chưa gửi được.', type: 'error' });
-      }
+      // Non-blocking retry
+      syncRecordToSheet(record).then(async (success) => {
+          if (success) {
+            const updated = { ...record, status: 'synced' as const };
+            await dbService.saveRecord(updated);
+            setRecords(prev => prev.map(r => r.id === id ? updated : r));
+            setToast({ message: 'Gửi lại thành công!', type: 'success' });
+          } else {
+            const updated = { ...record, status: 'error' as const };
+            await dbService.saveRecord(updated);
+            setRecords(prev => prev.map(r => r.id === id ? updated : r));
+            setToast({ message: 'Vẫn chưa gửi được.', type: 'error' });
+          }
+      });
   };
 
   const handleDeleteRecord = async (id: string) => {
@@ -266,21 +272,22 @@ const App: React.FC = () => {
           if (newImagesOnly.length === 0) return;
 
           if (settings.googleScriptUrl) {
-              setToast({ message: `Đang gửi thêm ${newImagesOnly.length} ảnh...`, type: 'warning' });
+              setToast({ message: `Đang gửi ngầm ${newImagesOnly.length} ảnh...`, type: 'info' });
               
-              const success = await syncRecordToSheet(updatedRecord, newImagesOnly);
-              
-              if (success) {
-                   const finalRecord = { ...updatedRecord, status: 'synced' as const };
-                   await dbService.saveRecord(finalRecord);
-                   setRecords(prev => prev.map(r => r.id === updatedRecord.id ? finalRecord : r));
-                   setToast({ message: 'Đã bổ sung ảnh thành công!', type: 'success' });
-              } else {
-                   const errorRecord = { ...updatedRecord, status: 'error' as const };
-                   await dbService.saveRecord(errorRecord);
-                   setRecords(prev => prev.map(r => r.id === updatedRecord.id ? errorRecord : r));
-                   setToast({ message: 'Lỗi gửi ảnh bổ sung.', type: 'error' });
-              }
+              // Non-blocking update
+              syncRecordToSheet(updatedRecord, newImagesOnly).then(async (success) => {
+                  if (success) {
+                       const finalRecord = { ...updatedRecord, status: 'synced' as const };
+                       await dbService.saveRecord(finalRecord);
+                       setRecords(prev => prev.map(r => r.id === updatedRecord.id ? finalRecord : r));
+                       setToast({ message: 'Đã bổ sung ảnh thành công!', type: 'success' });
+                  } else {
+                       const errorRecord = { ...updatedRecord, status: 'error' as const };
+                       await dbService.saveRecord(errorRecord);
+                       setRecords(prev => prev.map(r => r.id === updatedRecord.id ? errorRecord : r));
+                       setToast({ message: 'Lỗi gửi ảnh bổ sung.', type: 'error' });
+                  }
+              });
           }
       } catch (e) {
           console.error("Failed to update record", e);
@@ -313,10 +320,12 @@ const App: React.FC = () => {
             <div className="absolute top-4 left-4 right-4 z-[100] animate-fadeIn">
                 <div className={`px-4 py-4 rounded-2xl shadow-2xl flex items-center space-x-3 text-white font-black text-xs border border-white/10 backdrop-blur-xl ${
                     toast.type === 'success' ? 'bg-green-600/90' : 
-                    toast.type === 'error' ? 'bg-red-600/90' : 'bg-orange-500/90'
+                    toast.type === 'error' ? 'bg-red-600/90' : 
+                    toast.type === 'info' ? 'bg-sky-600/90' : 'bg-orange-500/90'
                 }`}>
                     {toast.type === 'success' ? <Check className="w-5 h-5" /> : 
-                     toast.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : <WifiOff className="w-5 h-5"/>}
+                     toast.type === 'error' ? <AlertTriangle className="w-5 h-5" /> : 
+                     toast.type === 'info' ? <Zap className="w-5 h-5 animate-pulse" /> : <WifiOff className="w-5 h-5"/>}
                     <span className="uppercase tracking-tight">{toast.message}</span>
                 </div>
             </div>

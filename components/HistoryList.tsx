@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { RepairRecord } from '../types';
 import { formatDate } from '../utils';
