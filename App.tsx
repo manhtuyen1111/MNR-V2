@@ -376,6 +376,7 @@ const App: React.FC = () => {
                     isDisabled={!isContainerValid}
                     onFocus={() => handleStepClick(2)}
                     assignedTeamId={user.assignedTeamId}
+                    userRole={user.role}
                 />
 
                 <CameraCapture 

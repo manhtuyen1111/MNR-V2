@@ -13,10 +13,11 @@ interface TeamSelectorProps {
   isDisabled: boolean;
   onFocus: () => void;
   assignedTeamId?: string;
+  userRole?: string; // Thêm prop để check quyền
 }
 
 const TeamSelector: React.FC<TeamSelectorProps> = ({ 
-  teams, selectedTeamId, onSelect, onManageTeams, isActive, isCompleted, isDisabled, onFocus, assignedTeamId 
+  teams, selectedTeamId, onSelect, onManageTeams, isActive, isCompleted, isDisabled, onFocus, assignedTeamId, userRole 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -184,14 +185,17 @@ const TeamSelector: React.FC<TeamSelectorProps> = ({
                 })}
               </div>
 
-              <button
-                onClick={() => { onManageTeams(); setIsOpen(false); }}
-                className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-300 text-slate-500 font-bold text-sm hover:bg-sky-50 hover:border-sky-300 transition-colors flex items-center justify-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>THÊM / CHỈNH SỬA TỔ</span>
-                <Settings2 className="w-4 h-4 ml-1 opacity-50" />
-              </button>
+              {/* CHỈ HIỂN THỊ NÚT NÀY NẾU LÀ ADMIN */}
+              {userRole === 'admin' && (
+                <button
+                    onClick={() => { onManageTeams(); setIsOpen(false); }}
+                    className="w-full py-4 rounded-2xl border-2 border-dashed border-slate-300 text-slate-500 font-bold text-sm hover:bg-sky-50 hover:border-sky-300 transition-colors flex items-center justify-center space-x-2"
+                >
+                    <Plus className="w-4 h-4" />
+                    <span>THÊM / CHỈNH SỬA TỔ</span>
+                    <Settings2 className="w-4 h-4 ml-1 opacity-50" />
+                </button>
+              )}
             </div>
           </div>
         </div>
