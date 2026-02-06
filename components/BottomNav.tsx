@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Camera, History, Settings, Lock } from 'lucide-react';
 import { TabView } from '../types';
@@ -13,49 +14,78 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
   const isAdmin = userRole === 'admin';
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] border-t border-slate-100 pb-safe z-50">
-       <div className="max-w-md mx-auto px-6 py-2">
-         <div className="bg-slate-50 rounded-full p-1.5 flex justify-between items-center relative shadow-inner">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#020617] border-t-2 border-white/10 pb-safe z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+       <div className="max-w-md mx-auto px-4 py-3">
+         <div className="flex justify-between items-center gap-3">
             
-            {/* Camera Tab */}
+            {/* Nghiệm thu (Capture) */}
             <button 
                 onClick={() => onChangeTab('capture')}
-                className={`flex-1 flex flex-col items-center justify-center py-2 rounded-full transition-all duration-300 ${currentTab === 'capture' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 flex flex-col items-center justify-center py-3 rounded-[1.25rem] transition-all duration-200 relative
+                    ${currentTab === 'capture' 
+                        ? 'bg-sky-500 text-black shadow-[0_0_20px_rgba(14,165,233,0.4)] scale-105 z-10' 
+                        : 'bg-slate-900 text-slate-500 border border-white/5 shadow-inner'
+                    }`}
             >
-                <Camera className="w-5 h-5 mb-0.5" />
-                <span className="text-[10px] font-bold">Nghiệm thu</span>
+                <div className={`transition-transform duration-300 ${currentTab === 'capture' ? 'scale-110' : ''}`}>
+                    <Camera className={`w-7 h-7 mb-1 ${currentTab === 'capture' ? 'stroke-[3]' : 'stroke-[2]'}`} />
+                </div>
+                <span className={`text-[12px] font-black uppercase tracking-tighter ${currentTab === 'capture' ? 'text-black' : 'text-slate-500'}`}>
+                    Nghiệm thu
+                </span>
+                {currentTab === 'capture' && (
+                    <div className="absolute -bottom-1 w-8 h-1 bg-white rounded-full shadow-[0_0_10px_#fff]"></div>
+                )}
             </button>
 
-            {/* History Tab */}
+            {/* Lịch sử (History) */}
             <button 
                 onClick={() => onChangeTab('history')}
-                className={`flex-1 flex flex-col items-center justify-center py-2 rounded-full transition-all duration-300 relative ${currentTab === 'history' ? 'bg-white shadow-sm text-sky-700' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 flex flex-col items-center justify-center py-3 rounded-[1.25rem] transition-all duration-200 relative
+                    ${currentTab === 'history' 
+                        ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)] scale-105 z-10' 
+                        : 'bg-slate-900 text-slate-500 border border-white/5 shadow-inner'
+                    }`}
             >
                 <div className="relative">
-                    <History className="w-5 h-5 mb-0.5" />
+                    <History className={`w-7 h-7 mb-1 ${currentTab === 'history' ? 'stroke-[3]' : 'stroke-[2]'}`} />
                     {pendingCount > 0 && (
-                        <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[9px] font-bold h-4 min-w-[16px] px-1 flex items-center justify-center rounded-full border-2 border-white">
+                        <span className="absolute -top-2 -right-3 bg-red-600 text-white text-[11px] font-black h-5 min-w-[20px] px-1 flex items-center justify-center rounded-full border-2 border-[#020617] shadow-lg animate-pulse">
                             {pendingCount}
                         </span>
                     )}
                 </div>
-                <span className="text-[10px] font-bold">Lịch sử</span>
+                <span className={`text-[12px] font-black uppercase tracking-tighter ${currentTab === 'history' ? 'text-black' : 'text-slate-500'}`}>
+                    Lịch sử
+                </span>
+                {currentTab === 'history' && (
+                    <div className="absolute -bottom-1 w-8 h-1 bg-sky-500 rounded-full shadow-[0_0_10px_#0ea5e9]"></div>
+                )}
             </button>
 
-            {/* Settings Tab */}
+            {/* Cấu hình (Settings) */}
             <button 
                 onClick={() => onChangeTab('settings')}
-                className={`flex-1 flex flex-col items-center justify-center py-2 rounded-full transition-all duration-300 relative ${currentTab === 'settings' ? 'bg-white shadow-sm text-purple-700' : 'text-slate-400 hover:text-slate-600'}`}
+                className={`flex-1 flex flex-col items-center justify-center py-3 rounded-[1.25rem] transition-all duration-200 relative
+                    ${currentTab === 'settings' 
+                        ? 'bg-slate-200 text-black shadow-[0_0_20px_rgba(226,232,240,0.3)] scale-105 z-10' 
+                        : 'bg-slate-900 text-slate-500 border border-white/5 shadow-inner'
+                    }`}
             >
                 <div className="relative">
-                    {isAdmin ? <Settings className="w-5 h-5 mb-0.5" /> : <Settings className="w-5 h-5 mb-0.5 opacity-50" />}
+                    <Settings className={`w-7 h-7 mb-1 ${currentTab === 'settings' ? 'stroke-[3]' : 'stroke-[2]'}`} />
                     {!isAdmin && (
-                        <div className="absolute -top-1 -right-2 bg-slate-200 rounded-full p-0.5 border border-white">
-                            <Lock className="w-2.5 h-2.5 text-slate-500" />
+                        <div className="absolute -top-1 -right-2 bg-black/60 rounded-full p-0.5 border border-white/20">
+                            <Lock className="w-3 h-3 text-slate-400" />
                         </div>
                     )}
                 </div>
-                <span className="text-[10px] font-bold">Cấu hình</span>
+                <span className={`text-[12px] font-black uppercase tracking-tighter ${currentTab === 'settings' ? 'text-black' : 'text-slate-500'}`}>
+                    Cấu hình
+                </span>
+                {currentTab === 'settings' && (
+                    <div className="absolute -bottom-1 w-8 h-1 bg-slate-400 rounded-full shadow-[0_0_10px_#94a3b8]"></div>
+                )}
             </button>
 
          </div>
