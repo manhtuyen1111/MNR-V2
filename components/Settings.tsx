@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
-import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen } from 'lucide-react';
+import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X } from 'lucide-react';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -140,17 +140,24 @@ function getOrCreateFolder(parentFolder, folderName) {
                     </div>
 
                     <div className="space-y-3">
-                        <div className="relative">
+                        <div className="relative group">
                             <input 
                                 type="text" 
                                 value={url}
                                 onChange={(e) => setUrl(e.target.value)}
                                 placeholder="Dán URL vào đây..."
-                                className="w-full py-4 pl-4 pr-10 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-sky-500 focus:bg-white focus:outline-none transition-all text-sm font-bold text-slate-700 shadow-inner placeholder:font-normal"
+                                className="w-full py-4 pl-4 pr-20 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-sky-500 focus:bg-white focus:outline-none transition-all text-sm font-bold text-slate-700 shadow-inner placeholder:font-normal"
                             />
                             {url && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                                    <button 
+                                        onClick={() => setUrl('')}
+                                        className="p-1.5 rounded-full bg-slate-200 text-slate-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+                                        title="Xóa nhanh"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                    <CheckCircle2 className="w-5 h-5 text-green-500 ml-1" />
                                 </div>
                             )}
                         </div>
