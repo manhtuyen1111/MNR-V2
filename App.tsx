@@ -23,7 +23,8 @@ const App: React.FC = () => {
   // Settings (Small data -> Keep in LocalStorage)
   const [settings, setSettings] = useState<AppSettings>(() => {
      const saved = localStorage.getItem('appSettings');
-     return saved ? JSON.parse(saved) : { googleScriptUrl: '' };
+     // Cập nhật link mặc định ban đầu
+     return saved ? JSON.parse(saved) : { googleScriptUrl: 'https://script.google.com/macros/s/AKfycbxhbNED5rPbjHnMOtIRJtu6B86tLA59qfFKiqqeqwGBH7TX9kGKD3_3FJe_zgiNrT5l/exec' };
   });
 
   // Teams (Small data -> Keep in LocalStorage)
