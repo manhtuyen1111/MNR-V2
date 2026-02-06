@@ -20,21 +20,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
 
     setTimeout(() => {
-        const lowerUsername = username.toLowerCase();
-        
-        // 1. Lấy tài khoản mặc định
-        const defaultUsers = USERS;
-        
-        // 2. Lấy tài khoản tùy chỉnh từ LocalStorage
-        const customUsersRaw = localStorage.getItem('customUsers');
-        const customUsers = customUsersRaw ? JSON.parse(customUsersRaw) : {};
-        
-        // Gộp tất cả tài khoản
-        const allUsers = { ...defaultUsers, ...customUsers };
-        
-        const user = allUsers[lowerUsername];
-        
-        // Kiểm tra mật khẩu (trong app này mật khẩu mặc định = username)
+        const user = USERS[username.toLowerCase()];
         if (user && password === username) {
             onLogin(user);
         } else {
@@ -122,7 +108,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             
             <div className="mt-16 text-center">
                 <p className="text-[10px] text-slate-700 font-black uppercase tracking-[0.5em]">
-                    v2.5.3 • Matran MNR Solution
+                    v2.5.1 • Matran MNR Solution
                 </p>
             </div>
         </div>

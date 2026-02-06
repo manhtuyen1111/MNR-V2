@@ -306,7 +306,7 @@ const App: React.FC = () => {
           <button onClick={() => setUser(null)} className="text-sky-400 font-black hover:text-white transition-colors border-l border-white/10 pl-3">ĐĂNG XUẤT</button>
       </div>
 
-      <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto">
+      <main className="flex-1 flex flex-col relative w-full max-w-md mx-auto overflow-hidden">
         
         {/* Toast Notification */}
         {toast && (
@@ -365,7 +365,7 @@ const App: React.FC = () => {
                 />
           </div>
         ) : activeTab === 'history' ? (
-            <div className="flex-1 overflow-y-auto scrollbar-hide bg-slate-50">
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide bg-slate-50">
                 {isLoadingRecords ? (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400">
                         <Loader2 className="w-8 h-8 animate-spin mb-2" />
