@@ -1,16 +1,19 @@
 
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
-import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen } from 'lucide-react';
 
 interface SettingsProps {
   settings: AppSettings;
   onSave: (settings: AppSettings) => void;
 }
 
+type SettingsTab = 'connection' | 'guide';
+
 const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
   const [url, setUrl] = useState(settings.googleScriptUrl || '');
   const [showScript, setShowScript] = useState(false);
+  const [activeTab, setActiveTab] = useState<SettingsTab>('connection');
 
   const handleSave = () => {
     onSave({ ...settings, googleScriptUrl: url });
@@ -101,111 +104,150 @@ function getOrCreateFolder(parentFolder, folderName) {
 `;
 
   return (
-    <div className="p-4 space-y-4 animate-fadeIn pb-24">
-       {/* Input Card */}
-       <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center space-x-3 mb-6">
-             <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl border border-purple-100 shadow-sm">
-                <LinkIcon className="w-5 h-5" />
-             </div>
-             <div>
-                <h2 className="text-lg font-black text-slate-800 tracking-tight">Cấu hình Hệ thống</h2>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Liên kết Google Apps Script</p>
-             </div>
-          </div>
-
-          <div className="space-y-2">
-             <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Web App URL</label>
-             <input 
-                type="text" 
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://script.google.com/macros/s/..."
-                className="w-full p-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-purple-500 focus:bg-white focus:outline-none transition-all text-sm font-mono text-slate-600 shadow-inner"
-             />
-          </div>
-
-          {!url ? (
-             <div className="flex items-start space-x-3 mt-4 text-amber-600 text-[11px] font-bold bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>Vui lòng triển khai Google Apps Script mới và dán URL vào đây để kích hoạt tính năng lưu ảnh theo cấu trúc thư mục mới.</span>
-             </div>
-          ) : (
-             <div className="flex items-center space-x-3 mt-4 text-green-600 text-[11px] font-bold bg-green-50 p-4 rounded-2xl border border-green-100">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Đã cấu hình URL kết nối thành công.</span>
-             </div>
-          )}
-          
-          <div className="mt-8">
-             <button 
-                onClick={handleSave}
-                className="w-full bg-purple-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-purple-900/20 active:scale-95 transition-transform flex items-center justify-center space-x-3 border border-purple-400/30"
-             >
-                <Save className="w-5 h-5" />
-                <span className="uppercase tracking-widest text-xs">Lưu Cấu Hình</span>
-             </button>
+    <div className="flex flex-col h-full bg-slate-100">
+       {/* Tab Navigation */}
+       <div className="px-4 pt-4 pb-2 bg-slate-100 shrink-0 z-10">
+          <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex">
+              <button 
+                onClick={() => setActiveTab('connection')}
+                className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl transition-all duration-300 ${activeTab === 'connection' ? 'bg-sky-50 text-sky-700 shadow-sm border border-sky-100' : 'text-slate-400 hover:bg-slate-50'}`}
+              >
+                  <Zap className={`w-4 h-4 ${activeTab === 'connection' ? 'fill-sky-700' : ''}`} />
+                  <span className="text-xs font-black uppercase tracking-wider">Kết nối API</span>
+              </button>
+              <button 
+                onClick={() => setActiveTab('guide')}
+                className={`flex-1 flex items-center justify-center space-x-2 py-3 rounded-xl transition-all duration-300 ${activeTab === 'guide' ? 'bg-purple-50 text-purple-700 shadow-sm border border-purple-100' : 'text-slate-400 hover:bg-slate-50'}`}
+              >
+                  <BookOpen className={`w-4 h-4 ${activeTab === 'guide' ? 'fill-purple-700' : ''}`} />
+                  <span className="text-xs font-black uppercase tracking-wider">Mã Script & HD</span>
+              </button>
           </div>
        </div>
 
-       {/* Instruction Card */}
-       <div className="bg-[#0f172a] text-white p-6 rounded-[2rem] shadow-2xl relative overflow-hidden border border-white/5">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500/5 rounded-full blur-3xl"></div>
-            
-            <h3 className="font-black text-lg mb-6 flex items-center justify-between border-b border-white/10 pb-4">
-                <div className="flex items-center">
-                    <FileCode className="w-6 h-6 mr-3 text-sky-400" />
-                    Mã Script Tối Ưu
-                </div>
-            </h3>
-
-            <div className="space-y-5 text-sm text-slate-300">
-                <p className="text-[10px] text-sky-400 font-black bg-sky-950/50 p-3 rounded-xl border border-sky-900/50 uppercase tracking-widest leading-relaxed">
-                    Lưu ý: Script này đã được tối ưu để lưu ảnh theo cấu trúc thư mục Năm-Tháng/Ngày/Tổ/Cont và xử lý nhanh hơn.
-                </p>
-                
-                <div className="space-y-3">
-                    <div className="flex space-x-3">
-                        <span className="bg-slate-800 w-6 h-6 flex items-center justify-center rounded-lg font-black text-[10px] shrink-0 border border-white/10 text-sky-400">1</span>
-                        <p className="text-xs">Tạo dự án mới tại <a href="https://script.google.com" target="_blank" className="text-sky-400 underline decoration-sky-400/30 font-bold">Google Apps Script</a>.</p>
-                    </div>
-                    <div className="flex space-x-3">
-                        <span className="bg-slate-800 w-6 h-6 flex items-center justify-center rounded-lg font-black text-[10px] shrink-0 border border-white/10 text-sky-400">2</span>
-                        <p className="text-xs">Sao chép mã tối ưu bên dưới và dán vào file <code>Code.gs</code>.</p>
-                    </div>
-                </div>
-                
-                {/* Script Code Block Toggle */}
-                <div className="mt-4 bg-[#0a0f1d] rounded-2xl overflow-hidden border border-white/5 shadow-inner">
-                    <button 
-                        onClick={() => setShowScript(!showScript)}
-                        className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-all"
-                    >
-                        <span className="text-[10px] font-black font-mono text-sky-300 uppercase tracking-widest">Xem Mã Code.gs</span>
-                        {showScript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
-                    
-                    {showScript && (
-                        <div className="relative group">
-                            <pre className="p-4 text-[10px] font-mono text-slate-400 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-96 overflow-y-auto bg-black/30">
-                                {SCRIPT_CODE}
-                            </pre>
-                            <button 
-                                onClick={() => copyToClipboard(SCRIPT_CODE)}
-                                className="absolute top-3 right-3 p-3 bg-sky-600 text-white rounded-xl shadow-2xl hover:bg-sky-500 flex items-center space-x-2 border border-sky-400/50 transition-all"
-                            >
-                                <Copy className="w-4 h-4" />
-                                <span className="text-[10px] font-black uppercase tracking-wider">Copy</span>
-                            </button>
+       {/* Content Area */}
+       <div className="flex-1 overflow-y-auto px-4 pb-24 scrollbar-hide">
+          
+          {/* TAB 1: CONNECTION */}
+          {activeTab === 'connection' && (
+             <div className="space-y-4 animate-fadeIn mt-2">
+                <div className="bg-white rounded-[2rem] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-100 p-6">
+                    <div className="flex items-center space-x-3 mb-6">
+                        <div className="p-3 bg-gradient-to-br from-sky-400 to-blue-600 text-white rounded-2xl shadow-lg shadow-sky-200">
+                            <LinkIcon className="w-6 h-6" />
                         </div>
-                    )}
+                        <div>
+                            <h2 className="text-lg font-black text-slate-800 tracking-tight">Liên kết Web App</h2>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Google Apps Script URL</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="relative">
+                            <input 
+                                type="text" 
+                                value={url}
+                                onChange={(e) => setUrl(e.target.value)}
+                                placeholder="Dán URL vào đây..."
+                                className="w-full py-4 pl-4 pr-10 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-sky-500 focus:bg-white focus:outline-none transition-all text-sm font-bold text-slate-700 shadow-inner placeholder:font-normal"
+                            />
+                            {url && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                </div>
+                            )}
+                        </div>
+                        
+                        {!url ? (
+                            <div className="flex items-start space-x-2 text-amber-600 text-[10px] font-bold bg-amber-50 p-3 rounded-xl border border-amber-100/50">
+                                <AlertCircle className="w-4 h-4 shrink-0" />
+                                <span className="leading-tight">Cần URL để tính năng đồng bộ hoạt động.</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-start space-x-2 text-green-600 text-[10px] font-bold bg-green-50 p-3 rounded-xl border border-green-100/50">
+                                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                <span className="leading-tight">Sẵn sàng đồng bộ dữ liệu.</span>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex space-x-3">
-                    <span className="bg-slate-800 w-6 h-6 flex items-center justify-center rounded-lg font-black text-[10px] shrink-0 border border-white/10 text-sky-400">3</span>
-                    <p className="text-xs"><strong>Deploy</strong> &rarr; <strong>New deployment</strong> (Web App, Me, Anyone).</p>
+                <button 
+                    onClick={handleSave}
+                    className="w-full bg-slate-900 text-white font-black py-4.5 rounded-2xl shadow-xl shadow-slate-900/20 active:scale-95 transition-transform flex items-center justify-center space-x-3 border border-slate-700"
+                >
+                    <Save className="w-5 h-5" />
+                    <span className="uppercase tracking-widest text-xs">Lưu Cấu Hình</span>
+                </button>
+             </div>
+          )}
+
+          {/* TAB 2: GUIDE & SCRIPT */}
+          {activeTab === 'guide' && (
+             <div className="space-y-4 animate-fadeIn mt-2">
+                 {/* Instruction Card */}
+                <div className="bg-[#0f172a] text-white p-6 rounded-[2rem] shadow-2xl relative overflow-hidden border border-white/5">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
+                        
+                        <h3 className="font-black text-lg mb-5 flex items-center border-b border-white/10 pb-4">
+                            <FileCode className="w-6 h-6 mr-3 text-purple-400" />
+                            <span className="tracking-tight">Mã Nguồn Script</span>
+                        </h3>
+
+                        <div className="space-y-4">
+                            <p className="text-[10px] text-purple-300 font-bold bg-purple-900/20 p-3 rounded-xl border border-purple-500/20 uppercase tracking-widest leading-relaxed">
+                                Sử dụng mã này trong file <code>Code.gs</code> để tối ưu tốc độ và cấu trúc thư mục.
+                            </p>
+                            
+                            {/* Script Code Block Toggle */}
+                            <div className="bg-[#020617] rounded-2xl overflow-hidden border border-white/10 shadow-inner">
+                                <button 
+                                    onClick={() => setShowScript(!showScript)}
+                                    className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-all group"
+                                >
+                                    <span className="text-[10px] font-black font-mono text-purple-300 uppercase tracking-widest group-hover:text-purple-200">
+                                        {showScript ? 'Thu gọn mã' : 'Xem toàn bộ mã'}
+                                    </span>
+                                    {showScript ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                                </button>
+                                
+                                {showScript && (
+                                    <div className="relative group/code">
+                                        <pre className="p-4 text-[9px] font-mono text-slate-400 overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto bg-black/50 custom-scrollbar">
+                                            {SCRIPT_CODE}
+                                        </pre>
+                                        <div className="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity">
+                                            <button 
+                                                onClick={() => copyToClipboard(SCRIPT_CODE)}
+                                                className="p-2 bg-purple-600 text-white rounded-lg shadow-lg hover:bg-purple-500 flex items-center space-x-1"
+                                            >
+                                                <Copy className="w-3 h-3" />
+                                                <span className="text-[8px] font-black uppercase">Copy</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                                <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Các bước triển khai</h4>
+                                <div className="flex space-x-3 items-start">
+                                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-0 text-purple-400">1</span>
+                                    <p className="text-[11px] text-slate-300 leading-tight pt-0.5">Tạo dự án mới tại <a href="https://script.google.com" target="_blank" className="text-purple-400 hover:underline font-bold">script.google.com</a></p>
+                                </div>
+                                <div className="flex space-x-3 items-start">
+                                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-0 text-purple-400">2</span>
+                                    <p className="text-[11px] text-slate-300 leading-tight pt-0.5">Dán mã trên vào file <code>Code.gs</code> và lưu lại.</p>
+                                </div>
+                                <div className="flex space-x-3 items-start">
+                                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-0 text-purple-400">3</span>
+                                    <p className="text-[11px] text-slate-300 leading-tight pt-0.5">Chọn <strong>Deploy</strong> &rarr; <strong>New deployment</strong>. Chọn <em>Web app</em>, Access: <em>Anyone</em>.</p>
+                                </div>
+                            </div>
+                        </div>
                 </div>
-            </div>
+             </div>
+          )}
        </div>
     </div>
   );

@@ -28,7 +28,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
             facingMode: 'environment',
-            width: { ideal: 1920 },
+            width: { ideal: 1920 }, // Input stream still high quality for focus
             height: { ideal: 1080 }
         } 
       });
@@ -49,19 +49,35 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     setIsCameraOpen(false);
   };
 
-  // Capture Photo from Video Stream
+  // Capture Photo from Video Stream - OPTIMIZED FOR 900x600 SPEED
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      // Target Dimensions
+      const MAX_W = 900;
+      const MAX_H = 600;
+
+      let w = video.videoWidth;
+      let h = video.videoHeight;
+      
+      // Calculate scale to fit 900x600
+      const scale = Math.min(MAX_W / w, MAX_H / h);
+      if (scale < 1) {
+          w = w * scale;
+          h = h * scale;
+      }
+
+      // Set canvas to optimized size immediately
+      canvas.width = w;
+      canvas.height = h;
       
       const ctx = canvas.getContext('2d');
       if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        ctx.drawImage(video, 0, 0, w, h);
+        // Export at 0.5 quality directly to save processing time later
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
         onAddImage(dataUrl);
       }
     }

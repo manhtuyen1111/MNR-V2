@@ -270,13 +270,26 @@ const ImageViewer: React.FC<{
         if (videoRef.current && canvasRef.current) {
             const v = videoRef.current;
             const c = canvasRef.current;
-            c.width = v.videoWidth;
-            c.height = v.videoHeight;
+            
+            // Optimized Capture: 900x600 Max
+            const MAX_W = 900;
+            const MAX_H = 600;
+            let w = v.videoWidth;
+            let h = v.videoHeight;
+            const scale = Math.min(MAX_W / w, MAX_H / h);
+            if (scale < 1) {
+                w *= scale;
+                h *= scale;
+            }
+
+            c.width = w;
+            c.height = h;
+
             const ctx = c.getContext('2d');
             if (ctx) {
-                ctx.drawImage(v, 0, 0);
-                const raw = c.toDataURL('image/jpeg', 0.6);
-                const compressed = await compressImage(raw, 1024, 0.5); // Fast quality
+                ctx.drawImage(v, 0, 0, w, h);
+                // Direct compression: 0.5 quality
+                const compressed = c.toDataURL('image/jpeg', 0.5);
                 setStagedImages(prev => [...prev, compressed]);
                 if (navigator.vibrate) navigator.vibrate(30);
             }

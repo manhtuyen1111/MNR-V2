@@ -2,9 +2,9 @@
 import { RepairRecord } from './types';
 
 // --- IMAGE COMPRESSION ---
-// Adjusted defaults for faster uploads (quality 0.5 and maxWidth 1024)
-// This is the "sweet spot" for speed (4-5s for 20 images) and visual clarity.
-export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.5): Promise<string> => {
+// Adjusted defaults: 900x600 max resolution, quality 0.5
+// This drastically reduces file size (~40-60KB) for fast 3G/4G uploads.
+export const compressImage = (base64Str: string, maxWidth = 900, maxHeight = 600, quality = 0.5): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
@@ -13,18 +13,23 @@ export const compressImage = (base64Str: string, maxWidth = 1024, quality = 0.5)
       let width = img.width;
       let height = img.height;
 
-      // Maintain aspect ratio
-      if (width > maxWidth) {
-        height = (maxWidth / width) * height;
-        width = maxWidth;
+      // Calculate scale ratio to fit within maxWidth x maxHeight
+      // We take the smaller ratio to ensure the image fits entirely within the box
+      const scale = Math.min(maxWidth / width, maxHeight / height);
+
+      // Only scale down, never scale up
+      if (scale < 1) {
+          width = width * scale;
+          height = height * scale;
       }
 
       canvas.width = width;
       canvas.height = height;
+      
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
-        // Using JPEG format with optimized quality for fastest transmission
+        // Using JPEG format with optimized quality (0.5) for fastest transmission
         resolve(canvas.toDataURL('image/jpeg', quality));
       } else {
         resolve(base64Str); // Fallback if canvas fails
