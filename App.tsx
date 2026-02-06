@@ -425,6 +425,7 @@ const App: React.FC = () => {
                 ) : (
                     <HistoryList 
                         records={records} 
+                        teams={teams}
                         onRetry={handleRetry} 
                         onDelete={handleDeleteRecord} 
                         onUpdateRecord={handleUpdateRecord}

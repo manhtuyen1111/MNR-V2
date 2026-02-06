@@ -1,17 +1,18 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { RepairRecord } from '../types';
+import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
 import { CheckCircle, Clock, AlertTriangle, RefreshCw, Trash2, Image as ImageIcon, X, Camera, Save, Filter, Calendar, Users, ChevronDown } from 'lucide-react';
-import { REPAIR_TEAMS } from '../constants';
 
 interface HistoryListProps {
   records: RepairRecord[];
+  teams: Team[];
   onRetry: (id: string) => void;
   onDelete: (id: string) => void;
   onUpdateRecord: (updatedRecord: RepairRecord, newImagesOnly: string[]) => void;
 }
 
-const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, onUpdateRecord }) => {
+const HistoryList: React.FC<HistoryListProps> = ({ records, teams, onRetry, onDelete, onUpdateRecord }) => {
   const [viewingRecord, setViewingRecord] = useState<RepairRecord | null>(null);
   const [filterTeam, setFilterTeam] = useState<string>('all');
   const [filterDateRange, setFilterDateRange] = useState<{start: string, end: string}>({start: '', end: ''});
@@ -19,7 +20,7 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
 
   // Filtering logic
   const filteredRecords = records.filter(record => {
-    // Team Filter
+    // Team Filter - Sử dụng teamId để so sánh chính xác
     if (filterTeam !== 'all' && record.teamId !== filterTeam) return false;
 
     // Date Filter
@@ -77,7 +78,7 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-                {/* Team Selector Dropdown */}
+                {/* Team Selector Dropdown - Sử dụng prop teams thay vì hằng số tĩnh */}
                 <div className="relative">
                     <select 
                         value={filterTeam}
@@ -85,7 +86,7 @@ const HistoryList: React.FC<HistoryListProps> = ({ records, onRetry, onDelete, o
                         className="w-full appearance-none bg-slate-50 border-2 border-slate-100 rounded-xl py-2.5 pl-3 pr-8 text-[11px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
                     >
                         <option value="all">Tất cả tổ đội</option>
-                        {REPAIR_TEAMS.map(team => (
+                        {teams.map(team => (
                             <option key={team.id} value={team.id}>{team.name}</option>
                         ))}
                     </select>
