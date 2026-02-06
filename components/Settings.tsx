@@ -25,12 +25,10 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
   };
 
   const SCRIPT_CODE = `
-// --- CẤU HÌNH v2.0 (Optimized Speed) ---
+// --- CẤU HÌNH v2.1 (Fix Image Blob) ---
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
 function doPost(e) {
-  // Chỉ khóa đoạn logic tạo thư mục để tránh xung đột
-  // Việc ghi file sẽ được mở khóa để chạy song song
   var lock = LockService.getScriptLock();
   lock.tryLock(10000); 
 
@@ -52,29 +50,28 @@ function doPost(e) {
 
     var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
     
-    // Tìm thư mục (Logic tuần tự)
     var yearMonthFolder = getOrCreateFolder(rootFolder, yearMonthFolderLabel);
     var dateFolder = getOrCreateFolder(yearMonthFolder, fullDateString);
     var teamFolder = getOrCreateFolder(dateFolder, teamName);
     var containerFolder = getOrCreateFolder(teamFolder, containerNumber);
     
-    // QUAN TRỌNG: Nhả khóa ngay khi đã có thư mục đích
-    // Để các yêu cầu khác có thể bắt đầu xử lý ngay lập tức
+    // Nhả khóa để xử lý ảnh song song
     lock.releaseLock(); 
 
-    // 2. Lưu Hình Ảnh (Chạy song song, không cần Lock)
+    // 2. Lưu Hình Ảnh (Fix lỗi File không xem được)
     var timeStr = timestamp.getTime().toString();
     
     for (var i = 0; i < images.length; i++) {
-      var imageBase64 = images[i].split(',')[1];
+      var imageBase64 = images[i].split(',')[1]; // Bỏ phần header data:image...
       var decodedImage = Utilities.base64Decode(imageBase64);
       var fileName = containerNumber + '_' + timeStr + '_' + (i + 1) + '.jpg';
       
-      // Tạo file trực tiếp vào folder
-      containerFolder.createFile(fileName, decodedImage, 'image/jpeg');
+      // QUAN TRỌNG: Phải tạo Blob với mimeType rõ ràng
+      var blob = Utilities.newBlob(decodedImage, 'image/jpeg', fileName);
+      containerFolder.createFile(blob);
     }
 
-    // 3. Ghi Log (Có thể chậm, nhưng chạy cuối cùng)
+    // 3. Ghi Log Sheet
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       if (ss) {
@@ -191,12 +188,12 @@ function getOrCreateFolder(parentFolder, folderName) {
                         
                         <h3 className="font-black text-lg mb-5 flex items-center border-b border-white/10 pb-4">
                             <FileCode className="w-6 h-6 mr-3 text-purple-400" />
-                            <span className="tracking-tight">Mã Nguồn Script v2.0</span>
+                            <span className="tracking-tight">Mã Nguồn Script v2.1 (Fix)</span>
                         </h3>
 
                         <div className="space-y-4">
                             <p className="text-[10px] text-purple-300 font-bold bg-purple-900/20 p-3 rounded-xl border border-purple-500/20 uppercase tracking-widest leading-relaxed">
-                                Đã tối ưu tốc độ. Vui lòng cập nhật đè lên mã cũ trong Google Apps Script.
+                                Đã sửa lỗi xem ảnh trên Drive. Vui lòng cập nhật và Deploy lại (New Deployment).
                             </p>
                             
                             {/* Script Code Block Toggle */}
