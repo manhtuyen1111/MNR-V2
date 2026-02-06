@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X, AlertTriangle } from 'lucide-react';
-import { resetToDefault } from '../utils/resetApp';  // ← Đã import đúng
+import { resetToDefault } from '../utils/resetApp';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -24,8 +24,8 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
     alert('Đã copy mã vào bộ nhớ tạm!');
   };
 
-  const SCRIPT_CODE = `
-// --- CẤU HÌNH v2.2 (Hỗ trợ Upload từng phần) ---
+  // SCRIPT_CODE giữ nguyên, đảm bảo string đóng đúng
+  const SCRIPT_CODE = `// --- CẤU HÌNH v2.2 (Hỗ trợ Upload từng phần) ---
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
 function doPost(e) {
@@ -39,10 +39,8 @@ function doPost(e) {
     var images = data.images; 
     var timestamp = new Date(data.timestamp);
     var editor = data.editor || 'unknown';
-    // Lấy chỉ số bắt đầu (để đặt tên file tiếp nối: _4.jpg, _5.jpg...)
     var startIdx = data.startIdx || 0; 
 
-    // 1. Tạo Cấu Trúc Thư Mục (Cần Lock)
     var year = timestamp.getFullYear().toString();
     var month = ("0" + (timestamp.getMonth() + 1)).slice(-2);
     var day = ("0" + timestamp.getDate()).slice(-2);
@@ -57,17 +55,14 @@ function doPost(e) {
     var teamFolder = getOrCreateFolder(dateFolder, teamName);
     var containerFolder = getOrCreateFolder(teamFolder, containerNumber);
     
-    // Nhả khóa để xử lý ảnh song song
     lock.releaseLock(); 
 
-    // 2. Lưu Hình Ảnh
     var timeStr = timestamp.getTime().toString();
     
     for (var i = 0; i < images.length; i++) {
-      var imageBase64 = images[i].split(',')[1]; // Bỏ phần header data:image...
+      var imageBase64 = images[i].split(',')[1];
       var decodedImage = Utilities.base64Decode(imageBase64);
       
-      // Tính toán số thứ tự ảnh chính xác dựa trên startIdx
       var imageIndex = startIdx + i + 1;
       var fileName = containerNumber + '_' + timeStr + '_' + imageIndex + '.jpg';
       
@@ -75,9 +70,6 @@ function doPost(e) {
       containerFolder.createFile(blob);
     }
 
-    // 3. Ghi Log Sheet (Chỉ ghi nếu startIdx = 0 hoặc update)
-    // Nếu upload từng phần (retry), ta có thể chọn không ghi thêm dòng mới hoặc update dòng cũ
-    // Ở đây đơn giản hóa: Luôn append log để theo dõi lịch sử gửi
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       if (ss) {
@@ -85,14 +77,13 @@ function doPost(e) {
         if (sheet.getLastRow() === 0) {
           sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Ảnh gửi đợt này", "Tổng ảnh (ước tính)", "Link Folder"]);
         }
-        // Ghi log
         sheet.appendRow([
           new Date(), 
           containerNumber, 
           teamName, 
           editor, 
-          images.length, // Số ảnh gửi trong request này
-          startIdx + images.length, // Tổng số ảnh tính đến hiện tại
+          images.length,
+          startIdx + images.length,
           containerFolder.getUrl()
         ]);
       }
@@ -112,8 +103,7 @@ function getOrCreateFolder(parentFolder, folderName) {
   } else {
     return parentFolder.createFolder(folderName);
   }
-}
-`;
+}`;
 
   return (
     <div className="flex flex-col h-full bg-slate-100">
@@ -140,7 +130,6 @@ function getOrCreateFolder(parentFolder, folderName) {
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto px-4 pb-24 scrollbar-hide">
         
-        {/* TAB 1: CONNECTION */}
         {activeTab === 'connection' && (
           <div className="space-y-4 animate-fadeIn mt-2">
             <div className="bg-white rounded-[2rem] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-100 p-6">
@@ -199,15 +188,14 @@ function getOrCreateFolder(parentFolder, folderName) {
               <span className="uppercase tracking-widest text-xs">Lưu Cấu Hình</span>
             </button>
 
-            {/* === NÚT RESET ĐÃ THÊM Ở ĐÂY - Cuối tab Kết nối API === */}
+            {/* Reset block */}
             <div className="mt-10 pt-8 border-t-2 border-red-300 bg-red-50/40 rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-bold text-red-700 mb-3 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
                 Reset toàn bộ ứng dụng
               </h3>
               <p className="text-sm text-red-800/90 mb-5 leading-relaxed">
-                Xóa hết dữ liệu cục bộ (URL script, token, cài đặt, lịch sử...), app sẽ về trạng thái như mới cài.  
-                <span className="font-semibold">Không thể khôi phục!</span> Chỉ dùng khi cần reset hoàn toàn.
+                Xóa hết dữ liệu cục bộ (URL script, token, cài đặt, lịch sử...). App sẽ về trạng thái mới. Không thể khôi phục!
               </p>
               <button
                 onClick={resetToDefault}
@@ -219,10 +207,8 @@ function getOrCreateFolder(parentFolder, folderName) {
           </div>
         )}
 
-        {/* TAB 2: GUIDE & SCRIPT */}
         {activeTab === 'guide' && (
           <div className="space-y-4 animate-fadeIn mt-2">
-            {/* Instruction Card */}
             <div className="bg-[#0f172a] text-white p-6 rounded-[2rem] shadow-2xl relative overflow-hidden border border-white/5">
               <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
               
@@ -235,8 +221,7 @@ function getOrCreateFolder(parentFolder, folderName) {
                 <p className="text-[10px] text-purple-300 font-bold bg-purple-900/20 p-3 rounded-xl border border-purple-500/20 uppercase tracking-widest leading-relaxed">
                   Cập nhật: Hỗ trợ tính năng Retry thông minh (chỉ gửi ảnh lỗi). Vui lòng Deploy lại.
                 </p>
-                
-                {/* Script Code Block Toggle */}
+
                 <div className="bg-[#020617] rounded-2xl overflow-hidden border border-white/10 shadow-inner">
                   <button 
                     onClick={() => setShowScript(!showScript)}
@@ -269,4 +254,25 @@ function getOrCreateFolder(parentFolder, folderName) {
                 <div className="space-y-3 pt-2">
                   <h4 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Các bước triển khai</h4>
                   <div className="flex space-x-3 items-start">
-                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-
+                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-0 text-purple-400">1</span>
+                    <p className="text-[11px] text-slate-300 leading-tight pt-0.5">Tạo dự án mới tại <a href="https://script.google.com" target="_blank" className="text-purple-400 hover:underline font-bold">script.google.com</a></p>
+                  </div>
+                  <div className="flex space-x-3 items-start">
+                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-0 text-purple-400">2</span>
+                    <p className="text-[11px] text-slate-300 leading-tight pt-0.5">Dán mã trên vào file <code>Code.gs</code> và lưu lại.</p>
+                  </div>
+                  <div className="flex space-x-3 items-start">
+                    <span className="bg-white/10 w-5 h-5 flex items-center justify-center rounded font-bold text-[10px] shrink-0 text-purple-400">3</span>
+                    <p className="text-[11px] text-slate-300 leading-tight pt-0.5">Chọn <strong>Deploy</strong> → <strong>New deployment</strong>. Chọn <em>Web app</em>, Access: <em>Anyone</em>.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Settings;
