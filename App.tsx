@@ -144,7 +144,7 @@ const App: React.FC = () => {
       setImages(prev => [...prev, compressed]);
   };
 
-  const syncRecordToSheet = async (record: RepairRecord, specificImages?: string[]): Promise<boolean> => {
+  const syncRecordToSheet = async (record: RepairRecord, specificImages?: string[], startIdx: number = 0): Promise<boolean> => {
       if (!settings.googleScriptUrl) return false;
       try {
         const payload = {
@@ -152,7 +152,8 @@ const App: React.FC = () => {
             timestamp: new Date(record.timestamp).toISOString(),
             containerNumber: record.containerNumber,
             team: record.teamName,
-            images: specificImages || record.images, 
+            images: specificImages || record.images,
+            startIdx: startIdx, // Gửi chỉ số bắt đầu để đặt tên file chính xác (ví dụ _4.jpg)
             editor: user?.username || 'unknown'
         };
         
@@ -193,7 +194,8 @@ const App: React.FC = () => {
             teamName,
             images: images,
             timestamp: Date.now(),
-            status: 'pending' 
+            status: 'pending',
+            uploadedCount: 0 // Ban đầu chưa có ảnh nào được gửi
         };
 
         // 1. SAVE TO LOCAL DB
@@ -224,12 +226,11 @@ const App: React.FC = () => {
         setToast({ message: 'Đã lưu! Đang gửi ngầm...', type: 'info' });
 
         // Trigger Sync asynchronously (Fire and Forget from UI perspective)
-        syncRecordToSheet(newRecord).then(async (success) => {
+        syncRecordToSheet(newRecord, undefined, 0).then(async (success) => {
             if (success) {
-                const syncedRecord = { ...newRecord, status: 'synced' as const };
+                const syncedRecord = { ...newRecord, status: 'synced' as const, uploadedCount: newRecord.images.length };
                 await dbService.saveRecord(syncedRecord);
                 setRecords(prev => prev.map(r => r.id === newRecord.id ? syncedRecord : r));
-                // Optional: Silent success or small indicator, don't spam toast if user is typing
             } else {
                 const errorRecord = { ...newRecord, status: 'error' as const };
                 await dbService.saveRecord(errorRecord);
@@ -253,16 +254,33 @@ const App: React.FC = () => {
       const record = records.find(r => r.id === id);
       if (!record || !settings.googleScriptUrl) return;
 
-      setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
-      setToast({ message: 'Đang thử gửi lại...', type: 'warning' });
+      // Tính toán những ảnh chưa gửi được
+      const startIdx = record.uploadedCount || 0;
+      const imagesToSync = record.images.slice(startIdx);
 
-      // Non-blocking retry
-      syncRecordToSheet(record).then(async (success) => {
+      if (imagesToSync.length === 0) {
+          // Trường hợp hiếm: Đã gửi hết nhưng status vẫn error, thử cập nhật lại status
+          const updated = { ...record, status: 'synced' as const };
+          await dbService.saveRecord(updated);
+          setRecords(prev => prev.map(r => r.id === id ? updated : r));
+          setToast({ message: 'Dữ liệu đã đầy đủ. Cập nhật trạng thái.', type: 'success' });
+          return;
+      }
+
+      setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
+      setToast({ message: `Đang gửi tiếp ${imagesToSync.length} ảnh...`, type: 'warning' });
+
+      // Non-blocking retry with specific subset of images
+      syncRecordToSheet(record, imagesToSync, startIdx).then(async (success) => {
           if (success) {
-            const updated = { ...record, status: 'synced' as const };
+            const updated = { 
+                ...record, 
+                status: 'synced' as const,
+                uploadedCount: record.images.length // Đánh dấu đã gửi hết
+            };
             await dbService.saveRecord(updated);
             setRecords(prev => prev.map(r => r.id === id ? updated : r));
-            setToast({ message: 'Gửi lại thành công!', type: 'success' });
+            setToast({ message: 'Gửi thành công!', type: 'success' });
           } else {
             const updated = { ...record, status: 'error' as const };
             await dbService.saveRecord(updated);
@@ -281,6 +299,7 @@ const App: React.FC = () => {
 
   const handleUpdateRecord = async (updatedRecord: RepairRecord, newImagesOnly: string[] = []) => {
       try {
+          // Lưu vào DB trước
           await dbService.saveRecord(updatedRecord);
           setRecords(prev => prev.map(r => r.id === updatedRecord.id ? updatedRecord : r));
           
@@ -289,10 +308,17 @@ const App: React.FC = () => {
           if (settings.googleScriptUrl) {
               setToast({ message: `Đang gửi ngầm ${newImagesOnly.length} ảnh...`, type: 'info' });
               
+              // Tính chỉ số bắt đầu cho các ảnh mới
+              const startIdx = updatedRecord.images.length - newImagesOnly.length;
+
               // Non-blocking update
-              syncRecordToSheet(updatedRecord, newImagesOnly).then(async (success) => {
+              syncRecordToSheet(updatedRecord, newImagesOnly, startIdx).then(async (success) => {
                   if (success) {
-                       const finalRecord = { ...updatedRecord, status: 'synced' as const };
+                       const finalRecord = { 
+                           ...updatedRecord, 
+                           status: 'synced' as const,
+                           uploadedCount: updatedRecord.images.length // Cập nhật số lượng đã upload
+                       };
                        await dbService.saveRecord(finalRecord);
                        setRecords(prev => prev.map(r => r.id === updatedRecord.id ? finalRecord : r));
                        setToast({ message: 'Đã bổ sung ảnh thành công!', type: 'success' });

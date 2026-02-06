@@ -1,3 +1,4 @@
+
 export interface Team {
   id: string;
   name: string;
@@ -15,6 +16,7 @@ export interface RepairRecord {
   images: string[];
   timestamp: number;
   status: SyncStatus;
+  uploadedCount?: number; // Track how many images have been successfully uploaded to Drive
 }
 
 export type TabView = 'capture' | 'history' | 'settings';

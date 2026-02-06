@@ -25,7 +25,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
   };
 
   const SCRIPT_CODE = `
-// --- CẤU HÌNH v2.1 (Fix Image Blob) ---
+// --- CẤU HÌNH v2.2 (Hỗ trợ Upload từng phần) ---
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
 function doPost(e) {
@@ -39,6 +39,8 @@ function doPost(e) {
     var images = data.images; 
     var timestamp = new Date(data.timestamp);
     var editor = data.editor || 'unknown';
+    // Lấy chỉ số bắt đầu (để đặt tên file tiếp nối: _4.jpg, _5.jpg...)
+    var startIdx = data.startIdx || 0; 
 
     // 1. Tạo Cấu Trúc Thư Mục (Cần Lock)
     var year = timestamp.getFullYear().toString();
@@ -58,28 +60,41 @@ function doPost(e) {
     // Nhả khóa để xử lý ảnh song song
     lock.releaseLock(); 
 
-    // 2. Lưu Hình Ảnh (Fix lỗi File không xem được)
+    // 2. Lưu Hình Ảnh
     var timeStr = timestamp.getTime().toString();
     
     for (var i = 0; i < images.length; i++) {
       var imageBase64 = images[i].split(',')[1]; // Bỏ phần header data:image...
       var decodedImage = Utilities.base64Decode(imageBase64);
-      var fileName = containerNumber + '_' + timeStr + '_' + (i + 1) + '.jpg';
       
-      // QUAN TRỌNG: Phải tạo Blob với mimeType rõ ràng
+      // Tính toán số thứ tự ảnh chính xác dựa trên startIdx
+      var imageIndex = startIdx + i + 1;
+      var fileName = containerNumber + '_' + timeStr + '_' + imageIndex + '.jpg';
+      
       var blob = Utilities.newBlob(decodedImage, 'image/jpeg', fileName);
       containerFolder.createFile(blob);
     }
 
-    // 3. Ghi Log Sheet
+    // 3. Ghi Log Sheet (Chỉ ghi nếu startIdx = 0 hoặc update)
+    // Nếu upload từng phần (retry), ta có thể chọn không ghi thêm dòng mới hoặc update dòng cũ
+    // Ở đây đơn giản hóa: Luôn append log để theo dõi lịch sử gửi
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       if (ss) {
         var sheet = ss.getActiveSheet();
         if (sheet.getLastRow() === 0) {
-          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Số lượng ảnh", "Link Folder"]);
+          sheet.appendRow(["Thời gian", "Số Container", "Tổ", "Người chụp", "Ảnh gửi đợt này", "Tổng ảnh (ước tính)", "Link Folder"]);
         }
-        sheet.appendRow([new Date(), containerNumber, teamName, editor, images.length, containerFolder.getUrl()]);
+        // Ghi log
+        sheet.appendRow([
+          new Date(), 
+          containerNumber, 
+          teamName, 
+          editor, 
+          images.length, // Số ảnh gửi trong request này
+          startIdx + images.length, // Tổng số ảnh tính đến hiện tại
+          containerFolder.getUrl()
+        ]);
       }
     } catch(err) {}
 
@@ -195,12 +210,12 @@ function getOrCreateFolder(parentFolder, folderName) {
                         
                         <h3 className="font-black text-lg mb-5 flex items-center border-b border-white/10 pb-4">
                             <FileCode className="w-6 h-6 mr-3 text-purple-400" />
-                            <span className="tracking-tight">Mã Nguồn Script v2.1 (Fix)</span>
+                            <span className="tracking-tight">Mã Nguồn Script v2.2 (New)</span>
                         </h3>
 
                         <div className="space-y-4">
                             <p className="text-[10px] text-purple-300 font-bold bg-purple-900/20 p-3 rounded-xl border border-purple-500/20 uppercase tracking-widest leading-relaxed">
-                                Đã sửa lỗi xem ảnh trên Drive. Vui lòng cập nhật và Deploy lại (New Deployment).
+                                Cập nhật: Hỗ trợ tính năng Retry thông minh (chỉ gửi ảnh lỗi). Vui lòng Deploy lại.
                             </p>
                             
                             {/* Script Code Block Toggle */}
