@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X, AlertTriangle } from 'lucide-react';
-
+import { resetToDefault } from '../utils/resetApp';
 interface SettingsProps {
   settings: AppSettings;
   onSave: (settings: AppSettings) => void;
@@ -102,8 +102,7 @@ function getOrCreateFolder(parentFolder, folderName) {
     return parentFolder.createFolder(folderName);
   }
 }`;
-
-  const handleReset = async () => {
+  
     if (!window.confirm('Reset toàn bộ ứng dụng?\\n\\n- Xóa URL script, teams, user login\\n- Xóa TOÀN BỘ lịch sử sửa chữa (tab Lịch sử)\\nDữ liệu mất vĩnh viễn!')) {
       return;
     }
@@ -207,7 +206,7 @@ function getOrCreateFolder(parentFolder, folderName) {
                 Xóa hết dữ liệu cục bộ (URL script, token, cài đặt, lịch sử...). App sẽ về trạng thái mới. Không thể khôi phục!
               </p>
               <button
-                onClick={handleReset}
+                onClick={resetToDefault}
                 className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-sm py-3 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
               >
                 RESET TOÀN BỘ VỀ MẶC ĐỊNH
