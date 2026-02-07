@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X, AlertTriangle } from 'lucide-react';
-import { resetToDefault } from '../utils/resetApp';
+import { resetToDefault as resetApp } from '../utils/resetApp'; // giữ import cũ nếu có
+import { dbService } from '../utils'; // import dbService để xóa IndexedDB
 
 interface SettingsProps {
   settings: AppSettings;
@@ -24,7 +25,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
     alert('Đã copy mã vào bộ nhớ tạm!');
   };
 
-  // SCRIPT_CODE giữ nguyên, đảm bảo string đóng đúng
+  // SCRIPT_CODE giữ nguyên
   const SCRIPT_CODE = `// --- CẤU HÌNH v2.2 (Hỗ trợ Upload từng phần) ---
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
@@ -104,6 +105,36 @@ function getOrCreateFolder(parentFolder, folderName) {
     return parentFolder.createFolder(folderName);
   }
 }`;
+
+  // Hàm reset đầy đủ: xóa localStorage + IndexedDB + reload
+  const handleReset = async () => {
+    if (
+      !window.confirm(
+        'Reset toàn bộ ứng dụng?\n\n- Xóa URL script, teams, user login\n- Xóa TOÀN BỘ lịch sử sửa chữa (tab Lịch sử)\nDữ liệu mất vĩnh viễn, không khôi phục được!'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // 1. Xóa localStorage
+      localStorage.clear(); // hoặc xóa từng key nếu muốn cẩn thận hơn
+      // localStorage.removeItem('appSettings');
+      // localStorage.removeItem('repairTeams');
+      // localStorage.removeItem('currentUser');
+
+      // 2. Xóa toàn bộ IndexedDB (lịch sử records)
+      await dbService.clearAllRecords();
+
+      alert('Đã reset toàn bộ thành công! Ứng dụng sẽ tải lại...');
+
+      // 3. Reload để app về trạng thái mới
+      window.location.reload();
+    } catch (error) {
+      console.error('Lỗi reset:', error);
+      alert('Reset thất bại. Vui lòng thử lại hoặc xóa cache trình duyệt thủ công.');
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-slate-100">
@@ -198,9 +229,9 @@ function getOrCreateFolder(parentFolder, folderName) {
                 Xóa hết dữ liệu cục bộ (URL script, token, cài đặt, lịch sử...). App sẽ về trạng thái mới. Không thể khôi phục!
               </p>
               <button
-                onClick={resetToDefault}
+                onClick={handleReset}
                 className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-sm py-3 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
-             >
+              >
                 RESET TOÀN BỘ VỀ MẶC ĐỊNH
               </button>
             </div>
