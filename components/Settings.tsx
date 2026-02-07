@@ -199,9 +199,9 @@ function getOrCreateFolder(parentFolder, folderName) {
               </p>
               <button
                 onClick={resetToDefault}
-                className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
-              >
-                RESET TOÀN BỘ VỀ MẶC ĐỊNH BAN ĐẦU
+                className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-sm py-3 px-5 rounded-xl shadow-md transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+             >
+                RESET TOÀN BỘ VỀ MẶC ĐỊNH
               </button>
             </div>
           </div>
