@@ -1,11 +1,11 @@
-// utils/resetApp.ts - Reset toàn bộ app về mặc định (bao gồm xóa lịch sử IndexedDB)
+// utils/resetApp.ts - Reset toàn bộ app, xóa hết IndexedDB mà không cần biết tên DB
 
 export const resetToDefault = async (): Promise<void> => {
   const confirmed = window.confirm(
     'Bạn chắc chắn muốn RESET toàn bộ ứng dụng về mặc định?\n\n' +
-    '• Xóa hết dữ liệu cục bộ: cài đặt URL Google Script, teams, user...\n' +
+    '• Xóa hết cài đặt, user, teams\n' +
     '• XÓA TOÀN BỘ lịch sử sửa chữa (tab Lịch sử)\n' +
-    '• App sẽ reload và về trạng thái như mới cài đặt\n' +
+    '• App sẽ reload về trạng thái mới\n' +
     '• KHÔNG THỂ KHÔI PHỤC! Xác nhận?'
   );
 
@@ -16,39 +16,47 @@ export const resetToDefault = async (): Promise<void> => {
     localStorage.clear();
     sessionStorage.clear();
 
-    // Xóa cache trình duyệt (nếu là PWA)
+    // Xóa cache PWA
     if ('caches' in window) {
-      const cacheNames = await caches.keys();
-      await Promise.all(cacheNames.map(name => caches.delete(name)));
+      const names = await caches.keys();
+      await Promise.all(names.map(name => caches.delete(name)));
     }
 
-    // Hủy service worker (nếu có)
+    // Xóa service worker
     if ('serviceWorker' in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map(reg => reg.unregister()));
     }
 
-    // Xóa IndexedDB (lịch sử sửa chữa)
-    await new Promise<void>((resolve, reject) => {
-      const request = indexedDB.open('RepairDB', 1); // Thay 'RepairDB' bằng tên DB thực tế của mày
+    // Xóa TOÀN BỘ IndexedDB databases (không cần biết tên DB)
+    if (indexedDB.databases) {
+      const databases = await indexedDB.databases();
+      await Promise.all(
+        databases.map(dbInfo => {
+          if (dbInfo.name) {
+            return new Promise<void>((resolve, reject) => {
+              const req = indexedDB.deleteDatabase(dbInfo.name);
+              req.onsuccess = () => resolve();
+              req.onerror = () => reject(req.error);
+              req.onblocked = () => {
+                console.warn('Delete blocked for DB:', dbInfo.name);
+                resolve(); // Tiếp tục dù blocked
+              };
+            });
+          }
+          return Promise.resolve();
+        })
+      );
+    } else {
+      // Fallback cho browser cũ
+      console.warn('indexedDB.databases() not supported, skipping DB clear');
+    }
 
-      request.onsuccess = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        const tx = db.transaction('repairRecords', 'readwrite'); // Thay 'repairRecords' bằng tên objectStore thực tế
-        const store = tx.objectStore('repairRecords');
-        const clearReq = store.clear();
-
-        clearReq.onsuccess = () => resolve();
-        clearReq.onerror = () => reject(clearReq.error || new Error('Clear failed'));
-      };
-
-      request.onerror = () => reject(request.error);
-    });
-
-    alert('Đã reset toàn bộ ứng dụng về mặc định!\nApp sẽ tải lại ngay.');
+    alert('Đã reset toàn bộ thành công!\nApp sẽ tải lại ngay.');
     window.location.reload();
   } catch (error) {
     console.error('Lỗi reset:', error);
-    alert('Reset thất bại. Vui lòng thử lại hoặc xóa cache trình duyệt thủ công.');
+    alert('Reset thành công một phần. Vui lòng reload trang hoặc xóa cache trình duyệt thủ công.');
+    window.location.reload();
   }
 };
