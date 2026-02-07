@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X, AlertTriangle } from 'lucide-react';
-import { dbService } from '../utils';
 
 interface SettingsProps {
   settings: AppSettings;
@@ -111,7 +110,6 @@ function getOrCreateFolder(parentFolder, folderName) {
 
     try {
       localStorage.clear();
-      await dbService.clearAllRecords();
       alert('Đã reset toàn bộ thành công! Ứng dụng sẽ tải lại...');
       window.location.reload();
     } catch (error) {
