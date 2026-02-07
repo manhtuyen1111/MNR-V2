@@ -4,7 +4,7 @@ import { RepairRecord } from './types';
 // --- IMAGE COMPRESSION ---
 // Adjusted defaults: 900x600 max resolution, quality 0.5
 // This drastically reduces file size (~40-60KB) for fast 3G/4G uploads.
-export const compressImage = (base64Str: string, maxWidth = 900, maxHeight = 600, quality = 0.5): Promise<string> => {
+export const compressImage = (base64Str: string, maxWidth = 1100, maxHeight = 1100, quality = 0.72): Promise<string> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.src = base64Str;
