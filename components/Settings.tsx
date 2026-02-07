@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X, AlertTriangle } from 'lucide-react';
-import { resetToDefault } from '../utils/resetApp';
+import { resetToDefault } from '../utils/resetApp';  // Dùng hàm reset từ file utils/resetApp.ts
+
 interface SettingsProps {
   settings: AppSettings;
   onSave: (settings: AppSettings) => void;
@@ -23,6 +24,7 @@ const Settings: React.FC<SettingsProps> = ({ settings, onSave }) => {
     alert('Đã copy mã vào bộ nhớ tạm!');
   };
 
+  // SCRIPT_CODE (giữ nguyên, không thay đổi)
   const SCRIPT_CODE = `// --- CẤU HÌNH v2.2 (Hỗ trợ Upload từng phần) ---
 var ROOT_FOLDER_ID = '1Gpn6ZSUAUwSJqLAbYMo50kICCufLtLx-';
 
@@ -102,23 +104,10 @@ function getOrCreateFolder(parentFolder, folderName) {
     return parentFolder.createFolder(folderName);
   }
 }`;
-  
-    if (!window.confirm('Reset toàn bộ ứng dụng?\\n\\n- Xóa URL script, teams, user login\\n- Xóa TOÀN BỘ lịch sử sửa chữa (tab Lịch sử)\\nDữ liệu mất vĩnh viễn!')) {
-      return;
-    }
-
-    try {
-      localStorage.clear();
-      alert('Đã reset toàn bộ thành công! Ứng dụng sẽ tải lại...');
-      window.location.reload();
-    } catch (error) {
-      console.error('Lỗi reset:', error);
-      alert('Reset thất bại. Thử xóa cache trình duyệt.');
-    }
-  };
 
   return (
     <div className="flex flex-col h-full bg-slate-100">
+      {/* Tab Navigation */}
       <div className="px-4 pt-4 pb-2 bg-slate-100 shrink-0 z-10">
         <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex">
           <button 
@@ -138,7 +127,9 @@ function getOrCreateFolder(parentFolder, folderName) {
         </div>
       </div>
 
+      {/* Content Area */}
       <div className="flex-1 overflow-y-auto px-4 pb-24 scrollbar-hide">
+        
         {activeTab === 'connection' && (
           <div className="space-y-4 animate-fadeIn mt-2">
             <div className="bg-white rounded-[2rem] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-slate-100 p-6">
@@ -197,6 +188,7 @@ function getOrCreateFolder(parentFolder, folderName) {
               <span className="uppercase tracking-widest text-xs">Lưu Cấu Hình</span>
             </button>
 
+            {/* Reset block - dùng resetToDefault */}
             <div className="mt-10 pt-8 border-t-2 border-red-300 bg-red-50/40 rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-bold text-red-700 mb-3 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
