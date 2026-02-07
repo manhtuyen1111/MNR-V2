@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 import { Save, Link as LinkIcon, AlertCircle, FileCode, CheckCircle2, Copy, ChevronDown, ChevronUp, Zap, BookOpen, X, AlertTriangle } from 'lucide-react';
-import { resetToDefault as resetApp } from '../utils/resetApp'; // giữ import cũ nếu có
 import { dbService } from '../utils'; // import dbService để xóa IndexedDB
 
 interface SettingsProps {
