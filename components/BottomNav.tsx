@@ -64,7 +64,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
             <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none opacity-50" />
           </button>
 
-          {/* Cấu hình - Màu đỏ kiểu cảnh báo, đậm, dễ đọc */}
+          {/* Cài đặt - Đổi chữ thành CÀI ĐẶT, giữ màu đỏ cảnh báo */}
           <button 
             onClick={() => onChangeTab('settings')}
             className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all duration-300 relative
@@ -94,7 +94,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
                   : 'text-slate-600'
                 }`}
             >
-        
+              CÀI ĐẶT
             </span>
             {currentTab === 'settings' && (
               <div className="absolute -bottom-1 w-10 h-1 bg-sky-300 rounded-full shadow-[0_0_12px_rgba(14,165,233,0.6)]" />
