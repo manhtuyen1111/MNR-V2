@@ -42,7 +42,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('appSettings');
     return saved ? JSON.parse(saved) : { 
-      googleScriptUrl: 'https://script.google.com/macros/s/AKfycbzhkL0bfHrPnp2NTBXoUgejqO4Y9TdVFCS6zv3GjszGL49Ugtr7Qmj_XRt7N0AH7BWD/exec' 
+      googleScriptUrl: 'https://script.google.com/macros/s/AKfycbzbjPA2yD7YcpZXNCeD20f8aI8mD9-XczQdq-sqDbbgJCUWFmpdUDvDeQ96kpashwLm/exec' 
     };
   });
 
