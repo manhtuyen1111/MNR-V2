@@ -35,11 +35,11 @@ export const resetToDefault = async (): Promise<void> => {
         databases.map(dbInfo => {
           if (dbInfo.name) {
             return new Promise<void>((resolve, reject) => {
-              const req = indexedDB.deleteDatabase(dbInfo.name);
+              const req = indexedDB.deleteDatabase(dbInfo.name!);  // Thêm ! ở đây
               req.onsuccess = () => resolve();
               req.onerror = () => reject(req.error);
               req.onblocked = () => {
-                console.warn('Delete blocked for DB:', dbInfo.name);
+                console.warn('Delete blocked for DB:', dbInfo.name!);  // Thêm ! nếu cần
                 resolve(); // Tiếp tục dù blocked
               };
             });
