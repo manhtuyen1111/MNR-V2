@@ -94,7 +94,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
                   : 'text-slate-600'
                 }`}
             >
-              CẤU HÌNH
+        
             </span>
             {currentTab === 'settings' && (
               <div className="absolute -bottom-1 w-10 h-1 bg-sky-300 rounded-full shadow-[0_0_12px_rgba(14,165,233,0.6)]" />
