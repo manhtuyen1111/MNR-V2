@@ -35,7 +35,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
             {currentTab === 'capture' && (
               <div className="absolute -bottom-1 w-10 h-1 bg-sky-300 rounded-full shadow-[0_0_12px_rgba(14,165,233,0.6)]" />
             )}
-            {/* Hiệu ứng 3D nổi: inset shadow nhẹ cho cảm giác lõm */}
             <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none opacity-50" />
           </button>
 
@@ -65,7 +64,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
             <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none opacity-50" />
           </button>
 
-          {/* Cấu hình */}
+          {/* Cấu hình - Chỉ icon + chữ đỏ khi active, background giữ nguyên như 2 tab kia */}
           <button 
             onClick={() => onChangeTab('settings')}
             className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all duration-300 relative
@@ -75,14 +74,26 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
               } border border-slate-200`}
           >
             <div className="relative">
-              <Settings className={`w-7 h-7 mb-1 ${currentTab === 'settings' ? 'stroke-[3]' : 'stroke-[2]'}`} />
+              <Settings 
+                className={`w-7 h-7 mb-1 transition-all duration-300
+                  ${currentTab === 'settings' 
+                    ? 'stroke-red-400 stroke-[3]' 
+                    : 'stroke-[2]'}`
+                } 
+              />
               {!isAdmin && (
                 <div className="absolute -top-1 -right-2 bg-white/80 rounded-full p-0.5 border border-slate-300 shadow-sm">
                   <Lock className="w-3 h-3 text-slate-500" />
                 </div>
               )}
             </div>
-            <span className={`text-xs font-black uppercase tracking-tighter ${currentTab === 'settings' ? 'text-white' : 'text-slate-600'}`}>
+            <span 
+              className={`text-xs font-black uppercase tracking-tighter transition-all duration-300
+                ${currentTab === 'settings' 
+                  ? 'text-red-500 drop-shadow-[0_1px_4px_rgba(239,68,68,0.6)]' 
+                  : 'text-slate-600'
+                }`}
+            >
               CẤU HÌNH
             </span>
             {currentTab === 'settings' && (
