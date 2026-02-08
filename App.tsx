@@ -471,25 +471,38 @@ const App: React.FC = () => {
         )}
 
         {activeTab === 'capture' && isFormComplete && (
-          <div className="fixed bottom-24 right-4 z-40 animate-fadeIn">
-            <button
-              onClick={handleSaveData}
-              disabled={isSubmitting}
-              className="flex items-center space-x-2 bg-gradient-to-tr from-sky-600 to-blue-700 text-white px-6 py-4.5 rounded-2xl shadow-2xl shadow-sky-900/40 hover:scale-105 active:scale-95 transition-all border-2 border-white/20"
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <>
-                  <span className="font-black text-lg uppercase tracking-tight">Hoàn tất lưu</span>
-                  <div className="bg-white/20 p-1.5 rounded-full">
-                    <Send className="w-5 h-5" />
-                  </div>
-                </>
-              )}
-            </button>
-          </div>
-        )}
+  <div className="fixed bottom-28 right-4 sm:right-6 z-50 animate-fadeIn">
+    <button
+      onClick={handleSaveData}
+      disabled={isSubmitting}
+      className={`
+        flex items-center justify-center gap-3
+        bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700
+        text-white font-bold text-xl uppercase tracking-wider
+        px-8 py-5 rounded-3xl
+        shadow-2xl shadow-blue-900/50
+        hover:shadow-2xl hover:shadow-blue-700/70 hover:scale-105
+        active:scale-95 active:shadow-inner
+        transition-all duration-200
+        border-2 border-white/30
+        disabled:opacity-70 disabled:cursor-not-allowed
+        min-w-[220px]  // Đảm bảo nút không quá hẹp
+      `}
+    >
+      {isSubmitting ? (
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-7 h-7 animate-spin" />
+          <span>ĐANG LƯU...</span>
+        </div>
+      ) : (
+        <>
+          <span>HOÀN TẤT LƯU</span>
+          <Send className="w-7 h-7" />
+        </>
+      )}
+    </button>
+  </div>
+)}
 
       </main>
 
