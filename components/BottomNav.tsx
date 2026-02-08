@@ -64,7 +64,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
             <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none opacity-50" />
           </button>
 
-          {/* Cấu hình - Chỉ icon + chữ đỏ khi active, background giữ nguyên như 2 tab kia */}
+          {/* Cấu hình - Màu đỏ kiểu cảnh báo, đậm, dễ đọc */}
           <button 
             onClick={() => onChangeTab('settings')}
             className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all duration-300 relative
@@ -75,10 +75,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
           >
             <div className="relative">
               <Settings 
-                className={`w-7 h-7 mb-1 transition-all duration-300
+                className={`w-7 h-7 mb-1 transition-colors duration-300
                   ${currentTab === 'settings' 
-                    ? 'stroke-red-400 stroke-[3]' 
-                    : 'stroke-[2]'}`
+                    ? 'stroke-red-600 stroke-[3]' 
+                    : 'stroke-slate-500 stroke-[2]'}`
                 } 
               />
               {!isAdmin && (
@@ -88,9 +88,9 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
               )}
             </div>
             <span 
-              className={`text-xs font-black uppercase tracking-tighter transition-all duration-300
+              className={`text-xs font-black uppercase tracking-tighter transition-colors duration-300
                 ${currentTab === 'settings' 
-                  ? 'text-red-500 drop-shadow-[0_1px_4px_rgba(239,68,68,0.6)]' 
+                  ? 'text-red-700' 
                   : 'text-slate-600'
                 }`}
             >
