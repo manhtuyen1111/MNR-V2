@@ -1,4 +1,3 @@
-
 export interface Team {
   id: string;
   name: string;
@@ -16,7 +15,8 @@ export interface RepairRecord {
   images: string[];
   timestamp: number;
   status: SyncStatus;
-  uploadedCount?: number; // Track how many images have been successfully uploaded to Drive
+  uploadedCount: number;          // Bắt buộc, để theo dõi số ảnh đã upload thành công
+  imageHashes?: string[];         // Mới: Lưu hash SHA-256 của từng ảnh để tránh duplicate khi retry
 }
 
 export type TabView = 'capture' | 'history' | 'settings';
