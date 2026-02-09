@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
 import {
@@ -9,11 +9,7 @@ import {
   Trash2,
   Image as ImageIcon,
   X,
-  Filter,
-  Calendar,
   Users,
-  ChevronDown,
-  Search,
 } from 'lucide-react';
 import CameraCapture from './CameraCapture';
 
@@ -77,11 +73,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
       y.setDate(y.getDate() - 1);
 
       if (quickDate === 'today' && d.getTime() !== today.getTime()) return false;
-      if (
-        quickDate === 'yesterday' &&
-        d.getTime() !== y.getTime()
-      )
-        return false;
+      if (quickDate === 'yesterday' && d.getTime() !== y.getTime()) return false;
 
       if (quickDate === 'custom') {
         if (range.start && d < new Date(range.start)) return false;
@@ -101,88 +93,70 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
   return (
     <>
-      <div className="p-4 space-y-4 pb-28">
-        {/* ===== FILTER BAR ===== */}
-        <div className="bg-white rounded-2xl border p-3 space-y-3 shadow-sm">
-          <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-sky-600" />
-            <span className="text-xs font-black uppercase tracking-widest">
-              Bộ lọc
-            </span>
-          </div>
+      <div className="p-4 space-y-3 pb-28">
+        {/* ===== FILTER BAR (TỐI GIẢN) ===== */}
+        <div className="bg-white rounded-xl border p-3 space-y-2 shadow-sm">
+          <input
+            value={searchCont}
+            onChange={(e) => setSearchCont(e.target.value)}
+            placeholder="Tìm container..."
+            className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
+          />
 
-          {/* SEARCH CONT */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input
-              value={searchCont}
-              onChange={(e) => setSearchCont(e.target.value)}
-              placeholder="Nhập số container..."
-              className="w-full pl-9 pr-3 py-2 border rounded-xl text-sm font-mono"
-            />
-            {contSuggestions.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white border rounded-xl shadow-lg overflow-hidden">
-                {contSuggestions.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setSearchCont(c)}
-                    className="w-full text-left px-3 py-2 text-sm font-mono hover:bg-sky-50"
-                  >
-                    {c.slice(0, 4)}
-                    <span className="text-red-600">{c.slice(4)}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            {/* TEAM */}
-            <div className="relative">
-              <select
-                value={filterTeam}
-                onChange={(e) => setFilterTeam(e.target.value)}
-                className="w-full bg-slate-50 border rounded-xl p-2 text-xs font-bold"
-              >
-                <option value="all">Tất cả tổ đội</option>
-                {teams.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
+          {contSuggestions.length > 0 && (
+            <div className="border rounded-lg overflow-hidden">
+              {contSuggestions.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setSearchCont(c)}
+                  className="w-full text-left px-3 py-2 text-sm font-mono hover:bg-slate-100"
+                >
+                  {c.slice(0, 4)}
+                  <span className="text-red-600">{c.slice(4)}</span>
+                </button>
+              ))}
             </div>
+          )}
 
-            {/* DATE */}
-            <div className="relative">
-              <select
-                value={quickDate}
-                onChange={(e) => {
-                  const v = e.target.value as any;
-                  setQuickDate(v);
-                  if (v !== 'custom') setRange({ start: '', end: '' });
-                }}
-                className="w-full bg-slate-50 border rounded-xl p-2 text-xs font-bold"
-              >
-                <option value="all">Tất cả</option>
-                <option value="today">Hôm nay</option>
-                <option value="yesterday">Hôm qua</option>
-                <option value="custom">Tùy chọn</option>
-              </select>
-              <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
-            </div>
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={filterTeam}
+              onChange={(e) => setFilterTeam(e.target.value)}
+              className="border rounded-lg p-2 text-xs font-semibold"
+            >
+              <option value="all">Tất cả tổ đội</option>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={quickDate}
+              onChange={(e) => {
+                const v = e.target.value as any;
+                setQuickDate(v);
+                if (v !== 'custom') setRange({ start: '', end: '' });
+              }}
+              className="border rounded-lg p-2 text-xs font-semibold"
+            >
+              <option value="all">Tất cả thời gian</option>
+              <option value="today">Hôm nay</option>
+              <option value="yesterday">Hôm qua</option>
+              <option value="custom">Tùy chọn</option>
+            </select>
           </div>
 
           {quickDate === 'custom' && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="date"
                 value={range.start}
                 onChange={(e) =>
                   setRange((p) => ({ ...p, start: e.target.value }))
                 }
-                className="border rounded-xl p-2 text-xs"
+                className="border rounded-lg p-2 text-xs"
               />
               <input
                 type="date"
@@ -190,22 +164,22 @@ const HistoryList: React.FC<HistoryListProps> = ({
                 onChange={(e) =>
                   setRange((p) => ({ ...p, end: e.target.value }))
                 }
-                className="border rounded-xl p-2 text-xs"
+                className="border rounded-lg p-2 text-xs"
               />
             </div>
           )}
         </div>
 
-        {/* ===== LIST ===== */}
+        {/* ===== HISTORY LIST (GỌN) ===== */}
         {sorted.map((r) => (
           <div
             key={r.id}
             onClick={() => setViewing(r)}
-            className="bg-white rounded-2xl p-4 border shadow-sm flex justify-between cursor-pointer hover:shadow-md transition"
+            className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
           >
-            <div className="flex space-x-4">
+            <div className="flex items-center space-x-3">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                   r.status === 'synced'
                     ? 'bg-green-100 text-green-600'
                     : r.status === 'error'
@@ -213,30 +187,22 @@ const HistoryList: React.FC<HistoryListProps> = ({
                     : 'bg-amber-100 text-amber-600'
                 }`}
               >
-                {r.status === 'synced' && <CheckCircle />}
-                {r.status === 'error' && <AlertTriangle />}
-                {r.status === 'pending' && <Clock />}
+                {r.status === 'synced' && <CheckCircle size={18} />}
+                {r.status === 'error' && <AlertTriangle size={18} />}
+                {r.status === 'pending' && <Clock size={18} />}
               </div>
 
               <div>
-                <div className="font-mono font-black text-xl tracking-tight">
+                <div className="font-mono font-bold text-sm">
                   {r.containerNumber.slice(0, 4)}
                   <span className="text-red-600">
                     {r.containerNumber.slice(4)}
                   </span>
                 </div>
-
-                <div className="flex items-center space-x-2 text-xs mt-1">
-                  <span className="bg-slate-100 px-2 rounded font-bold">
-                    {r.teamName}
-                  </span>
-                  <span className="flex items-center space-x-1 text-sky-600 font-bold">
-                    <ImageIcon className="w-3 h-3" />
-                    <span>{r.images.length}</span>
-                  </span>
+                <div className="text-[11px] text-slate-500">
+                  {r.teamName} • {r.images.length} ảnh
                 </div>
-
-                <div className="text-[10px] text-slate-400 mt-1">
+                <div className="text-[10px] text-slate-400">
                   {formatDate(r.timestamp)}
                 </div>
               </div>
@@ -249,9 +215,9 @@ const HistoryList: React.FC<HistoryListProps> = ({
                     e.stopPropagation();
                     onRetry(r.id);
                   }}
-                  className="p-2 bg-sky-100 rounded-xl"
+                  className="p-2 rounded-lg bg-slate-100"
                 >
-                  <RefreshCw className="w-5 h-5" />
+                  <RefreshCw size={16} />
                 </button>
               )}
               <button
@@ -259,9 +225,9 @@ const HistoryList: React.FC<HistoryListProps> = ({
                   e.stopPropagation();
                   onDelete(r.id);
                 }}
-                className="p-2 bg-red-50 rounded-xl"
+                className="p-2 rounded-lg bg-red-50 text-red-500"
               >
-                <Trash2 className="w-5 h-5 text-red-500" />
+                <Trash2 size={16} />
               </button>
             </div>
           </div>
@@ -273,13 +239,13 @@ const HistoryList: React.FC<HistoryListProps> = ({
           record={viewing}
           onClose={() => setViewing(null)}
           onUpdate={(all, added) => {
-  const updated: RepairRecord = {
-    ...viewing,
-    images: all,
-    status: 'pending', // ✅ đúng SyncStatus
-  };
-  setViewing(updated);
-  onUpdateRecord(updated, added);
+            const updated: RepairRecord = {
+              ...viewing,
+              images: all,
+              status: 'pending',
+            };
+            setViewing(updated);
+            onUpdateRecord(updated, added);
           }}
         />
       )}
@@ -297,15 +263,21 @@ const ImageViewer: React.FC<{
   const [images, setImages] = useState<string[]>(record.images);
   const [added, setAdded] = useState<string[]>([]);
 
+  useEffect(() => {
+    setImages(record.images);
+    setAdded([]);
+  }, [record]);
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black">
-      <div className="h-20 px-6 flex justify-between items-center bg-black/80 text-white">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+      {/* HEADER */}
+      <div className="h-16 px-5 flex justify-between items-center bg-black/80 text-white shrink-0">
         <div>
-          <div className="font-mono font-black text-xl">
+          <div className="font-mono font-bold text-lg">
             {record.containerNumber}
           </div>
-          <div className="flex items-center text-xs text-sky-400 space-x-2">
-            <Users className="w-3 h-3" />
+          <div className="flex items-center text-xs text-slate-300 space-x-2">
+            <Users size={12} />
             <span>{record.teamName}</span>
             <span>• {images.length} ảnh</span>
           </div>
@@ -315,26 +287,33 @@ const ImageViewer: React.FC<{
         </button>
       </div>
 
-      <div className="p-3 grid grid-cols-4 gap-2">
-        {images.map((img, i) => (
-          <img
-            key={i}
-            src={img}
-            className="aspect-square object-cover rounded"
-          />
-        ))}
+      {/* IMAGE LIST (SCROLL) */}
+      <div className="flex-1 overflow-y-auto p-3">
+        <div className="grid grid-cols-4 gap-2">
+          {images.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              className="aspect-square object-cover rounded"
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="p-4">
+      {/* CAMERA */}
+      <div className="relative z-10 p-4">
         <CameraCapture
           images={added}
           onAddImage={(img) => {
             setImages((p) => [...p, img]);
             setAdded((p) => [...p, img]);
           }}
-          onRemoveImage={(i) =>
-            setAdded((p) => p.filter((_, idx) => idx !== i))
-          }
+          onRemoveImage={(i) => {
+            setImages((p) =>
+              p.filter((_, idx) => idx !== record.images.length + i)
+            );
+            setAdded((p) => p.filter((_, idx) => idx !== i));
+          }}
           isActive
           isCompleted={false}
           isDisabled={false}
@@ -342,11 +321,12 @@ const ImageViewer: React.FC<{
         />
       </div>
 
+      {/* SAVE BUTTON */}
       {added.length > 0 && (
-        <div className="p-4">
+        <div className="p-4 relative z-20">
           <button
             onClick={() => onUpdate(images, added)}
-            className="w-full bg-green-600 text-white font-black py-4 rounded-xl"
+            className="w-full bg-green-600 text-white font-bold py-3 rounded-xl"
           >
             LƯU ẢNH BỔ SUNG
           </button>
