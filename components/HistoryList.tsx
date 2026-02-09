@@ -206,12 +206,20 @@ const HistoryList: React.FC<HistoryListProps> = ({
                       {r.containerNumber.slice(4)}
                     </span>
                   </div>
-                  <div className="text-[11px] font-bold text-slate-900">
-                    {r.teamName} • {r.images.length} ảnh
-                  </div>
-                  <div className="text-[10px] text-slate-400 font-normal">
-                    {formatDate(r.timestamp)}
-                  </div>
+                 <div className="flex items-center gap-1 text-[11px]">
+  <span className="font-bold text-slate-900">
+    {r.teamName}
+  </span>
+
+  <span className="text-slate-400">
+    • {r.images.length} ảnh
+  </span>
+
+  <span className="text-slate-400">
+    • {formatDate(r.timestamp)}
+  </span>
+</div>
+
                 </div>
               </div>
 
