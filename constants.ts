@@ -44,69 +44,79 @@ export const USERS: Record<string, User> = {
     username: 'Phạm Quang Tuấn', 
     name: 'Phạm Quang Tuấn - Tổ 1', 
     role: 'worker', 
-    assignedTeamId: 't1' 
+    assignedTeamId: 't1',
+    password: '123'
   },
 
   'viet.th': { 
     username: 'Trần Hoàng Việt', 
     name: 'Trần Hoàng Việt - Tổ 1', 
     role: 'worker', 
-    assignedTeamId: 't1' 
+    assignedTeamId: 't1',
+    password: '123'
   },
 
   'khai.lq': { 
     username: 'Lê Quang Khải', 
     name: 'Lê Quang Khải - Tổ 2', 
     role: 'worker', 
-    assignedTeamId: 't2' 
+    assignedTeamId: 't2',
+    password: '123'
   },
 
   'long.mv': { 
     username: 'Mai Văn Long', 
     name: 'Mai Văn Long - Tổ 2', 
     role: 'worker', 
-    assignedTeamId: 't2' 
+    assignedTeamId: 't2',
+    password: '123'
   },
 
   'ha.bt': { 
     username: 'Bùi Trọng Hà', 
     name: 'Bùi Trọng Hà - Tổ 2', 
     role: 'worker', 
-    assignedTeamId: 't2' 
+    assignedTeamId: 't2',
+    password: '123'
   },
 
   'canh.mx': { 
     username: 'Mai Xuân Cảnh', 
     name: 'Mai Xuân Cảnh - Tổ 3', 
     role: 'worker', 
-    assignedTeamId: 't3' 
+    assignedTeamId: 't3',
+    password: '123'
   },
 
   'kien.dv': { 
     username: 'Đặng Văn Kiên', 
     name: 'Đặng Văn Kiên - Tổ 3', 
     role: 'worker', 
-    assignedTeamId: 't3' 
+    assignedTeamId: 't3',
+    password: '123'
   },
 
   'tuan.nv': { 
     username: 'Nguyễn Văn Tuấn', 
     name: 'Nguyễn Văn Tuấn - Tổ 3', 
     role: 'worker', 
-    assignedTeamId: 't3' 
+    assignedTeamId: 't3',
+    password: '123'
   },
 
   'ngung.vv': { 
     username: 'Vũ Văn Ngừng', 
     name: 'Vũ Văn Ngừng - Tổ 4', 
     role: 'worker', 
-    assignedTeamId: 't4' 
+    assignedTeamId: 't4',
+    password: '123'
   },
 
   'anh.bv': { 
     username: 'Bùi Văn Anh', 
     name: 'Bùi Văn Anh - Tổ 4', 
     role: 'worker', 
-    assignedTeamId: 't4' 
+    assignedTeamId: 't4',
+    password: '123'
   },
 };
