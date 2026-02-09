@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   RefreshCw,
   Trash2,
-  Image as ImageIcon,
   X,
   Users,
 } from 'lucide-react';
@@ -89,13 +88,11 @@ const HistoryList: React.FC<HistoryListProps> = ({
     [filtered]
   );
 
-  /* ================= UI ================= */
-
   return (
     <>
       <div className="p-4 space-y-3 pb-28">
-        {/* ===== FILTER BAR (TỐI GIẢN) ===== */}
-        <div className="bg-white rounded-xl border p-3 space-y-2 shadow-sm">
+        {/* FILTER */}
+        <div className="bg-white rounded-xl border p-3 space-y-2">
           <input
             value={searchCont}
             onChange={(e) => setSearchCont(e.target.value)}
@@ -170,7 +167,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
           )}
         </div>
 
-        {/* ===== HISTORY LIST (GỌN) ===== */}
+        {/* LIST */}
         {sorted.map((r) => (
           <div
             key={r.id}
@@ -270,8 +267,7 @@ const ImageViewer: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-      {/* HEADER */}
-      <div className="h-16 px-5 flex justify-between items-center bg-black/80 text-white shrink-0">
+      <div className="h-16 px-5 flex justify-between items-center bg-black/80 text-white">
         <div>
           <div className="font-mono font-bold text-lg">
             {record.containerNumber}
@@ -287,7 +283,6 @@ const ImageViewer: React.FC<{
         </button>
       </div>
 
-      {/* IMAGE LIST (SCROLL) */}
       <div className="flex-1 overflow-y-auto p-3">
         <div className="grid grid-cols-4 gap-2">
           {images.map((img, i) => (
@@ -300,8 +295,7 @@ const ImageViewer: React.FC<{
         </div>
       </div>
 
-      {/* CAMERA */}
-      <div className="relative z-10 p-4">
+      <div className="p-4">
         <CameraCapture
           images={added}
           onAddImage={(img) => {
@@ -321,9 +315,8 @@ const ImageViewer: React.FC<{
         />
       </div>
 
-      {/* SAVE BUTTON */}
       {added.length > 0 && (
-        <div className="p-4 relative z-20">
+        <div className="p-4">
           <button
             onClick={() => onUpdate(images, added)}
             className="w-full bg-green-600 text-white font-bold py-3 rounded-xl"
