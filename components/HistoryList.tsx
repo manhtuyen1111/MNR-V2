@@ -90,47 +90,16 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
   return (
     <>
-      <div className="p-4 space-y-3 pb-28 relative">  {/* Thêm relative ở đây */}
+      <div className="p-4 space-y-3 pb-28 relative">
+        {/* CARD ĐẾM NHỎ GỌN Ở GÓC PHẢI TRÊN */}
+        <div className="absolute top-3 right-4 z-10 pointer-events-none">
+          <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
+            <span className="font-semibold text-indigo-600">{sorted.length}</span>
+            <span className="text-slate-500">/</span>
+            <span className="text-slate-500">{records.length}</span>
+          </div>
+        </div>
 
-  {/* CARD ĐẾM NHỎ GỌN Ở GÓC PHẢI TRÊN */}
-  <div className="absolute top-4 right-4 z-10">
-    <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
-      <span className="font-semibold text-indigo-600">{sorted.length}</span>
-      <span className="text-slate-600">/</span>
-      <span className="text-slate-500">{records.length}</span>
-    </div>
-  </div>
-
-  {/* FILTER - giữ nguyên như cũ */}
-  <div className="bg-white rounded-xl border p-3 space-y-2">
-    <input
-      value={searchCont}
-      onChange={(e) => setSearchCont(e.target.value)}
-      placeholder="Tìm container..."
-      className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
-    />
-    {/* ... phần còn lại của filter ... */}
-  </div>
-
-  {/* LIST - giữ nguyên */}
-  {sorted.map((r) => (
-    <div
-      key={r.id}
-      onClick={() => setViewing(r)}
-      className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
-    >
-      {/* ... nội dung item hiện tại ... */}
-    </div>
-  ))}
-
-  {/* Nếu không có record nào */}
-  {sorted.length === 0 && (
-    <div className="text-center py-10 text-slate-500">
-      Không có bản ghi nào khớp với bộ lọc hiện tại
-    </div>
-  )}
-
-</div>
         {/* FILTER */}
         <div className="bg-white rounded-xl border p-3 space-y-2">
           <input
@@ -208,67 +177,73 @@ const HistoryList: React.FC<HistoryListProps> = ({
         </div>
 
         {/* LIST */}
-        {sorted.map((r) => (
-          <div
-            key={r.id}
-            onClick={() => setViewing(r)}
-            className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
-          >
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                  r.status === 'synced'
-                    ? 'bg-green-100 text-green-600'
-                    : r.status === 'error'
-                    ? 'bg-red-100 text-red-600'
-                    : 'bg-amber-100 text-amber-600'
-                }`}
-              >
-                {r.status === 'synced' && <CheckCircle size={18} />}
-                {r.status === 'error' && <AlertTriangle size={18} />}
-                {r.status === 'pending' && <Clock size={18} />}
+        {sorted.length > 0 ? (
+          sorted.map((r) => (
+            <div
+              key={r.id}
+              onClick={() => setViewing(r)}
+              className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
+            >
+              <div className="flex items-center space-x-3">
+                <div
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                    r.status === 'synced'
+                      ? 'bg-green-100 text-green-600'
+                      : r.status === 'error'
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-amber-100 text-amber-600'
+                  }`}
+                >
+                  {r.status === 'synced' && <CheckCircle size={18} />}
+                  {r.status === 'error' && <AlertTriangle size={18} />}
+                  {r.status === 'pending' && <Clock size={18} />}
+                </div>
+
+                <div>
+                  <div className="font-mono font-bold text-sm">
+                    {r.containerNumber.slice(0, 4)}
+                    <span className="text-red-600">
+                      {r.containerNumber.slice(4)}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500">
+                    {r.teamName} • {r.images.length} ảnh
+                  </div>
+                  <div className="text-[10px] text-slate-400">
+                    {formatDate(r.timestamp)}
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <div className="font-mono font-bold text-sm">
-                  {r.containerNumber.slice(0, 4)}
-                  <span className="text-red-600">
-                    {r.containerNumber.slice(4)}
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-500">
-                  {r.teamName} • {r.images.length} ảnh
-                </div>
-                <div className="text-[10px] text-slate-400">
-                  {formatDate(r.timestamp)}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {r.status === 'error' && (
+              <div className="flex items-center space-x-2">
+                {r.status === 'error' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRetry(r.id);
+                    }}
+                    className="p-2 rounded-lg bg-slate-100"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRetry(r.id);
+                    onDelete(r.id);
                   }}
-                  className="p-2 rounded-lg bg-slate-100"
+                  className="p-2 rounded-lg bg-red-50 text-red-500"
                 >
-                  <RefreshCw size={16} />
+                  <Trash2 size={16} />
                 </button>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(r.id);
-                }}
-                className="p-2 rounded-lg bg-red-50 text-red-500"
-              >
-                <Trash2 size={16} />
-              </button>
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="text-center py-10 text-slate-500 italic">
+            Không có bản ghi nào khớp với bộ lọc hiện tại
           </div>
-        ))}
+        )}
       </div>
 
       {viewing && (
