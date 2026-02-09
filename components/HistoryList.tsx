@@ -206,7 +206,8 @@ const HistoryList: React.FC<HistoryListProps> = ({
                       {r.containerNumber.slice(4)}
                     </span>
                   </div>
-                 <div className="flex items-center gap-1 text-[11px]">
+                 <div className="flex items-center gap-1 text-[11px] font-mono leading-tight">
+
   <span className="font-bold text-slate-900">
     {r.teamName}
   </span>
