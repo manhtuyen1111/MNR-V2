@@ -16,7 +16,7 @@ export interface RepairRecord {
   timestamp: number;
   status: SyncStatus;
   uploadedCount: number;          // Bắt buộc, để theo dõi số ảnh đã upload thành công
-  imageHashes?: string[];         // Mới: Lưu hash SHA-256 của từng ảnh để tránh duplicate khi retry
+  imageHashes?: string[];         // Lưu hash SHA-256 của từng ảnh
 }
 
 export type TabView = 'capture' | 'history' | 'settings';
@@ -25,25 +25,14 @@ export interface AppSettings {
   googleScriptUrl: string;
 }
 
-/* ===== USER TYPES (CÁCH 2) ===== */
+/* ===== USER ===== */
 
 export type Role = 'admin' | 'qc' | 'worker';
 
-export interface BaseUser {
+export interface User {
   username: string;
   name: string;
   role: Role;
-  assignedTeamId?: string;
+  password: string;          // 🔥 BẮT BUỘC cho TẤT CẢ (admin / qc / worker)
+  assignedTeamId?: string;   // worker dùng
 }
-
-export interface LoginUser extends BaseUser {
-  role: 'admin' | 'qc';
-  password: string;
-}
-
-export interface WorkerUser extends BaseUser {
-  role: 'worker';
-  assignedTeamId: string;
-}
-
-export type User = LoginUser | WorkerUser;
