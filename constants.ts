@@ -18,77 +18,91 @@ export const MOCK_CONTAINER_SUGGESTIONS = [
 ];
 
 export const USERS: Record<string, User> = {
-  'admin': { 
+  admin: { 
     username: 'admin', 
     name: 'Administrator', 
-    password: 'admin9', 
-    role: 'admin' 
+    role: 'admin',
+    password: 'admin9'
   },
-  'qc': { 
+
+  qc: { 
     username: 'QC Manager', 
     name: 'QC Manager', 
-    role: 'qc' 
+    role: 'qc',
+    password: 'qc123'
   },
+
   // ────────────── TÀI KHOẢN MỚI ──────────────
   'thi.nb': { 
     username: 'Nguyễn Bá Thi', 
     name: 'Nguyễn Bá Thi - QC Manager', 
-    role: 'qc' 
+    role: 'qc',
+    password: 'qc123'
   },
+
   'tuan.pq': { 
     username: 'Phạm Quang Tuấn', 
     name: 'Phạm Quang Tuấn - Tổ 1', 
     role: 'worker', 
     assignedTeamId: 't1' 
   },
+
   'viet.th': { 
     username: 'Trần Hoàng Việt', 
     name: 'Trần Hoàng Việt - Tổ 1', 
     role: 'worker', 
     assignedTeamId: 't1' 
   },
+
   'khai.lq': { 
     username: 'Lê Quang Khải', 
     name: 'Lê Quang Khải - Tổ 2', 
     role: 'worker', 
     assignedTeamId: 't2' 
   },
+
   'long.mv': { 
     username: 'Mai Văn Long', 
     name: 'Mai Văn Long - Tổ 2', 
     role: 'worker', 
     assignedTeamId: 't2' 
   },
+
   'ha.bt': { 
     username: 'Bùi Trọng Hà', 
     name: 'Bùi Trọng Hà - Tổ 2', 
     role: 'worker', 
     assignedTeamId: 't2' 
   },
+
   'canh.mx': { 
     username: 'Mai Xuân Cảnh', 
     name: 'Mai Xuân Cảnh - Tổ 3', 
     role: 'worker', 
     assignedTeamId: 't3' 
   },
+
   'kien.dv': { 
     username: 'Đặng Văn Kiên', 
     name: 'Đặng Văn Kiên - Tổ 3', 
     role: 'worker', 
     assignedTeamId: 't3' 
   },
+
   'tuan.nv': { 
     username: 'Nguyễn Văn Tuấn', 
     name: 'Nguyễn Văn Tuấn - Tổ 3', 
     role: 'worker', 
     assignedTeamId: 't3' 
   },
+
   'ngung.vv': { 
     username: 'Vũ Văn Ngừng', 
     name: 'Vũ Văn Ngừng - Tổ 4', 
     role: 'worker', 
     assignedTeamId: 't4' 
   },
+
   'anh.bv': { 
     username: 'Bùi Văn Anh', 
     name: 'Bùi Văn Anh - Tổ 4', 
