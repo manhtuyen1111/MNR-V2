@@ -25,10 +25,25 @@ export interface AppSettings {
   googleScriptUrl: string;
 }
 
-export interface User {
+/* ===== USER TYPES (CÁCH 2) ===== */
+
+export type Role = 'admin' | 'qc' | 'worker';
+
+export interface BaseUser {
   username: string;
   name: string;
-  role: 'admin' | 'qc' | 'worker';
-  assignedTeamId?: string; // If set, user is locked to this team
-  password: string;          // optional để không bắt buộc phải có ở mọi user
+  role: Role;
+  assignedTeamId?: string;
 }
+
+export interface LoginUser extends BaseUser {
+  role: 'admin' | 'qc';
+  password: string;
+}
+
+export interface WorkerUser extends BaseUser {
+  role: 'worker';
+  assignedTeamId: string;
+}
+
+export type User = LoginUser | WorkerUser;
