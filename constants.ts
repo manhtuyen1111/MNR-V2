@@ -29,7 +29,7 @@ export const USERS: Record<string, User> = {
     username: 'QC Manager', 
     name: 'QC Manager', 
     role: 'qc',
-    password: 'qc123'
+    password: '123'
   },
 
   // ────────────── TÀI KHOẢN MỚI ──────────────
@@ -37,7 +37,7 @@ export const USERS: Record<string, User> = {
     username: 'Nguyễn Bá Thi', 
     name: 'Nguyễn Bá Thi - QC Manager', 
     role: 'qc',
-    password: 'qc123'
+    password: '123'
   },
 
   'tuan.pq': { 
