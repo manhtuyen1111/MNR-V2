@@ -12,17 +12,9 @@ import Login from './components/Login';
 import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
-import {
-  Check,
-  AlertTriangle,
-  Send,
-  Loader2,
-  WifiOff,
-  ShieldAlert,
-  Zap,
-} from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 
-/* ================= HASH ================= */
+/* ===== IMAGE HASH ===== */
 async function getImageHash(base64: string): Promise<string> {
   try {
     const binary = atob(base64.split(',')[1]);
@@ -38,7 +30,7 @@ async function getImageHash(base64: string): Promise<string> {
 }
 
 const App: React.FC = () => {
-  /* ================= AUTH ================= */
+  /* ===== AUTH ===== */
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('currentUser');
     return saved ? JSON.parse(saved) : null;
@@ -46,7 +38,7 @@ const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<TabView>('capture');
 
-  /* ================= SETTINGS ================= */
+  /* ===== SETTINGS ===== */
   const [settings, setSettings] = useState<AppSettings>(() => {
     const saved = localStorage.getItem('appSettings');
     return saved
@@ -57,16 +49,15 @@ const App: React.FC = () => {
         };
   });
 
-  /* ================= DATA ================= */
+  /* ===== DATA ===== */
   const [teams, setTeams] = useState<Team[]>(() => {
     const saved = localStorage.getItem('repairTeams');
     return saved ? JSON.parse(saved) : REPAIR_TEAMS;
   });
 
   const [records, setRecords] = useState<RepairRecord[]>([]);
-  const [isLoadingRecords, setIsLoadingRecords] = useState(true);
 
-  /* ================= CAPTURE ================= */
+  /* ===== CAPTURE ===== */
   const [containerNum, setContainerNum] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -74,12 +65,8 @@ const App: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isTeamManagerOpen, setIsTeamManagerOpen] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: 'success' | 'error' | 'warning' | 'info';
-  } | null>(null);
 
-  /* ================= DERIVED ================= */
+  /* ===== DERIVED ===== */
   const isContainerValid = /^[A-Z]{4}\d{7}$/.test(containerNum);
   const isTeamSelected = selectedTeamId !== '';
   const isFormComplete =
@@ -89,26 +76,16 @@ const App: React.FC = () => {
     (r) => r.status === 'pending' || r.status === 'error'
   ).length;
 
-  /* ================= LOAD ================= */
+  /* ===== LOAD ===== */
   useEffect(() => {
-    dbService.getAllRecords().then((r) => {
-      setRecords(r);
-      setIsLoadingRecords(false);
-    });
+    dbService.getAllRecords().then(setRecords);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('repairTeams', JSON.stringify(teams));
   }, [teams]);
 
-  useEffect(() => {
-    if (toast) {
-      const t = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [toast]);
-
-  /* ================= AUTO RETRY ONLINE ================= */
+  /* ===== AUTO RETRY ONLINE ===== */
   useEffect(() => {
     if (!navigator.onLine || !settings.googleScriptUrl) return;
 
@@ -116,21 +93,20 @@ const App: React.FC = () => {
       for (const r of records) {
         if (r.status !== 'error') continue;
 
-        const startIdx = r.uploadedCount || 0;
-        const imgs = r.images.slice(startIdx);
+        const start = r.uploadedCount || 0;
+        const imgs = r.images.slice(start);
         if (imgs.length === 0) continue;
 
         const hashes =
-          r.imageHashes?.slice(startIdx) ??
+          r.imageHashes?.slice(start) ??
           (await Promise.all(imgs.map(getImageHash)));
 
-        const ok = await syncRecord(r, imgs, startIdx, hashes);
+        const ok = await syncRecord(r, imgs, start, hashes);
         if (ok) {
           const updated: RepairRecord = {
             ...r,
             status: 'synced',
             uploadedCount: r.images.length,
-            imageHashes: r.imageHashes,
           };
           await dbService.saveRecord(updated);
           setRecords((p) => p.map((x) => (x.id === r.id ? updated : x)));
@@ -141,7 +117,7 @@ const App: React.FC = () => {
     retry();
   }, [records, settings.googleScriptUrl]);
 
-  /* ================= API ================= */
+  /* ===== API ===== */
   const syncRecord = async (
     record: RepairRecord,
     imgs?: string[],
@@ -168,7 +144,7 @@ const App: React.FC = () => {
     }
   };
 
-  /* ================= ACTIONS ================= */
+  /* ===== ACTIONS ===== */
   const handleLogin = (u: User) => {
     localStorage.setItem('currentUser', JSON.stringify(u));
     setUser(u);
@@ -210,18 +186,17 @@ const App: React.FC = () => {
     setImages([]);
     setActiveStep(1);
     setIsSubmitting(false);
-
-    setToast({ message: 'Đã lưu – chờ sync', type: 'info' });
   };
 
   const handleRetry = async (id: string) => {
     const r = records.find((x) => x.id === id);
     if (!r) return;
+
     const start = r.uploadedCount || 0;
     const imgs = r.images.slice(start);
     const hashes = r.imageHashes?.slice(start) ?? [];
-    const ok = await syncRecord(r, imgs, start, hashes);
 
+    const ok = await syncRecord(r, imgs, start, hashes);
     if (ok) {
       const updated: RepairRecord = {
         ...r,
@@ -243,7 +218,7 @@ const App: React.FC = () => {
     setRecords((p) => p.map((x) => (x.id === r.id ? r : x)));
   };
 
-  /* ================= RENDER ================= */
+  /* ===== RENDER ===== */
   if (!user) return <Login onLogin={handleLogin} />;
 
   return (
