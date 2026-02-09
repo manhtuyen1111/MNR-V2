@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
 import {
@@ -9,26 +9,25 @@ import {
   Trash2,
   Image as ImageIcon,
   X,
-  Camera,
-  Save,
   Filter,
   Calendar,
   Users,
   ChevronDown,
+  Search,
 } from 'lucide-react';
+import CameraCapture from './CameraCapture';
 
-/* ======================= HISTORY LIST ======================= */
+/* ================= PROPS ================= */
 
 interface HistoryListProps {
   records: RepairRecord[];
   teams: Team[];
   onRetry: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdateRecord: (
-    updatedRecord: RepairRecord,
-    newImagesOnly: string[]
-  ) => void;
+  onUpdateRecord: (updated: RepairRecord, newImages: string[]) => void;
 }
+
+/* ================= MAIN ================= */
 
 const HistoryList: React.FC<HistoryListProps> = ({
   records,
@@ -37,85 +36,113 @@ const HistoryList: React.FC<HistoryListProps> = ({
   onDelete,
   onUpdateRecord,
 }) => {
-  const [viewingRecord, setViewingRecord] =
-    useState<RepairRecord | null>(null);
-
+  const [viewing, setViewing] = useState<RepairRecord | null>(null);
   const [filterTeam, setFilterTeam] = useState('all');
   const [quickDate, setQuickDate] =
     useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
+  const [range, setRange] = useState({ start: '', end: '' });
+  const [searchCont, setSearchCont] = useState('');
 
-  const [filterDateRange, setFilterDateRange] = useState<{
-    start: string;
-    end: string;
-  }>({ start: '', end: '' });
+  /* ===== SEARCH GỢI Ý CONT ===== */
+  const contSuggestions = useMemo(() => {
+    if (!searchCont.trim()) return [];
+    const key = searchCont.toLowerCase();
+    return Array.from(
+      new Set(
+        records
+          .map((r) => r.containerNumber)
+          .filter((c) => c.toLowerCase().startsWith(key))
+      )
+    ).slice(0, 5);
+  }, [searchCont, records]);
 
-  const filteredRecords = records.filter((record) => {
-    if (filterTeam !== 'all' && record.teamId !== filterTeam) return false;
+  /* ===== FILTER ===== */
+  const filtered = useMemo(() => {
+    return records.filter((r) => {
+      if (
+        searchCont &&
+        !r.containerNumber.toLowerCase().includes(searchCont.toLowerCase())
+      )
+        return false;
 
-    const recordDate = new Date(record.timestamp);
-    recordDate.setHours(0, 0, 0, 0);
+      if (filterTeam !== 'all' && r.teamId !== filterTeam) return false;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+      const d = new Date(r.timestamp);
+      d.setHours(0, 0, 0, 0);
 
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    yesterday.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-    if (quickDate === 'today' && recordDate.getTime() !== today.getTime())
-      return false;
+      const y = new Date(today);
+      y.setDate(y.getDate() - 1);
 
-    if (
-      quickDate === 'yesterday' &&
-      recordDate.getTime() !== yesterday.getTime()
-    )
-      return false;
+      if (quickDate === 'today' && d.getTime() !== today.getTime()) return false;
+      if (
+        quickDate === 'yesterday' &&
+        d.getTime() !== y.getTime()
+      )
+        return false;
 
-    if (quickDate === 'custom') {
-      if (filterDateRange.start) {
-        const start = new Date(filterDateRange.start);
-        start.setHours(0, 0, 0, 0);
-        if (recordDate < start) return false;
+      if (quickDate === 'custom') {
+        if (range.start && d < new Date(range.start)) return false;
+        if (range.end && d > new Date(range.end)) return false;
       }
-      if (filterDateRange.end) {
-        const end = new Date(filterDateRange.end);
-        end.setHours(23, 59, 59, 999);
-        if (recordDate > end) return false;
-      }
-    }
 
-    return true;
-  });
+      return true;
+    });
+  }, [records, searchCont, filterTeam, quickDate, range]);
 
-  const sortedRecords = [...filteredRecords].sort(
-    (a, b) => b.timestamp - a.timestamp
+  const sorted = useMemo(
+    () => [...filtered].sort((a, b) => b.timestamp - a.timestamp),
+    [filtered]
   );
 
-  if (records.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8">
-        <Clock className="w-12 h-12 mb-4" />
-        <span className="font-bold text-lg">Lịch sử trống</span>
-      </div>
-    );
-  }
+  /* ================= UI ================= */
 
   return (
     <>
-      <div className="p-4 space-y-4 pb-24">
-        {/* FILTER */}
-        <div className="bg-white rounded-2xl border p-3 space-y-3">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+      <div className="p-4 space-y-4 pb-28">
+        {/* ===== FILTER BAR ===== */}
+        <div className="bg-white rounded-2xl border p-3 space-y-3 shadow-sm">
+          <div className="flex items-center space-x-2">
             <Filter className="w-4 h-4 text-sky-600" />
-            BỘ LỌC
+            <span className="text-xs font-black uppercase tracking-widest">
+              Bộ lọc
+            </span>
+          </div>
+
+          {/* SEARCH CONT */}
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <input
+              value={searchCont}
+              onChange={(e) => setSearchCont(e.target.value)}
+              placeholder="Nhập số container..."
+              className="w-full pl-9 pr-3 py-2 border rounded-xl text-sm font-mono"
+            />
+            {contSuggestions.length > 0 && (
+              <div className="absolute z-10 mt-1 w-full bg-white border rounded-xl shadow-lg overflow-hidden">
+                {contSuggestions.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setSearchCont(c)}
+                    className="w-full text-left px-3 py-2 text-sm font-mono hover:bg-sky-50"
+                  >
+                    {c.slice(0, 4)}
+                    <span className="text-red-600">{c.slice(4)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
+            {/* TEAM */}
             <div className="relative">
               <select
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
-                className="w-full bg-slate-50 border rounded-xl py-2 pl-3 pr-8 text-xs font-bold"
+                className="w-full bg-slate-50 border rounded-xl p-2 text-xs font-bold"
               >
                 <option value="all">Tất cả tổ đội</option>
                 {teams.map((t) => (
@@ -124,26 +151,26 @@ const HistoryList: React.FC<HistoryListProps> = ({
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-slate-400" />
+              <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
             </div>
 
+            {/* DATE */}
             <div className="relative">
               <select
                 value={quickDate}
                 onChange={(e) => {
                   const v = e.target.value as any;
                   setQuickDate(v);
-                  if (v !== 'custom')
-                    setFilterDateRange({ start: '', end: '' });
+                  if (v !== 'custom') setRange({ start: '', end: '' });
                 }}
-                className="w-full bg-slate-50 border rounded-xl py-2 pl-3 pr-8 text-xs font-bold"
+                className="w-full bg-slate-50 border rounded-xl p-2 text-xs font-bold"
               >
-                <option value="all">Tất cả thời gian</option>
+                <option value="all">Tất cả</option>
                 <option value="today">Hôm nay</option>
                 <option value="yesterday">Hôm qua</option>
                 <option value="custom">Tùy chọn</option>
               </select>
-              <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-slate-400" />
+              <Calendar className="absolute right-3 top-3 w-4 h-4 text-slate-400" />
             </div>
           </div>
 
@@ -151,23 +178,17 @@ const HistoryList: React.FC<HistoryListProps> = ({
             <div className="grid grid-cols-2 gap-3">
               <input
                 type="date"
-                value={filterDateRange.start}
+                value={range.start}
                 onChange={(e) =>
-                  setFilterDateRange((p) => ({
-                    ...p,
-                    start: e.target.value,
-                  }))
+                  setRange((p) => ({ ...p, start: e.target.value }))
                 }
                 className="border rounded-xl p-2 text-xs"
               />
               <input
                 type="date"
-                value={filterDateRange.end}
+                value={range.end}
                 onChange={(e) =>
-                  setFilterDateRange((p) => ({
-                    ...p,
-                    end: e.target.value,
-                  }))
+                  setRange((p) => ({ ...p, end: e.target.value }))
                 }
                 className="border rounded-xl p-2 text-xs"
               />
@@ -175,93 +196,86 @@ const HistoryList: React.FC<HistoryListProps> = ({
           )}
         </div>
 
-        {/* LIST */}
-        {sortedRecords.map((record) => (
+        {/* ===== LIST ===== */}
+        {sorted.map((r) => (
           <div
-            key={record.id}
-            onClick={() => setViewingRecord(record)}
-            className="bg-white rounded-2xl p-4 border shadow-sm hover:shadow-md active:scale-[0.98] transition cursor-pointer flex justify-between"
+            key={r.id}
+            onClick={() => setViewing(r)}
+            className="bg-white rounded-2xl p-4 border shadow-sm flex justify-between cursor-pointer hover:shadow-md transition"
           >
-            <div className="flex gap-4">
+            <div className="flex space-x-4">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center
-                ${
-                  record.status === 'synced'
+                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  r.status === 'synced'
                     ? 'bg-green-100 text-green-600'
-                    : record.status === 'error'
+                    : r.status === 'error'
                     ? 'bg-red-100 text-red-600'
                     : 'bg-amber-100 text-amber-600'
                 }`}
               >
-                {record.status === 'synced' && <CheckCircle />}
-                {record.status === 'error' && <AlertTriangle />}
-                {record.status === 'pending' && <Clock />}
+                {r.status === 'synced' && <CheckCircle />}
+                {r.status === 'error' && <AlertTriangle />}
+                {r.status === 'pending' && <Clock />}
               </div>
 
               <div>
-                <div className="font-mono font-black text-lg">
-                  <span className="text-slate-700">
-                    {record.containerNumber.slice(0, 4)}
-                  </span>
-                  <span className="text-red-600 tracking-widest ml-1">
-                    {record.containerNumber.slice(4)}
+                <div className="font-mono font-black text-xl tracking-tight">
+                  {r.containerNumber.slice(0, 4)}
+                  <span className="text-red-600">
+                    {r.containerNumber.slice(4)}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-[10px] mt-1">
-                  <span className="bg-slate-100 px-2 py-0.5 rounded">
-                    {record.teamName}
+                <div className="flex items-center space-x-2 text-xs mt-1">
+                  <span className="bg-slate-100 px-2 rounded font-bold">
+                    {r.teamName}
                   </span>
-                  <span className="flex items-center gap-1 bg-sky-100 px-2 py-0.5 rounded text-sky-700">
+                  <span className="flex items-center space-x-1 text-sky-600 font-bold">
                     <ImageIcon className="w-3 h-3" />
-                    {record.images.length}
+                    <span>{r.images.length}</span>
                   </span>
                 </div>
 
                 <div className="text-[10px] text-slate-400 mt-1">
-                  {formatDate(record.timestamp)}
+                  {formatDate(r.timestamp)}
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2">
-              {record.status === 'error' && (
+            <div className="flex items-center space-x-2">
+              {r.status === 'error' && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onRetry(record.id);
+                    onRetry(r.id);
                   }}
-                  className="p-2 rounded-xl bg-sky-50 text-sky-600"
+                  className="p-2 bg-sky-100 rounded-xl"
                 >
-                  <RefreshCw />
+                  <RefreshCw className="w-5 h-5" />
                 </button>
               )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(record.id);
+                  onDelete(r.id);
                 }}
-                className="p-2 rounded-xl bg-red-50 text-red-600"
+                className="p-2 bg-red-50 rounded-xl"
               >
-                <Trash2 />
+                <Trash2 className="w-5 h-5 text-red-500" />
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      {viewingRecord && (
+      {viewing && (
         <ImageViewer
-          record={viewingRecord}
-          onClose={() => setViewingRecord(null)}
-          onUpdate={(all, newly) => {
-            const updated = {
-              ...viewingRecord,
-              images: all,
-              status: 'pending' as const,
-            };
-            setViewingRecord(updated);
-            onUpdateRecord(updated, newly);
+          record={viewing}
+          onClose={() => setViewing(null)}
+          onUpdate={(all, added) => {
+            const updated = { ...viewing, images: all, status: 'pending' };
+            setViewing(updated);
+            onUpdateRecord(updated, added);
           }}
         />
       )}
@@ -269,129 +283,73 @@ const HistoryList: React.FC<HistoryListProps> = ({
   );
 };
 
-export default HistoryList;
-
-/* ======================= IMAGE VIEWER ======================= */
+/* ================= IMAGE VIEWER ================= */
 
 const ImageViewer: React.FC<{
   record: RepairRecord;
   onClose: () => void;
-  onUpdate: (allImages: string[], newImages: string[]) => void;
+  onUpdate: (all: string[], added: string[]) => void;
 }> = ({ record, onClose, onUpdate }) => {
-  const [mode, setMode] = useState<'view' | 'camera'>('view');
-  const [tempImages, setTempImages] = useState<string[]>(record.images);
-  const [stagedImages, setStagedImages] = useState<string[]>([]);
-
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
-
-  const startCamera = async () => {
-    setMode('camera');
-    const ms = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' },
-    });
-    setStream(ms);
-  };
-
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
-
-  const stopCamera = () => {
-    stream?.getTracks().forEach((t) => t.stop());
-    setStream(null);
-    setMode('view');
-    setStagedImages([]);
-  };
-
-  const capture = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const v = videoRef.current;
-    const c = canvasRef.current;
-    c.width = v.videoWidth;
-    c.height = v.videoHeight;
-    const ctx = c.getContext('2d');
-    if (!ctx) return;
-    ctx.drawImage(v, 0, 0);
-    const img = c.toDataURL('image/jpeg', 0.5);
-    setStagedImages((p) => [...p, img]);
-  };
-
-  const handleConfirmUpdate = () => {
-    const merged = [...tempImages, ...stagedImages];
-    setTempImages(merged);
-    onUpdate(merged, stagedImages);
-    stopCamera();
-  };
+  const [images, setImages] = useState<string[]>(record.images);
+  const [added, setAdded] = useState<string[]>([]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black">
-      {mode === 'view' ? (
-        <>
-          <div className="h-20 flex items-center justify-between px-6 bg-black/80 text-white">
-            <div>
-              <div className="font-mono font-black text-xl">
-                {record.containerNumber}
-              </div>
-              <div className="text-xs text-sky-400 flex items-center gap-2">
-                <Users className="w-3 h-3" />
-                {record.teamName} • {tempImages.length} ảnh
-              </div>
-            </div>
-            <button onClick={onClose}>
-              <X />
-            </button>
+    <div className="fixed inset-0 z-[100] bg-black">
+      <div className="h-20 px-6 flex justify-between items-center bg-black/80 text-white">
+        <div>
+          <div className="font-mono font-black text-xl">
+            {record.containerNumber}
           </div>
+          <div className="flex items-center text-xs text-sky-400 space-x-2">
+            <Users className="w-3 h-3" />
+            <span>{record.teamName}</span>
+            <span>• {images.length} ảnh</span>
+          </div>
+        </div>
+        <button onClick={onClose}>
+          <X />
+        </button>
+      </div>
 
-          <div className="grid grid-cols-4 gap-1 p-1">
-            {tempImages.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                className="aspect-square object-cover"
-              />
-            ))}
-            <button
-              onClick={startCamera}
-              className="aspect-square flex flex-col items-center justify-center border border-dashed text-sky-500"
-            >
-              <Camera />
-              <span className="text-[10px]">Thêm</span>
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="flex flex-col h-full">
-          <canvas ref={canvasRef} className="hidden" />
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="flex-1 object-cover"
+      <div className="p-3 grid grid-cols-4 gap-2">
+        {images.map((img, i) => (
+          <img
+            key={i}
+            src={img}
+            className="aspect-square object-cover rounded"
           />
-          <div className="p-4 flex justify-between items-center">
-            <button onClick={stopCamera}>
-              <X className="text-white" />
-            </button>
-            <button
-              onClick={capture}
-              className="w-20 h-20 rounded-full bg-white"
-            />
-            {stagedImages.length > 0 && (
-              <button
-                onClick={handleConfirmUpdate}
-                className="bg-green-600 p-3 rounded-xl text-white"
-              >
-                <Save />
-              </button>
-            )}
-          </div>
+        ))}
+      </div>
+
+      <div className="p-4">
+        <CameraCapture
+          images={added}
+          onAddImage={(img) => {
+            setImages((p) => [...p, img]);
+            setAdded((p) => [...p, img]);
+          }}
+          onRemoveImage={(i) =>
+            setAdded((p) => p.filter((_, idx) => idx !== i))
+          }
+          isActive
+          isCompleted={false}
+          isDisabled={false}
+          onFocus={() => {}}
+        />
+      </div>
+
+      {added.length > 0 && (
+        <div className="p-4">
+          <button
+            onClick={() => onUpdate(images, added)}
+            className="w-full bg-green-600 text-white font-black py-4 rounded-xl"
+          >
+            LƯU ẢNH BỔ SUNG
+          </button>
         </div>
       )}
     </div>
   );
 };
+
+export default HistoryList;
