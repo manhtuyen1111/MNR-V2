@@ -21,6 +21,7 @@ export const USERS: Record<string, User> = {
   'admin': { 
     username: 'admin', 
     name: 'Administrator', 
+    password: 'admin9', 
     role: 'admin' 
   },
   'qc': { 
