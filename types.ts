@@ -30,4 +30,5 @@ export interface User {
   name: string;
   role: 'admin' | 'qc' | 'worker';
   assignedTeamId?: string; // If set, user is locked to this team
+  password?: string;          // optional để không bắt buộc phải có ở mọi user
 }
