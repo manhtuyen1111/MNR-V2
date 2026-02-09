@@ -114,14 +114,23 @@ const HistoryList: React.FC<HistoryListProps> = ({
           </div>
 
           {/* SEARCH CONTAINER */}
-          <div className="mb-3">
+          <div className="relative mb-3">
             <input
               type="text"
               value={searchCont}
               onChange={(e) => setSearchCont(e.target.value)}
               placeholder="Nhập số container..."
-              className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-2.5 px-3 text-[11px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
+              className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl py-2.5 pl-3 pr-9 text-[11px] font-bold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition-all"
             />
+            {searchCont && (
+              <button
+                onClick={() => setSearchCont('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-red-100 hover:text-red-500 transition-colors"
+                title="Xóa tìm kiếm"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -186,7 +195,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
         </div>
 
         <h2 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
-          KẾT QUẢ ({sortedRecords.length})
+          KẾT QUẢ TÌM KIẾM ({sortedRecords.length})
         </h2>
 
         {sortedRecords.length === 0 ? (
@@ -198,13 +207,13 @@ const HistoryList: React.FC<HistoryListProps> = ({
             <div
               key={record.id}
               onClick={() => setViewingRecord(record)}
-              className="bg-white rounded-[1.5rem] p-4 border border-slate-100 flex justify-between cursor-pointer"
+              className="bg-white rounded-[1.5rem] p-4 shadow border border-slate-100 flex justify-between cursor-pointer active:scale-[0.98]"
             >
               <div>
-                <span className="font-black font-mono text-xl">
+                <span className="font-black font-mono text-xl text-slate-800">
                   {record.containerNumber}
                 </span>
-                <div className="text-[10px] text-slate-400 font-bold">
+                <div className="text-[10px] text-slate-400 font-bold mt-1">
                   {record.teamName} • {formatDate(record.timestamp)}
                 </div>
               </div>
