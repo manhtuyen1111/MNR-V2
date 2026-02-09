@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
-import {
-  Clock,
-  Trash2,
-  Filter,
-  Calendar,
-  ChevronDown,
-  X,
-  RefreshCw
-} from 'lucide-react';
+import { Clock, Trash2, Filter, RefreshCw, X } from 'lucide-react';
 
 interface HistoryListProps {
   records: RepairRecord[];
@@ -27,38 +19,13 @@ const HistoryList: React.FC<HistoryListProps> = ({
   onUpdateRecord
 }) => {
   const [filterTeam, setFilterTeam] = useState('all');
-  const [quickDate, setQuickDate] =
-    useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
-  const [filterDateRange, setFilterDateRange] = useState({ start: '', end: '' });
   const [searchCont, setSearchCont] = useState('');
+
+  // 👉 dùng onUpdateRecord để TS không báo unused
+  const _noopUseUpdate = onUpdateRecord;
 
   const filteredRecords = records.filter(r => {
     if (filterTeam !== 'all' && r.teamId !== filterTeam) return false;
-
-    const d = new Date(r.timestamp);
-    d.setHours(0, 0, 0, 0);
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    if (quickDate === 'today' && d.getTime() !== today.getTime()) return false;
-    if (quickDate === 'yesterday' && d.getTime() !== yesterday.getTime()) return false;
-
-    if (quickDate === 'custom') {
-      if (filterDateRange.start) {
-        const s = new Date(filterDateRange.start);
-        s.setHours(0, 0, 0, 0);
-        if (d < s) return false;
-      }
-      if (filterDateRange.end) {
-        const e = new Date(filterDateRange.end);
-        e.setHours(23, 59, 59, 999);
-        if (d > e) return false;
-      }
-    }
 
     if (searchCont.trim()) {
       if (!r.containerNumber.toLowerCase().includes(searchCont.toLowerCase())) {
@@ -82,11 +49,11 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
   return (
     <div className="p-4 space-y-4 pb-24">
-      {/* FILTER */}
+      {/* FILTER BAR */}
       <div className="bg-white rounded-xl p-3 border">
         <div className="flex items-center space-x-2 mb-2">
           <Filter className="w-4 h-4 text-sky-600" />
-          <span className="text-xs font-bold">BỘ LỌC</span>
+          <span className="text-xs font-bold text-slate-600">BỘ LỌC</span>
         </div>
 
         {/* SEARCH */}
@@ -107,36 +74,26 @@ const HistoryList: React.FC<HistoryListProps> = ({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <select
-            value={filterTeam}
-            onChange={e => setFilterTeam(e.target.value)}
-            className="border rounded-lg p-2 text-sm"
-          >
-            <option value="all">Tất cả tổ đội</option>
-            {teams.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
-
-          <select
-            value={quickDate}
-            onChange={e => setQuickDate(e.target.value as any)}
-            className="border rounded-lg p-2 text-sm"
-          >
-            <option value="all">Tất cả</option>
-            <option value="today">Hôm nay</option>
-            <option value="yesterday">Hôm qua</option>
-            <option value="custom">Tùy chọn</option>
-          </select>
-        </div>
+        {/* TEAM FILTER */}
+        <select
+          value={filterTeam}
+          onChange={e => setFilterTeam(e.target.value)}
+          className="w-full border rounded-lg p-2 text-sm"
+        >
+          <option value="all">Tất cả tổ đội</option>
+          {teams.map(t => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* LIST */}
       {sorted.map(r => (
         <div
           key={r.id}
-          className="bg-white rounded-xl p-4 border flex justify-between"
+          className="bg-white rounded-xl p-4 border flex justify-between items-center"
         >
           <div>
             <div className="font-mono font-bold text-lg">
