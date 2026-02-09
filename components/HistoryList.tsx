@@ -90,7 +90,47 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
   return (
     <>
-      <div className="p-4 space-y-3 pb-28">
+      <div className="p-4 space-y-3 pb-28 relative">  {/* Thêm relative ở đây */}
+
+  {/* CARD ĐẾM NHỎ GỌN Ở GÓC PHẢI TRÊN */}
+  <div className="absolute top-4 right-4 z-10">
+    <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
+      <span className="font-semibold text-indigo-600">{sorted.length}</span>
+      <span className="text-slate-600">/</span>
+      <span className="text-slate-500">{records.length}</span>
+    </div>
+  </div>
+
+  {/* FILTER - giữ nguyên như cũ */}
+  <div className="bg-white rounded-xl border p-3 space-y-2">
+    <input
+      value={searchCont}
+      onChange={(e) => setSearchCont(e.target.value)}
+      placeholder="Tìm container..."
+      className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
+    />
+    {/* ... phần còn lại của filter ... */}
+  </div>
+
+  {/* LIST - giữ nguyên */}
+  {sorted.map((r) => (
+    <div
+      key={r.id}
+      onClick={() => setViewing(r)}
+      className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
+    >
+      {/* ... nội dung item hiện tại ... */}
+    </div>
+  ))}
+
+  {/* Nếu không có record nào */}
+  {sorted.length === 0 && (
+    <div className="text-center py-10 text-slate-500">
+      Không có bản ghi nào khớp với bộ lọc hiện tại
+    </div>
+  )}
+
+</div>
         {/* FILTER */}
         <div className="bg-white rounded-xl border p-3 space-y-2">
           <input
