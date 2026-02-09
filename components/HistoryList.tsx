@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
 import {
@@ -37,15 +37,19 @@ const HistoryList: React.FC<HistoryListProps> = ({
 }) => {
   const [viewingRecord, setViewingRecord] = useState<RepairRecord | null>(null);
   const [filterTeam, setFilterTeam] = useState('all');
-  const [filterDateRange, setFilterDateRange] = useState({ start: '', end: '' });
   const [quickDate, setQuickDate] =
     useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
+  const [filterDateRange, setFilterDateRange] = useState({
+    start: '',
+    end: ''
+  });
 
   const [searchCont, setSearchCont] = useState('');
   const [showSuggest, setShowSuggest] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
-  /* ================= FILTER ================= */
+  /* ================= FILTER LOGIC ================= */
+
   const filteredRecords = records.filter(r => {
     if (filterTeam !== 'all' && r.teamId !== filterTeam) return false;
 
@@ -60,6 +64,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
     if (quickDate === 'today' && recordDate.getTime() !== today.getTime())
       return false;
+
     if (
       quickDate === 'yesterday' &&
       recordDate.getTime() !== yesterday.getTime()
@@ -79,14 +84,13 @@ const HistoryList: React.FC<HistoryListProps> = ({
       }
     }
 
-    if (searchCont) {
-      if (
-        !r.containerNumber
-          .toLowerCase()
-          .includes(searchCont.toLowerCase())
-      )
-        return false;
-    }
+    if (
+      searchCont &&
+      !r.containerNumber
+        .toLowerCase()
+        .includes(searchCont.toLowerCase())
+    )
+      return false;
 
     return true;
   });
@@ -95,7 +99,6 @@ const HistoryList: React.FC<HistoryListProps> = ({
     (a, b) => b.timestamp - a.timestamp
   );
 
-  /* ================= AUTOCOMPLETE ================= */
   const suggestions = searchCont
     ? records
         .filter(r =>
@@ -107,6 +110,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
     : [];
 
   /* ================= UI ================= */
+
   return (
     <>
       <div className="p-4 space-y-4 pb-24">
@@ -114,13 +118,13 @@ const HistoryList: React.FC<HistoryListProps> = ({
         <div className="bg-white rounded-2xl border p-3">
           <div className="flex items-center space-x-2 mb-2">
             <Filter className="w-4 h-4 text-sky-600" />
-            <span className="text-xs font-bold">BỘ LỌC</span>
+            <span className="text-xs font-black">BỘ LỌC</span>
           </div>
 
           {/* SEARCH */}
           <div className="relative mb-3">
             <input
-              ref={inputRef}
+              ref={searchRef}
               value={searchCont}
               onChange={e => {
                 setSearchCont(e.target.value);
@@ -135,7 +139,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
               <button
                 onClick={() => {
                   setSearchCont('');
-                  inputRef.current?.focus();
+                  searchRef.current?.focus();
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2"
               >
@@ -161,19 +165,65 @@ const HistoryList: React.FC<HistoryListProps> = ({
             )}
           </div>
 
-          {/* TEAM */}
-          <select
-            value={filterTeam}
-            onChange={e => setFilterTeam(e.target.value)}
-            className="w-full border rounded-xl p-2 text-sm"
-          >
-            <option value="all">Tất cả tổ đội</option>
-            {teams.map(t => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+          {/* TEAM FILTER */}
+          <div className="relative mb-3">
+            <select
+              value={filterTeam}
+              onChange={e => setFilterTeam(e.target.value)}
+              className="w-full border rounded-xl p-2 text-sm appearance-none"
+            >
+              <option value="all">Tất cả tổ đội</option>
+              {teams.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* DATE FILTER */}
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={quickDate}
+              onChange={e =>
+                setQuickDate(e.target.value as typeof quickDate)
+              }
+              className="border rounded-xl p-2 text-sm"
+            >
+              <option value="all">Tất cả</option>
+              <option value="today">Hôm nay</option>
+              <option value="yesterday">Hôm qua</option>
+              <option value="custom">Tuỳ chọn</option>
+            </select>
+
+            {quickDate === 'custom' && (
+              <>
+                <input
+                  type="date"
+                  value={filterDateRange.start}
+                  onChange={e =>
+                    setFilterDateRange(v => ({
+                      ...v,
+                      start: e.target.value
+                    }))
+                  }
+                  className="border rounded-xl p-2 text-sm"
+                />
+                <input
+                  type="date"
+                  value={filterDateRange.end}
+                  onChange={e =>
+                    setFilterDateRange(v => ({
+                      ...v,
+                      end: e.target.value
+                    }))
+                  }
+                  className="border rounded-xl p-2 text-sm"
+                />
+              </>
+            )}
+          </div>
         </div>
 
         {/* LIST */}
@@ -184,11 +234,28 @@ const HistoryList: React.FC<HistoryListProps> = ({
             className="bg-white rounded-xl p-4 border flex justify-between cursor-pointer"
           >
             <div>
-              <div className="font-mono font-bold text-lg">
-                {r.containerNumber}
+              <div className="flex items-center space-x-2">
+                {r.status === 'synced' && (
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                )}
+                {r.status === 'pending' && (
+                  <Clock className="w-4 h-4 text-amber-500" />
+                )}
+                {r.status === 'error' && (
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                )}
+                <span className="font-mono font-bold">
+                  {r.containerNumber}
+                </span>
               </div>
-              <div className="text-xs text-slate-500">
-                {r.teamName} • {formatDate(r.timestamp)}
+
+              <div className="text-xs text-slate-500 flex items-center space-x-2 mt-1">
+                <Users className="w-3 h-3" />
+                <span>{r.teamName}</span>
+                <Calendar className="w-3 h-3 ml-2" />
+                <span>{formatDate(r.timestamp)}</span>
+                <ImageIcon className="w-3 h-3 ml-2" />
+                <span>{r.images.length}</span>
               </div>
             </div>
 
@@ -235,7 +302,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
   );
 };
 
-/* ================= IMAGE VIEWER (GIỮ NGUYÊN) ================= */
+/* ================= IMAGE VIEWER ================= */
 
 const ImageViewer: React.FC<{
   record: RepairRecord;
@@ -243,9 +310,8 @@ const ImageViewer: React.FC<{
   onUpdate: (all: string[], onlyNew: string[]) => void;
 }> = ({ record, onClose, onUpdate }) => {
   const [mode, setMode] = useState<'view' | 'camera'>('view');
-  const [images, setImages] = useState(record.images);
+  const [images, setImages] = useState<string[]>(record.images);
   const [staged, setStaged] = useState<string[]>([]);
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -280,19 +346,18 @@ const ImageViewer: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black z-50">
+    <div className="fixed inset-0 bg-black z-50 text-white">
       {mode === 'view' ? (
         <>
-          <div className="p-4 flex justify-between text-white">
+          <div className="p-4 flex justify-between">
             <span>{record.containerNumber}</span>
             <button onClick={onClose}>
               <X />
             </button>
           </div>
-
           <div className="grid grid-cols-4 gap-1 p-2">
             {images.map((img, i) => (
-              <img key={i} src={img} className="object-cover" />
+              <img key={i} src={img} />
             ))}
             <button onClick={startCamera}>
               <Camera />
@@ -302,12 +367,7 @@ const ImageViewer: React.FC<{
       ) : (
         <>
           <canvas ref={canvasRef} className="hidden" />
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
+          <video ref={videoRef} autoPlay className="w-full h-full object-cover" />
           <button onClick={capture}>CAPTURE</button>
           {staged.length > 0 && (
             <button
