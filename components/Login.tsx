@@ -28,24 +28,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setTimeout(() => {
       const user = USERS[username.toLowerCase()];
 
-      if (!user) {
+      // Sai tài khoản hoặc mật khẩu
+      if (!user || user.password !== password) {
         setError('Tên đăng nhập hoặc mật khẩu không đúng');
         setLoading(false);
         return;
       }
 
-      if (user.role === 'worker') {
-        setError('Tài khoản này không được phép đăng nhập');
-        setLoading(false);
-        return;
-      }
-
-      if (user.password !== password) {
-        setError('Tên đăng nhập hoặc mật khẩu không đúng');
-        setLoading(false);
-        return;
-      }
-
+      // OK
       onLogin(user);
     }, 600);
   };
