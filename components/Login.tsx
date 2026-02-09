@@ -31,45 +31,44 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-white relative overflow-hidden">
-      {/* Background Elements - Sáng sủa, chuyên nghiệp */}
-      <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-cyan-50 pointer-events-none"></div>
-      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-teal-100/30 rounded-full blur-[140px] pointer-events-none"></div>
-      <div className="absolute bottom-[-15%] left-[-15%] w-[50%] h-[50%] bg-cyan-100/20 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* Background - Maersk style: sáng, gradient nhẹ xanh dương */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#E6F4FA] via-white to-[#D9F0F9] pointer-events-none"></div>
+      <div className="absolute top-[-15%] right-[-10%] w-[50%] h-[50%] bg-[#42B0D5]/10 rounded-full blur-[120px] pointer-events-none"></div>
 
-      <div className="w-full max-w-md z-10 animate-fadeIn">
-        {/* Logo Area */}
+      <div className="w-full max-w-md z-10">
+        {/* Logo & Title - Maersk vibe */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-700 rounded-2xl shadow-xl mb-6 transform hover:scale-105 transition-transform duration-300">
-            <Container className="w-10 h-10 text-white" />
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-[#00233D] rounded-full shadow-lg mb-6 transform hover:scale-105 transition-transform duration-300">
+            <Container className="w-10 h-10 text-[#42B0D5]" /> {/* Icon trắng + blue accent */}
           </div>
-          <h1 className="text-5xl font-black text-gray-900 tracking-tight">
-            MATRAN <span className="text-teal-700">MNR</span>
+          <h1 className="text-5xl font-black text-[#00233D] tracking-tight uppercase">
+            MATRAN <span className="text-[#42B0D5]">MNR</span>
           </h1>
           <div className="flex items-center justify-center space-x-4 mt-4">
-            <div className="h-1 w-8 bg-teal-600 rounded"></div>
-            <p className="text-gray-600 text-sm font-semibold uppercase tracking-wider">
+            <div className="h-1 w-10 bg-[#42B0D5] rounded"></div>
+            <p className="text-[#00233D] text-sm font-bold uppercase tracking-wider">
               QC Inspection System
             </p>
-            <div className="h-1 w-8 bg-teal-600 rounded"></div>
+            <div className="h-1 w-10 bg-[#42B0D5] rounded"></div>
           </div>
         </div>
 
-        {/* Login Box - Sạch sẽ, chuyên nghiệp */}
-        <div className="bg-white border border-gray-200 rounded-3xl p-10 shadow-2xl shadow-teal-100/40">
+        {/* Login Form - Clean, Maersk-inspired */}
+        <div className="bg-white border border-gray-200 rounded-3xl p-10 shadow-xl shadow-[#42B0D5]/10">
           <form onSubmit={handleLogin} className="space-y-7">
             <div className="space-y-2">
-              <label className="text-xs font-bold text-teal-700 uppercase tracking-wide ml-1">
+              <label className="text-xs font-bold text-[#00233D] uppercase tracking-wider ml-1">
                 Tài khoản
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <UserIcon className="h-5 w-5 text-teal-600" />
+                  <UserIcon className="h-5 w-5 text-[#42B0D5]" />
                 </div>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-lg rounded-2xl py-4 pl-12 pr-4 placeholder-gray-500 focus:outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-200 transition-all font-medium"
+                  className="w-full bg-white border border-gray-300 text-[#00233D] text-lg rounded-2xl py-4 pl-12 pr-4 placeholder-gray-400 focus:outline-none focus:border-[#42B0D5] focus:ring-4 focus:ring-[#42B0D5]/20 transition-all font-medium"
                   placeholder="Tên đăng nhập"
                   autoComplete="username"
                 />
@@ -77,18 +76,18 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold text-teal-700 uppercase tracking-wide ml-1">
+              <label className="text-xs font-bold text-[#00233D] uppercase tracking-wider ml-1">
                 Mật khẩu
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-teal-600" />
+                  <Lock className="h-5 w-5 text-[#42B0D5]" />
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-lg rounded-2xl py-4 pl-12 pr-4 placeholder-gray-500 focus:outline-none focus:border-teal-600 focus:ring-4 focus:ring-teal-200 transition-all font-medium"
+                  className="w-full bg-white border border-gray-300 text-[#00233D] text-lg rounded-2xl py-4 pl-12 pr-4 placeholder-gray-400 focus:outline-none focus:border-[#42B0D5] focus:ring-4 focus:ring-[#42B0D5]/20 transition-all font-medium"
                   placeholder="••••••••"
                   autoComplete="current-password"
                 />
@@ -106,13 +105,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-teal-700 hover:bg-teal-800 text-white font-bold py-5 rounded-2xl shadow-lg shadow-teal-300/30 transform active:scale-95 transition-all flex items-center justify-center space-x-3 group"
+                className="w-full bg-[#42B0D5] hover:bg-[#2e9bc0] text-white font-bold py-5 rounded-2xl shadow-lg shadow-[#42B0D5]/30 transform active:scale-95 transition-all flex items-center justify-center space-x-3 group"
               >
                 {loading ? (
                   <Loader2 className="w-7 h-7 animate-spin" />
                 ) : (
                   <>
-                    <span className="uppercase tracking-wide text-base">Đăng nhập</span>
+                    <span className="uppercase tracking-wider text-base">Đăng nhập</span>
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
@@ -122,8 +121,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </div>
 
         <div className="mt-10 text-center">
-          <div className="inline-block px-5 py-2 rounded-full bg-teal-50 border border-teal-100">
-            <p className="text-xs text-teal-800 font-medium">
+          <div className="inline-block px-5 py-2 rounded-full bg-[#42B0D5]/10 border border-[#42B0D5]/20">
+            <p className="text-xs text-[#00233D] font-medium">
               Version 2.5.2 • 2025
             </p>
           </div>
