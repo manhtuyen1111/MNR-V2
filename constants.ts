@@ -55,66 +55,66 @@ export const USERS: Record<string, User> = {
 
   // ────────────── TÀI KHOẢN MỚI ──────────────
   'thi.nb': { 
-    username: 'nguyen.bath', 
+    username: 'Nguyễn Bá Thi', 
     name: 'Nguyễn Bá Thi - QC Manager', 
     role: 'qc' 
   },
   'tuan.pq': { 
-    username: 'tuan.pq', 
+    username: 'Phạm Quang Tuấn', 
     name: 'Phạm Quang Tuấn - Tổ 1', 
     role: 'worker', 
     assignedTeamId: 't1' 
   },
   'viet.th': { 
-    username: 'viet.th', 
+    username: 'Trần Hoàng Việt', 
     name: 'Trần Hoàng Việt - Tổ 1', 
     role: 'worker', 
     assignedTeamId: 't1' 
   },
   'khai.lq': { 
-    username: 'khai.lq', 
+    username: 'Lê Quang Khải', 
     name: 'Lê Quang Khải - Tổ 2', 
     role: 'worker', 
     assignedTeamId: 't2' 
   },
   'long.mv': { 
-    username: 'long.mv', 
+    username: 'Mai Văn Long', 
     name: 'Mai Văn Long - Tổ 2', 
     role: 'worker', 
     assignedTeamId: 't2' 
   },
   'ha.bt': { 
-    username: 'ha.bt', 
+    username: 'Bùi Trọng Hà', 
     name: 'Bùi Trọng Hà - Tổ 2', 
     role: 'worker', 
     assignedTeamId: 't2' 
   },
   'canh.mx': { 
-    username: 'canh.mx', 
+    username: 'Mai Xuân Cảnh', 
     name: 'Mai Xuân Cảnh - Tổ 3', 
     role: 'worker', 
     assignedTeamId: 't3' 
   },
   'kien.dv': { 
-    username: 'kien.dv', 
+    username: 'Đặng Văn Kiên', 
     name: 'Đặng Văn Kiên - Tổ 3', 
     role: 'worker', 
     assignedTeamId: 't3' 
   },
   'tuan.nv': { 
-    username: 'tuan.nv', 
+    username: 'Nguyễn Văn Tuấn', 
     name: 'Nguyễn Văn Tuấn - Tổ 3', 
     role: 'worker', 
     assignedTeamId: 't3' 
   },
   'ngung.vv': { 
-    username: 'ngung.vv', 
+    username: 'Vũ Văn Ngừng', 
     name: 'Vũ Văn Ngừng - Tổ 4', 
     role: 'worker', 
     assignedTeamId: 't4' 
   },
   'anh.bv': { 
-    username: 'anh.bv', 
+    username: 'Bùi Văn Anh', 
     name: 'Bùi Văn Anh - Tổ 4', 
     role: 'worker', 
     assignedTeamId: 't4' 
