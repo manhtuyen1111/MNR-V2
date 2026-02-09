@@ -22,7 +22,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     // Giữ nguyên logic xác thực cũ
     setTimeout(() => {
         const user = USERS[username.toLowerCase()];
-        if (user && (password === username || password === '123456')) {
+        if (user && (password === username || password === '123')) {
             onLogin(user);
         } else {
             setError('Tên đăng nhập hoặc mật khẩu không đúng');
