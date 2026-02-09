@@ -198,28 +198,27 @@ const HistoryList: React.FC<HistoryListProps> = ({
                   {r.status === 'error' && <AlertTriangle size={18} />}
                   {r.status === 'pending' && <Clock size={18} />}
                 </div>
+                <div className="space-y-0.5">
+  {/* CONTAINER */}
+  <div className="font-mono font-bold text-sm leading-none">
+    {r.containerNumber.slice(0, 4)}
+    <span className="text-red-600">
+      {r.containerNumber.slice(4)}
+    </span>
+  </div>
 
-                <div>
-                  <div className="font-mono font-bold text-sm">
-                    {r.containerNumber.slice(0, 4)}
-                    <span className="text-red-600">
-                      {r.containerNumber.slice(4)}
-                    </span>
-                  </div>
-                 <div className="flex items-center gap-1 text-[11px] font-mono leading-tight">
-
-  <span className="font-bold text-slate-900">
-    {r.teamName}
-  </span>
-
-  <span className="text-slate-400">
-    • {r.images.length} ảnh
-  </span>
-
-  <span className="text-slate-400">
-    • {formatDate(r.timestamp)}
-  </span>
+  {/* TEAM + META */}
+  <div className="flex items-center gap-1 text-[10.5px] font-mono leading-tight text-slate-500">
+    <span className="font-semibold text-slate-900">
+      {r.teamName}
+    </span>
+    <span>• {r.images.length} ảnh</span>
+    <span>• {formatDate(r.timestamp)}</span>
+  </div>
 </div>
+
+                
+
 
                 </div>
               </div>
