@@ -273,9 +273,13 @@ const HistoryList: React.FC<HistoryListProps> = ({
           record={viewing}
           onClose={() => setViewing(null)}
           onUpdate={(all, added) => {
-            const updated = { ...viewing, images: all, status: 'pending' };
-            setViewing(updated);
-            onUpdateRecord(updated, added);
+  const updated: RepairRecord = {
+    ...viewing,
+    images: all,
+    status: 'pending', // ✅ đúng SyncStatus
+  };
+  setViewing(updated);
+  onUpdateRecord(updated, added);
           }}
         />
       )}
