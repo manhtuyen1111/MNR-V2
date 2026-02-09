@@ -24,7 +24,7 @@ export const USERS: Record<string, User> = {
     role: 'admin' 
   },
   'qc': { 
-    username: 'qc', 
+    username: 'QC Manager', 
     name: 'QC Manager', 
     role: 'qc' 
   },
