@@ -60,14 +60,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#0f172a] to-[#020617] pointer-events-none" />
       <div className="absolute top-[-10%] right-[-10%] w-[70%] h-[50%] bg-sky-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* Footer – dính layout */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10
-        text-white text-[11px] tracking-wide font-semibold opacity-90
-        drop-shadow-md">
-        Made by MT
-      </div>
-
-      <div className="w-full max-w-sm z-20 animate-fadeIn">
+      <div className="w-full max-w-sm z-10 animate-fadeIn">
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-[2rem] shadow-[0_0_40px_rgba(255,255,255,0.15)] mb-6">
@@ -85,6 +78,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </p>
             <div className="h-[2px] w-6 bg-sky-500" />
           </div>
+
+          {/* Made by MT */}
+          <p className="mt-3 text-white/60 text-[10px] tracking-[0.25em] font-medium uppercase">
+            Made by MT
+          </p>
         </div>
 
         {/* Login box */}
