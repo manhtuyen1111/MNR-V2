@@ -201,7 +201,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
                 </div>
 
                 {/* ====== HIỂN THỊ 1 DÒNG THEO YÊU CẦU ====== */}
-                <div className="flex items-baseline gap-2 font-mono">
+                <div className="flex items-baseline gap-1.5 font-mono">
                   {/* CONTAINER */}
                   <div className="font-bold text-sm">
                     <span className="text-black">
@@ -214,7 +214,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
                   {/* META */}
                   <div className="text-[10.5px] text-slate-400 whitespace-nowrap">
-                    {r.teamName}/{r.images.length}ẢNH{' '}
+                    {r.teamName} {r.images.length}ẢNH{' '}
                     {formatDate(r.timestamp)}
                   </div>
                 </div>
