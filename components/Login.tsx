@@ -59,6 +59,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   };
 
   return (
+   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 
+  text-white text-[11px] tracking-wide font-semibold opacity-90
+  drop-shadow-md">
+  Made by MT
+</div>
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#020617] relative overflow-hidden">
       {/* Background */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#0f172a] to-[#020617] pointer-events-none" />
@@ -82,11 +87,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </div>
 {/* Footer */}
-<div className="absolute bottom-4 left-1/2 -translate-x-1/2 
-  text-white text-[11px] tracking-wide font-semibold opacity-90
-  drop-shadow-md">
-  Made by MT
-</div>
+
         {/* Login box */}
         <div className="bg-slate-900/80 backdrop-blur-md border-2 border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
           <form onSubmit={handleLogin} className="space-y-6">
