@@ -91,7 +91,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
   return (
     <>
       <div className="p-4 space-y-3 pb-28 relative">
-        {/* CARD ĐẾM NHỎ GỌN Ở GÓC PHẢI TRÊN */}
+        {/* CARD ĐẾM */}
         <div className="absolute top-3 right-4 z-10 pointer-events-none">
           <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
             <span className="font-semibold text-indigo-600">{sorted.length}</span>
@@ -185,6 +185,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
               className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
             >
               <div className="flex items-center space-x-3">
+                {/* STATUS ICON */}
                 <div
                   className={`w-9 h-9 rounded-lg flex items-center justify-center ${
                     r.status === 'synced'
@@ -198,31 +199,28 @@ const HistoryList: React.FC<HistoryListProps> = ({
                   {r.status === 'error' && <AlertTriangle size={18} />}
                   {r.status === 'pending' && <Clock size={18} />}
                 </div>
-                <div className="space-y-0.5">
-  {/* CONTAINER */}
-  <div className="font-mono font-bold text-sm leading-none">
-    {r.containerNumber.slice(0, 4)}
-    <span className="text-red-600">
-      {r.containerNumber.slice(4)}
-    </span>
-  </div>
 
-  {/* TEAM + META */}
-  <div className="flex items-center gap-1 text-[10.5px] font-mono leading-tight text-slate-500">
-    <span className="font-semibold text-slate-900">
-      {r.teamName}
-    </span>
-    <span>• {r.images.length} ảnh</span>
-    <span>• {formatDate(r.timestamp)}</span>
-  </div>
-</div>
+                {/* ====== HIỂN THỊ 1 DÒNG THEO YÊU CẦU ====== */}
+                <div className="flex items-baseline gap-3 font-mono">
+                  {/* CONTAINER */}
+                  <div className="font-bold text-sm">
+                    <span className="text-black">
+                      {r.containerNumber.slice(0, 4)}
+                    </span>
+                    <span className="text-red-600">
+                      {r.containerNumber.slice(4)}
+                    </span>
+                  </div>
 
-                
-
-
+                  {/* META */}
+                  <div className="text-[10.5px] text-slate-400 whitespace-nowrap">
+                    {r.teamName}. {r.images.length} ẢNH{' '}
+                    {formatDate(r.timestamp)}
+                  </div>
                 </div>
               </div>
 
+              {/* ACTION */}
               <div className="flex items-center space-x-2">
                 {r.status === 'error' && (
                   <button
