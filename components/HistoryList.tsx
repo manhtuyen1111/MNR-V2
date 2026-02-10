@@ -214,7 +214,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
                   {/* META */}
                   <div className="text-[10.5px] text-slate-400 whitespace-nowrap">
-                    {r.teamName} {r.images.length} ẢNH{' '}
+                    {r.teamName}/{r.images.length}ẢNH{' '}
                     {formatDate(r.timestamp)}
                   </div>
                 </div>
