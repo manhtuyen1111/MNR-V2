@@ -82,10 +82,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
         </div>
 {/* Footer */}
-<div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-slate-500 text-[11px] tracking-wide font-semibold opacity-70">
+<div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-sky-400 text-[11px] tracking-wide font-semibold opacity-80">
   Made by MT
 </div>
-
         {/* Login box */}
         <div className="bg-slate-900/80 backdrop-blur-md border-2 border-white/10 rounded-[2.5rem] p-8 shadow-2xl">
           <form onSubmit={handleLogin} className="space-y-6">
