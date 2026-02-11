@@ -163,41 +163,20 @@ const App: React.FC = () => {
     startIdx: number = 0,
     imageHashes?: string[]
   ): Promise<boolean> => {
-   if (!settings.googleScriptUrl) return false;
+    if (!settings.googleScriptUrl) return false;
+    try {
+      const imagesToSend = specificImages || record.images;
+      const hashesToSend = imageHashes || record.imageHashes?.slice(startIdx) || [];
 
-try {
-  const imagesToSend = specificImages || record.images;
-  const hashesToSend =
-    imageHashes || record.imageHashes?.slice(startIdx) || [];
-
-  // 🚀 Upload song song từng ảnh
-  const uploadPromises = imagesToSend.map((img, index) => {
-    const payload = {
-      id: record.id,
-      timestamp: new Date(record.timestamp).toISOString(),
-      containerNumber: record.containerNumber,
-      team: record.teamName,
-      images: [img], // mỗi request chỉ 1 ảnh
-      startIdx: startIdx + index,
-      imageHashes: [hashesToSend[index]],
-      editor: user?.username || 'unknown'
-    };
-
-    return fetch(settings.googleScriptUrl, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
-  });
-
-  const responses = await Promise.all(uploadPromises);
-
-  return responses.every(res => res.ok);
-
-} catch (error) {
-  console.error("Parallel upload error:", error);
-  return false;
-}
-
+      const payload = {
+        id: record.id,
+        timestamp: new Date(record.timestamp).toISOString(),
+        containerNumber: record.containerNumber,
+        team: record.teamName,
+        images: imagesToSend,
+        startIdx: startIdx,
+        imageHashes: hashesToSend,          // <-- Mới: gửi hashes để server check duplicate
+        editor: user?.username || 'unknown'
       };
 
       const response = await fetch(settings.googleScriptUrl, {
