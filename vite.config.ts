@@ -9,9 +9,13 @@ export default defineConfig({
       registerType: 'autoUpdate',
 
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // cache mọi thứ cần thiết để offline load giống online
+        globPatterns: [
+          '**/*.{js,css,html,ico,png,svg,woff2,ttf}'
+        ],
         runtimeCaching: [
           {
+            // đảm bảo trang chính (HTML) dùng cache + network trước
             urlPattern: ({ request }) => request.destination === 'document',
             handler: 'NetworkFirst',
             options: {
