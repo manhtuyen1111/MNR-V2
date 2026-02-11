@@ -494,7 +494,8 @@ const App: React.FC = () => {
         transition-all duration-200
         border-2 border-white/30
         disabled:opacity-70 disabled:cursor-not-allowed
-        min-w-[220px]  // Đảm bảo nút không quá hẹp
+        // Đảm bảo nút không quá hẹp
+        min-w-[220px]
       `}
     >
       {isSubmitting ? (
