@@ -27,8 +27,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
+          width: { ideal: 1200 },
+          height: { ideal: 900 }
         } 
       });
       setStream(mediaStream);
@@ -55,7 +55,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       const canvas = canvasRef.current;
 
       // Kích thước mục tiêu: đủ lớn để nét hơn, nhưng vẫn kiểm soát size
-      const MAX_W = 900;
+      const MAX_W = 1200;
       const MAX_H = 900;
 
       let w = video.videoWidth;
