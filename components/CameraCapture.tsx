@@ -55,8 +55,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       const canvas = canvasRef.current;
 
       // Kích thước mục tiêu: đủ lớn để nét hơn, nhưng vẫn kiểm soát size
-      const MAX_W = 1100;
-      const MAX_H = 1100;
+      const MAX_W = 900;
+      const MAX_H = 900;
 
       let w = video.videoWidth;
       let h = video.videoHeight;
@@ -76,7 +76,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         ctx.drawImage(video, 0, 0, w, h);
 
         // Quality được điều chỉnh để đạt khoảng 60-90KB
-        const quality = 0.68; // Có thể thử 0.68 (nhỏ hơn) hoặc 0.75 (nét hơn chút)
+        const quality = 0.6; // Có thể thử 0.68 (nhỏ hơn) hoặc 0.75 (nét hơn chút)
 
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
 
