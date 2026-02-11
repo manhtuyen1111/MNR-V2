@@ -76,7 +76,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         ctx.drawImage(video, 0, 0, w, h);
 
         // Quality được điều chỉnh để đạt khoảng 60-90KB
-        const quality = 0.72; // Có thể thử 0.68 (nhỏ hơn) hoặc 0.75 (nét hơn chút)
+        const quality = 0.68; // Có thể thử 0.68 (nhỏ hơn) hoặc 0.75 (nét hơn chút)
 
         const dataUrl = canvas.toDataURL('image/jpeg', quality);
 
