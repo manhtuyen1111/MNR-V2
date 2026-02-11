@@ -14,6 +14,7 @@ import { dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert, Zap } from 'lucide-react';
 
 const App: React.FC = () => {
+
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem('currentUser');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -25,10 +26,7 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('appSettings');
     return saved
       ? JSON.parse(saved)
-      : {
-          googleScriptUrl:
-            'https://script.google.com/macros/s/AKfycbzbjPA2yD7YcpZXNCeD20f8aI8mD9-XczQdq-sqDbbgJCUWFmpdUDvDeQ96kpashwLm/exec',
-        };
+      : { googleScriptUrl: '' };
   });
 
   const [teams, setTeams] = useState<Team[]>(() => {
@@ -47,10 +45,7 @@ const App: React.FC = () => {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: 'success' | 'error' | 'warning' | 'info';
-  } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' | 'info' } | null>(null);
 
   useEffect(() => {
     if (user?.assignedTeamId) {
@@ -59,48 +54,24 @@ const App: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    const loadData = async () => {
-      const savedRecords = await dbService.getAllRecords();
-      setRecords(savedRecords);
+    const load = async () => {
+      const saved = await dbService.getAllRecords();
+      setRecords(saved);
       setIsLoadingRecords(false);
     };
-    loadData();
+    load();
   }, []);
 
   useEffect(() => {
     localStorage.setItem('repairTeams', JSON.stringify(teams));
   }, [teams]);
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   const isContainerValid = /^[A-Z]{4}\d{7}$/.test(containerNum);
   const isTeamSelected = selectedTeamId !== '';
-  const isFormComplete =
-    isContainerValid && isTeamSelected && images.length > 0;
+  const isFormComplete = isContainerValid && isTeamSelected && images.length > 0;
 
-  const handleAddImage = (imgData: string) => {
-    setImages((prev) => [...prev, imgData]);
-  };
-
-  const handleLogin = (u: User) => {
-    localStorage.setItem('currentUser', JSON.stringify(u));
-    setUser(u);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('currentUser');
-    setUser(null);
-  };
-
-  const handleSaveSettings = (newSettings: AppSettings) => {
-    localStorage.setItem('appSettings', JSON.stringify(newSettings));
-    setSettings(newSettings);
-    setToast({ message: 'Đã lưu cấu hình', type: 'success' });
+  const handleAddImage = (img: string) => {
+    setImages(prev => [...prev, img]);
   };
 
   const syncRecordToSheet = async (
@@ -108,6 +79,7 @@ const App: React.FC = () => {
     specificImages?: string[],
     startIdx: number = 0
   ): Promise<boolean> => {
+
     if (!settings.googleScriptUrl) return false;
 
     try {
@@ -120,12 +92,12 @@ const App: React.FC = () => {
         team: record.teamName,
         images: imagesToSend,
         startIdx,
-        editor: user?.username || 'unknown',
+        editor: user?.username || 'unknown'
       };
 
       const response = await fetch(settings.googleScriptUrl, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload)
       });
 
       return response.ok;
@@ -140,7 +112,7 @@ const App: React.FC = () => {
     setIsSubmitting(true);
 
     const teamName =
-      teams.find((t) => t.id === selectedTeamId)?.name || 'Unknown';
+      teams.find(t => t.id === selectedTeamId)?.name || 'Unknown';
 
     const newRecord: RepairRecord = {
       id: Date.now().toString(),
@@ -150,16 +122,16 @@ const App: React.FC = () => {
       images,
       timestamp: Date.now(),
       status: 'pending',
-      uploadedCount: 0,
+      uploadedCount: 0
     };
 
     await dbService.saveRecord(newRecord);
-    setRecords((prev) => [newRecord, ...prev]);
+    setRecords(prev => [newRecord, ...prev]);
 
     setContainerNum('');
     setImages([]);
-    setSelectedTeamId(user?.assignedTeamId || '');
     setActiveStep(1);
+
     setIsSubmitting(false);
 
     if (!settings.googleScriptUrl) {
@@ -171,57 +143,58 @@ const App: React.FC = () => {
 
     const success = await syncRecordToSheet(newRecord);
 
-    const updated = {
+    const updated: RepairRecord = {
       ...newRecord,
-      status: success ? 'synced' : 'error',
-      uploadedCount: success ? newRecord.images.length : 0,
+      status: success ? 'synced' as const : 'error' as const,
+      uploadedCount: success ? newRecord.images.length : 0
     };
 
     await dbService.saveRecord(updated);
-    setRecords((prev) =>
-      prev.map((r) => (r.id === updated.id ? updated : r))
-    );
+    setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
   };
 
   const handleRetry = async (id: string) => {
-    const record = records.find((r) => r.id === id);
+    const record = records.find(r => r.id === id);
     if (!record) return;
 
-    const success = await syncRecordToSheet(record);
+    const startIdx = record.uploadedCount || 0;
+    const imagesToSync = record.images.slice(startIdx);
 
-    const updated = {
+    const success = await syncRecordToSheet(record, imagesToSync, startIdx);
+
+    const updated: RepairRecord = {
       ...record,
-      status: success ? 'synced' : 'error',
-      uploadedCount: success ? record.images.length : 0,
+      status: success ? 'synced' as const : 'error' as const,
+      uploadedCount: success ? record.images.length : record.uploadedCount
     };
 
     await dbService.saveRecord(updated);
-    setRecords((prev) =>
-      prev.map((r) => (r.id === id ? updated : r))
-    );
+    setRecords(prev => prev.map(r => r.id === id ? updated : r));
   };
 
-  if (!user) return <Login onLogin={handleLogin} />;
+  if (!user) return <Login onLogin={setUser} />;
 
   const pendingCount = records.filter(
-    (r) => r.status === 'error' || r.status === 'pending'
+    r => r.status === 'error' || r.status === 'pending'
   ).length;
 
   return (
     <div className="h-[100dvh] bg-slate-100 flex flex-col">
       <Header />
 
-      <main className="flex-1 overflow-hidden">
-        {activeTab === 'capture' && (
-          <div className="p-4 space-y-4">
+      <main className="flex-1 flex flex-col max-w-md mx-auto w-full overflow-hidden">
+
+        {activeTab === 'capture' ? (
+          <div className="flex-1 flex flex-col px-4 py-4 space-y-5 overflow-y-auto">
+
             <ContainerInput
               value={containerNum}
               onChange={setContainerNum}
               isValid={isContainerValid}
-              isActive
+              isActive={activeStep === 1}
               isCompleted={isContainerValid}
               isDisabled={false}
-              onFocus={() => {}}
+              onFocus={() => setActiveStep(1)}
             />
 
             <TeamSelector
@@ -229,10 +202,10 @@ const App: React.FC = () => {
               selectedTeamId={selectedTeamId}
               onSelect={setSelectedTeamId}
               onManageTeams={() => setIsTeamManagerOpen(true)}
-              isActive
+              isActive={activeStep === 2}
               isCompleted={isTeamSelected}
               isDisabled={!isContainerValid}
-              onFocus={() => {}}
+              onFocus={() => setActiveStep(2)}
               assignedTeamId={user.assignedTeamId}
               userRole={user.role}
             />
@@ -240,52 +213,43 @@ const App: React.FC = () => {
             <CameraCapture
               images={images}
               onAddImage={handleAddImage}
-              onRemoveImage={(idx) =>
-                setImages((prev) =>
-                  prev.filter((_, i) => i !== idx)
-                )
+              onRemoveImage={(i) =>
+                setImages(prev => prev.filter((_, idx) => idx !== i))
               }
-              isActive
+              isActive={activeStep === 3}
               isCompleted={images.length > 0}
               isDisabled={!isTeamSelected}
-              onFocus={() => {}}
+              onFocus={() => setActiveStep(3)}
             />
 
             {isFormComplete && (
               <button
                 onClick={handleSaveData}
                 disabled={isSubmitting}
-                className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold flex justify-center items-center gap-2"
+                className="bg-blue-600 text-white py-4 rounded-xl font-bold"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    ĐANG LƯU...
-                  </>
-                ) : (
-                  <>
-                    HOÀN TẤT LƯU
-                    <Send className="w-5 h-5" />
-                  </>
-                )}
+                {isSubmitting ? 'ĐANG LƯU...' : 'HOÀN TẤT LƯU'}
               </button>
             )}
           </div>
-        )}
-
-        {activeTab === 'history' && (
+        ) : activeTab === 'history' ? (
           <HistoryList
             records={records}
             teams={teams}
             onRetry={handleRetry}
-            onDelete={() => {}}
-            onUpdateRecord={() => {}}
+            onDelete={async (id) => {
+              await dbService.deleteRecord(id);
+              setRecords(prev => prev.filter(r => r.id !== id));
+            }}
+            onUpdateRecord={async (r) => {
+              await dbService.saveRecord(r);
+              setRecords(prev => prev.map(x => x.id === r.id ? r : x));
+            }}
           />
+        ) : (
+          <Settings settings={settings} onSave={setSettings} />
         )}
 
-        {activeTab === 'settings' && user.role === 'admin' && (
-          <Settings settings={settings} onSave={handleSaveSettings} />
-        )}
       </main>
 
       <BottomNav
