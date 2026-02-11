@@ -7,12 +7,28 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'document',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'html-cache'
+            }
+          }
+        ]
+      },
+
       manifest: {
         name: 'Container QC App',
         short_name: 'QC',
+        description: 'App nghiệm thu sửa chữa container',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
+        start_url: '/',
         icons: [
           {
             src: '/icon-192.png',
