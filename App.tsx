@@ -10,7 +10,7 @@ import TeamManager from './components/TeamManager';
 import Login from './components/Login';
 import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
-import { compressImage, dbService } from './utils';
+import { dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert, Zap } from 'lucide-react';
 
 // Hàm tính hash SHA-256 cho ảnh base64 (để tránh duplicate trên server)
@@ -145,9 +145,8 @@ const App: React.FC = () => {
     setActiveTab('capture');
   };
 
-  const handleAddImage = async (imgData: string) => {
-    const compressed = await compressImage(imgData);
-    setImages(prev => [...prev, compressed]);
+ const handleAddImage = (imgData: string) => {
+  setImages(prev => [...prev, imgData]);
   };
 
   // Hàm sync được cập nhật để gửi imageHashes
