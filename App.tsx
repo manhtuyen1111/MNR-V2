@@ -144,19 +144,14 @@ const App: React.FC = () => {
     setToast({ message: 'Đã lưu cấu hình!', type: 'success' });
     setActiveTab('capture');
   };
-
-  const handleAddImage = async (imgData: string) => {
+const handleAddImage = async (imgData: string) => {
   try {
     const compressed = await compressImage(imgData);
     setImages(prev => [...prev, compressed]);
   } catch (error) {
     console.error("Image compression failed:", error);
-    // fallback nếu compress lỗi
     setImages(prev => [...prev, imgData]);
   }
-};
-  const compressed = await compressImage(imgData);
-  setImages(prev => [...prev, compressed]);
 };
   // Hàm sync được cập nhật để gửi imageHashes
   const syncRecordToSheet = async (
@@ -494,7 +489,6 @@ const App: React.FC = () => {
         transition-all duration-200
         border-2 border-white/30
         disabled:opacity-70 disabled:cursor-not-allowed
-        // Đảm bảo nút không quá hẹp
         min-w-[220px]
       `}
     >
