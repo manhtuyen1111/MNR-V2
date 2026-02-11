@@ -174,15 +174,16 @@ const App: React.FC = () => {
 
     setToast({ message: 'Đang gửi ngầm...', type: 'info' });
 
-    syncRecordToSheet(newRecord).then(async (success) => {
-      const updated = {
-        ...newRecord,
-        status: success ? 'synced' : 'error',
-        uploadedCount: success ? newRecord.images.length : 0
-      };
-      await dbService.saveRecord(updated);
-      setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
-    });
+    const success = await syncRecordToSheet(newRecord);
+
+    const updated: RepairRecord = {
+      ...newRecord,
+      status: success ? 'synced' as const : 'error' as const,
+      uploadedCount: success ? newRecord.images.length : 0
+    };
+
+    await dbService.saveRecord(updated);
+    setRecords(prev => prev.map(r => r.id === updated.id ? updated : r));
   };
 
   const handleRetry = async (id: string) => {
@@ -194,13 +195,17 @@ const App: React.FC = () => {
 
     if (imagesToSync.length === 0) return;
 
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
+    setRecords(prev =>
+      prev.map(r =>
+        r.id === id ? { ...r, status: 'pending' as const } : r
+      )
+    );
 
     const success = await syncRecordToSheet(record, imagesToSync, startIdx);
 
-    const updated = {
+    const updated: RepairRecord = {
       ...record,
-      status: success ? 'synced' : 'error',
+      status: success ? 'synced' as const : 'error' as const,
       uploadedCount: success ? record.images.length : record.uploadedCount
     };
 
@@ -211,8 +216,8 @@ const App: React.FC = () => {
   if (!user) return <Login onLogin={(u) => setUser(u)} />;
 
   return (
-    <> 
-      {/* GIỮ NGUYÊN TOÀN BỘ PHẦN JSX CỦA BẠN Ở DƯỚI */}
+    <>
+      {/* Giữ nguyên toàn bộ JSX gốc của bạn ở đây */}
     </>
   );
 };
