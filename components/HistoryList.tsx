@@ -34,7 +34,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
   const [viewing, setViewing] = useState<RepairRecord | null>(null);
   const [filterTeam, setFilterTeam] = useState('all');
   const [quickDate, setQuickDate] =
-    useState<'all' | 'today' | 'yesterday' | 'custom'>('all');
+    useState<'all' | 'today' | 'yesterday' | 'custom'>('');
   const [range, setRange] = useState({ start: '', end: '' });
   const [searchCont, setSearchCont] = useState('');
 
@@ -207,7 +207,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
                     <span className="text-black">
                       {r.containerNumber.slice(0, 4)}
                     </span>
-                    <span className="text-red-600">
+                    <span className="text-green-700">
                       {r.containerNumber.slice(4)}
                     </span>
                   </div>
