@@ -105,7 +105,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   const MAX_W = 1000;
   const MAX_H = 750;
-  const QUALITY = 0.6;
+  const QUALITY = 0.65;
 
   let w = video.videoWidth;
   let h = video.videoHeight;
