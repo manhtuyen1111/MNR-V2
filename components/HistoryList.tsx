@@ -222,7 +222,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
               {/* ACTION */}
               <div className="flex items-center space-x-2">
-                {r.status === 'error' && (
+                {(r.status === 'error' || r.status === 'pending')&& (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
