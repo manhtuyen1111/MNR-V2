@@ -48,7 +48,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       const track = mediaStream.getVideoTracks()[0];
       if (track) {
         const capabilities = track.getCapabilities() as any;
-        setIsTorchSupported(!!capabilities.torch);
+        setIsTorchSupported(!!capabilities?.torch);
       }
 
     } catch (err) {
@@ -64,8 +64,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
       if (track && isTorchOn) {
         try {
-          // @ts-ignore
-          await track.applyConstraints({
+          await (track as any).applyConstraints({
             advanced: [{ torch: false }]
           });
         } catch {}
@@ -87,8 +86,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
     if (!track) return;
 
     try {
-      // @ts-ignore
-      await track.applyConstraints({
+      await (track as any).applyConstraints({
         advanced: [{ torch: !isTorchOn }]
       });
 
@@ -170,7 +168,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
             )}
           </div>
 
-          <button onClick={stopCamera} className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20">
+          <button
+            onClick={stopCamera}
+            className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20"
+          >
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -198,7 +199,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
                 </div>
               </div>
             ))}
-            {images.length === 0 && <span className="text-white/40 text-xs pl-2 italic">Chưa có ảnh nào...</span>}
           </div>
 
           <div className="flex-1 flex items-center justify-between px-8">
@@ -208,12 +208,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
               onClick={capturePhoto}
               className="w-20 h-20 rounded-full border-[5px] border-white/30 flex items-center justify-center active:scale-95 transition-transform"
             >
-              <div className="w-16 h-16 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.5)]"></div>
+              <div className="w-16 h-16 bg-white rounded-full"></div>
             </button>
 
             <button
               onClick={stopCamera}
-              className="w-16 h-12 bg-sky-600 rounded-xl flex items-center justify-center space-x-1 shadow-lg active:scale-95 transition-transform border border-sky-400"
+              className="w-16 h-12 bg-sky-600 rounded-xl flex items-center justify-center space-x-1"
             >
               <span className="text-white font-black text-sm">OK</span>
               <Check className="w-4 h-4 text-white" />
@@ -230,6 +230,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       onClick={!isDisabled ? startCamera : undefined}
       className={`
         transition-all duration-300 rounded-2xl p-4 border flex flex-col cursor-pointer bg-white
+        ${isActive 
+          ? 'scale-[1.03] shadow-md border-sky-600' 
+          : isDisabled
+            ? 'opacity-60 grayscale border-slate-200 bg-slate-50 pointer-events-none'
+            : isCompleted
+              ? 'border-green-500'
+              : 'border-slate-200'
+        }
       `}
     >
       <div className="flex items-center space-x-2">
