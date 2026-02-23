@@ -34,7 +34,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
   const [viewing, setViewing] = useState<RepairRecord | null>(null);
   const [filterTeam, setFilterTeam] = useState('all');
   const [quickDate, setQuickDate] =
-    useState<'all' | 'today' | 'yesterday' | 'custom'>('');
+    useState<'all' | 'today' | 'yesterday' | 'custom'>('today');
   const [range, setRange] = useState({ start: '', end: '' });
   const [searchCont, setSearchCont] = useState('');
 
