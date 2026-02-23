@@ -228,7 +228,11 @@ const HistoryList: React.FC<HistoryListProps> = ({
                       e.stopPropagation();
                       onRetry(r.id);
                     }}
-                    className="p-2 rounded-lg bg-slate-100"
+                  className={`p-2 rounded-lg ${
+  r.status === 'pending'
+    ? 'bg-amber-100 text-amber-600'
+    : 'bg-slate-100'
+}`}
                   >
                     <RefreshCw size={16} />
                   </button>
