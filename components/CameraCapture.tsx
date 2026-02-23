@@ -98,33 +98,49 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
   /* ================= CAPTURE PHOTO ================= */
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
+  if (!videoRef.current || !canvasRef.current) return;
 
-      const MAX_W = 1200;
-      const MAX_H = 900;
+  const video = videoRef.current;
+  const canvas = canvasRef.current;
 
-      let w = video.videoWidth;
-      let h = video.videoHeight;
+  const MAX_W = 1000;
+  const MAX_H = 750;
+  const QUALITY = 0.6;
 
-      if (w > MAX_W || h > MAX_H) {
-        const scale = Math.min(MAX_W / w, MAX_H / h);
-        w = Math.round(w * scale);
-        h = Math.round(h * scale);
-      }
+  let w = video.videoWidth;
+  let h = video.videoHeight;
 
-      canvas.width = w;
-      canvas.height = h;
+  if (w > MAX_W || h > MAX_H) {
+    const scale = Math.min(MAX_W / w, MAX_H / h);
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+  }
 
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
-        onAddImage(dataUrl);
-      }
-    }
-  };
+  canvas.width = w;
+  canvas.height = h;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  ctx.drawImage(video, 0, 0, w, h);
+
+  canvas.toBlob(
+    (blob) => {
+      if (!blob) return;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onAddImage(reader.result as string);
+      };
+      reader.readAsDataURL(blob);
+    },
+    'image/jpeg',
+    QUALITY
+  );
+
+  // rung nhẹ khi chụp
+  navigator.vibrate?.(30);
+};
 
   /* ================= EFFECTS ================= */
   useEffect(() => {
