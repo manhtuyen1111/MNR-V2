@@ -13,10 +13,7 @@ const ReportDashboard = () => {
         }
         setLoading(false);
       })
-      .catch(err => {
-        console.error("Lỗi lấy báo cáo:", err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -38,29 +35,45 @@ const ReportDashboard = () => {
   const headers = Object.keys(rows[0]);
 
   return (
-    <div className="overflow-x-auto p-4">
-      <table className="min-w-full text-xs border border-slate-300 bg-white">
-        <thead className="bg-slate-100">
-          <tr>
-            {headers.map((h) => (
-              <th key={h} className="px-3 py-2 border text-left font-bold">
-                {h}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} className="border-b hover:bg-slate-50">
+    <div className="h-full flex flex-col bg-slate-50">
+      <div className="px-4 py-3 border-b bg-white font-semibold text-slate-700">
+        BÁO CÁO SỬA CHỮA
+      </div>
+
+      <div className="flex-1 overflow-auto">
+        <table className="min-w-full text-[11px] text-slate-700">
+          <thead className="bg-slate-100 sticky top-0">
+            <tr>
               {headers.map((h) => (
-                <td key={h} className="px-3 py-2 border">
-                  {row[h]}
-                </td>
+                <th
+                  key={h}
+                  className="px-3 py-2 border-b text-left font-medium whitespace-nowrap"
+                >
+                  {h}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {rows.map((row, i) => (
+              <tr
+                key={i}
+                className="border-b hover:bg-slate-100"
+              >
+                {headers.map((h) => (
+                  <td
+                    key={h}
+                    className="px-3 py-2 whitespace-nowrap"
+                  >
+                    {row[h]}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
