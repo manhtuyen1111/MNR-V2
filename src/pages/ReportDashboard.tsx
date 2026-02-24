@@ -9,7 +9,7 @@ const ReportDashboard = () => {
   const [toDate, setToDate] = useState("");
 
   useEffect(() => {
-    fetch("DÁN_URL_SCRIPT_CỦA_BẠN_Ở_ĐÂY")
+    fetch("https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec")
       .then(res => res.json())
       .then(result => {
         if (result.success) {
