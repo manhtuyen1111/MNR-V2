@@ -30,7 +30,7 @@ const ReportDashboard = () => {
     fetchData();
   }, []);
 
-  // ===== LẤY DANH SÁCH TỔ =====
+  // ===== TEAMS =====
   const teams = useMemo(() => {
     if (!rows.length) return [];
     const headers = Object.keys(rows[0]);
@@ -44,11 +44,10 @@ const ReportDashboard = () => {
 
   const headers = rows.length ? Object.keys(rows[0]) : [];
 
-  // ===== HIỂN THỊ CỘT =====
+  // ===== VISIBLE HEADERS =====
   const visibleHeaders = useMemo(() => {
     return headers.filter((h) => {
       if (h === "DATE") return true;
-      if (h === "SL") return true;
       if (h.includes("Grand")) return true;
       if (selectedTeam === "ALL") return true;
       return h.startsWith(selectedTeam);
@@ -102,20 +101,25 @@ const ReportDashboard = () => {
     }
   };
 
-  // ===== KPI =====
+  // ===== TOTAL CONT (1 cont = 1 SL) =====
   const totalCont = useMemo(() => {
-    return sortedRows.reduce(
-      (sum, row) => sum + Number(row["Grand Total"] || 0),
-      0
-    );
-  }, [sortedRows]);
+    return sortedRows.reduce((sum, row) => {
+      if (selectedTeam === "ALL") {
+        return sum + Number(row["Grand Total"] || 0);
+      }
 
-  const totalSL = useMemo(() => {
-    return sortedRows.reduce(
-      (sum, row) => sum + Number(row["SL"] || 0),
-      0
-    );
-  }, [sortedRows]);
+      return (
+        sum +
+        visibleHeaders
+          .filter((h) => h !== "DATE")
+          .reduce(
+            (teamSum, h) =>
+              teamSum + Number(row[h] || 0),
+            0
+          )
+      );
+    }, 0);
+  }, [sortedRows, selectedTeam, visibleHeaders]);
 
   if (loading)
     return (
@@ -157,9 +161,15 @@ const ReportDashboard = () => {
       </div>
 
       {/* KPI MINI */}
-      <div className="grid grid-cols-2 gap-2 p-2 bg-white border-b">
-        <MiniKpi title="Cont" value={totalCont} />
-        <MiniKpi title="SL" value={totalSL} />
+      <div className="grid grid-cols-1 p-2 bg-white border-b">
+        <div className="bg-slate-100 p-2 rounded text-center">
+          <div className="text-[11px] text-slate-500">
+            Tổng cont (SL)
+          </div>
+          <div className="text-base font-bold text-indigo-600">
+            {totalCont.toLocaleString()}
+          </div>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -217,22 +227,5 @@ const ReportDashboard = () => {
     </div>
   );
 };
-
-const MiniKpi = ({
-  title,
-  value,
-}: {
-  title: string;
-  value: number;
-}) => (
-  <div className="bg-slate-100 p-2 rounded text-center">
-    <div className="text-[11px] text-slate-500">
-      {title}
-    </div>
-    <div className="text-base font-bold text-indigo-600">
-      {value.toLocaleString()}
-    </div>
-  </div>
-);
 
 export default ReportDashboard;
