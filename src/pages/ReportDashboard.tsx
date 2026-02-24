@@ -42,16 +42,13 @@ const ReportDashboard = () => {
     fetchData();
   }, []);
 
-  // Format số: 1 chữ số thập phân
   const formatNumber = (num: number) => num.toFixed(1);
 
-  // Format ngày: 24/02 (gọn cho mobile)
   const formatDateDisplay = (dateStr: string) => {
     const [, month, day] = dateStr.split("-");
     return `${day}/${month}`;
   };
 
-  // TEAMS
   const teams = useMemo(() => {
     const set = new Set<string>();
     Object.values(data).forEach((day) =>
@@ -60,10 +57,8 @@ const ReportDashboard = () => {
     return ["ALL", ...Array.from(set).sort()];
   }, [data]);
 
-  // FILTERED DATES
   const filteredDates = useMemo(() => {
     const allDates = Object.keys(data).sort((a, b) => b.localeCompare(a));
-
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10);
 
@@ -72,37 +67,37 @@ const ReportDashboard = () => {
 
     let compareDate = new Date();
 
-    if (rangeType === "7D") {
-      compareDate.setDate(today.getDate() - 7);
-    } else if (rangeType === "30D") {
-      compareDate.setDate(today.getDate() - 30);
-    } else if (rangeType === "MONTH") {
+    if (rangeType === "7D") compareDate.setDate(today.getDate() - 7);
+    else if (rangeType === "30D") compareDate.setDate(today.getDate() - 30);
+    else if (rangeType === "MONTH")
       compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    } else if (rangeType === "CUSTOM" && fromDate && toDate) {
+    else if (rangeType === "CUSTOM" && fromDate && toDate)
       return allDates.filter((d) => d >= fromDate && d <= toDate);
-    }
 
     const compareStr = compareDate.toISOString().slice(0, 10);
     return allDates.filter((d) => d >= compareStr);
   }, [data, rangeType, fromDate, toDate]);
 
-  // TOTAL CONTAINERS
-  const totalContainers = useMemo(() => {
-    let total = 0;
+  const { totalContainers, totalHours } = useMemo(() => {
+    let containers = 0;
+    let hours = 0;
+
     filteredDates.forEach((date) => {
       const day = data[date] || {};
       Object.entries(day).forEach(([team, val]) => {
         if (selectedTeam === "ALL" || selectedTeam === team) {
-          total += val.containers;
+          containers += val.containers;
+          hours += val.hours;
         }
       });
     });
-    return total;
+
+    return { totalContainers: containers, totalHours: hours };
   }, [filteredDates, data, selectedTeam]);
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center text-slate-500 text-lg">
+      <div className="min-h-screen flex items-center justify-center text-slate-500 text-lg">
         Đang tải dữ liệu...
       </div>
     );
@@ -110,13 +105,16 @@ const ReportDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
+      {/* HEADER */}
       <header className="bg-white sticky top-0 z-10 shadow-md">
-        <div className="px-4 pt-4 pb-3 space-y-3.5">
-          <h1 className="text-xl font-bold text-slate-800">
+        <div className="px-3.5 pt-3.5 pb-2.5 space-y-3">
+          <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             📊 Báo cáo Container 2026
           </h1>
 
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {/* Team filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+            <span className="text-sm text-slate-500 whitespace-nowrap">👥</span>
             {teams.map((team) => (
               <button
                 key={team}
@@ -124,10 +122,10 @@ const ReportDashboard = () => {
                   setSelectedTeam(team);
                   setExpanded(null);
                 }}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
                   selectedTeam === team
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 active:bg-slate-200"
                 }`}
               >
                 {team === "ALL" ? "Tất cả" : team}
@@ -135,7 +133,8 @@ const ReportDashboard = () => {
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          {/* Range filter */}
+          <div className="flex flex-wrap gap-1.5">
             {[
               { key: "TODAY", label: "Hôm nay" },
               { key: "7D", label: "7 ngày" },
@@ -149,8 +148,8 @@ const ReportDashboard = () => {
                 onClick={() => setRangeType(r.key)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition ${
                   rangeType === r.key
-                    ? "bg-indigo-100 text-indigo-700 border border-indigo-300"
-                    : "bg-slate-200 text-slate-600 hover:bg-slate-300"
+                    ? "bg-indigo-100 text-indigo-700 border border-indigo-300 shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 active:bg-slate-300"
                 }`}
               >
                 {r.label}
@@ -159,36 +158,51 @@ const ReportDashboard = () => {
           </div>
 
           {rangeType === "CUSTOM" && (
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <input
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="border border-slate-300 rounded px-3 py-1.5 text-sm flex-1"
+                className="border border-slate-300 rounded px-2.5 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="border border-slate-300 rounded px-3 py-1.5 text-sm flex-1"
+                className="border border-slate-300 rounded px-2.5 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
             </div>
           )}
         </div>
 
-        <div className="bg-indigo-50 border-t border-indigo-100 px-4 py-3.5 text-center">
-          <div className="text-xs text-indigo-700 uppercase tracking-wide font-medium">
-            Tổng container
-          </div>
-          <div className="text-3xl font-extrabold text-indigo-700 mt-1">
-            {totalContainers.toLocaleString("vi-VN")}
+        {/* TỔNG - 2 cột */}
+        <div className="bg-indigo-50 border-t border-indigo-100 px-3.5 py-3.5">
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <div className="text-xs text-indigo-700 uppercase font-medium tracking-wide">
+                📦 Tổng container
+              </div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1">
+                {totalContainers.toLocaleString("vi-VN")}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-xs text-indigo-700 uppercase font-medium tracking-wide">
+                ⏰ Tổng giờ công
+              </div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1">
+                {formatNumber(totalHours)}h
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-4 py-5 space-y-4 pb-8">
+      {/* DANH SÁCH NGÀY */}
+      <main className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5 pb-10">
         {filteredDates.length === 0 ? (
-          <div className="text-center text-slate-500 py-10">
+          <div className="text-center text-slate-500 py-12 text-base">
             Không có dữ liệu trong khoảng thời gian này
           </div>
         ) : (
@@ -197,7 +211,6 @@ const ReportDashboard = () => {
             let dayContainers = 0;
             let dayHours = 0;
 
-            // Chỉ tính một lần, logic đúng
             Object.entries(day).forEach(([team, value]) => {
               if (selectedTeam === "ALL" || selectedTeam === team) {
                 dayContainers += value.containers;
@@ -213,7 +226,7 @@ const ReportDashboard = () => {
             return (
               <div
                 key={date}
-                className={`rounded-xl border shadow-sm transition-all ${
+                className={`rounded-2xl border shadow-sm transition-all ${
                   isHigh
                     ? "bg-red-50 border-red-200"
                     : "bg-white border-slate-200 hover:border-slate-300"
@@ -223,16 +236,19 @@ const ReportDashboard = () => {
                   onClick={() => setExpanded(isOpen ? null : date)}
                   className="w-full px-4 py-3.5 flex items-center justify-between text-left"
                 >
-                  <div>
-                    <div className="font-semibold text-slate-800">
-                      {formatDateDisplay(date)}
-                    </div>
-                    <div className="text-sm text-slate-600 mt-0.5">
-                      {dayContainers} cont • {formatNumber(dayHours)}h
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-slate-500">📅</span>
+                    <div>
+                      <div className="font-semibold text-slate-800 text-base">
+                        {formatDateDisplay(date)}
+                      </div>
+                      <div className="text-sm text-slate-600 mt-0.5">
+                        {dayContainers} cont • {formatNumber(dayHours)}h
+                      </div>
                     </div>
                   </div>
-                  <span className="text-slate-400 text-xl">
-                    {isOpen ? "▲" : "▼"}
+                  <span className="text-slate-400 text-lg font-bold">
+                    {isOpen ? "🔼" : "🔽"}
                   </span>
                 </button>
 
@@ -246,13 +262,13 @@ const ReportDashboard = () => {
                       .map(([team, value]) => (
                         <div
                           key={team}
-                          className="flex justify-between py-2.5 text-sm border-b border-slate-100 last:border-0"
+                          className="flex justify-between items-center py-2.5 text-sm border-b border-slate-100 last:border-0"
                         >
                           <span className="text-slate-700 font-medium">
                             {team}
                           </span>
                           <span className="text-indigo-600 font-semibold">
-                            {value.containers} cont • {formatNumber(value.hours)}h
+                            {value.containers} 📦 • {formatNumber(value.hours)} ⏰
                           </span>
                         </div>
                       ))}
