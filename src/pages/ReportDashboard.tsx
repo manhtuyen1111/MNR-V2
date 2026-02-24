@@ -42,10 +42,10 @@ const ReportDashboard = () => {
   // ===== TÍNH SL (CONT) =====
   const getRowTotalSL = (row: any) => {
     if (selectedTeam === "ALL") {
-      return Number(row["Grand Total - SL"] || 0);
+      return Number(row["Grand Total - Số lượng"] || 0);
     }
 
-    return Number(row[`${selectedTeam} - SL`] || 0);
+    return Number(row[`${selectedTeam} - Số lượng`] || 0);
   };
 
   // ===== TÍNH GIỜ =====
@@ -155,7 +155,7 @@ const ReportDashboard = () => {
                   .filter((t) => t !== "ALL")
                   .map((team) => {
                     const sl = Number(
-                      row[`${team} - SL`] || 0
+                      row[`${team} - Số lượng`] || 0
                     );
                     const hours = Number(
                       row[`${team} - Giờ`] || 0
