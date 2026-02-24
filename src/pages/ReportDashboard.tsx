@@ -22,7 +22,6 @@ const ReportDashboard = () => {
 
   const [expanded, setExpanded] = useState<string | null>(null);
 
-  // FETCH DATA
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -97,23 +96,22 @@ const ReportDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500 text-lg">
-        Đang tải dữ liệu...
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Đang tải...
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* HEADER */}
-      <header className="bg-white sticky top-0 z-10 shadow-md">
-        <div className="px-3.5 pt-3.5 pb-2.5 space-y-3">
-          <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+      <header className="bg-white sticky top-0 z-10 shadow-sm">
+        <div className="px-3 py-3 space-y-2.5">
+          <h1 className="text-base font-bold text-slate-800 flex items-center gap-1.5">
             📊 Báo cáo Container 2026
           </h1>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-            <span className="text-sm text-slate-500 whitespace-nowrap">👥</span>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+            <span className="text-xs text-slate-500 whitespace-nowrap">👥</span>
             {teams.map((team) => (
               <button
                 key={team}
@@ -121,10 +119,10 @@ const ReportDashboard = () => {
                   setSelectedTeam(team);
                   setExpanded(null);
                 }}
-                className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${
+                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all touch-manipulation ${
                   selectedTeam === team
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 active:bg-slate-200"
+                    ? "bg-indigo-600 text-white shadow"
+                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100"
                 }`}
               >
                 {team === "ALL" ? "Tất cả" : team}
@@ -144,9 +142,9 @@ const ReportDashboard = () => {
               <button
                 key={r.key}
                 onClick={() => setRangeType(r.key)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+                className={`px-2.5 py-1 rounded-full text-xs font-medium transition touch-manipulation ${
                   rangeType === r.key
-                    ? "bg-indigo-100 text-indigo-700 border border-indigo-300 shadow-sm"
+                    ? "bg-indigo-100 text-indigo-700 border border-indigo-300"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200 active:bg-slate-300"
                 }`}
               >
@@ -161,35 +159,33 @@ const ReportDashboard = () => {
                 type="date"
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="border border-slate-300 rounded px-2.5 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
               />
               <input
                 type="date"
                 value={toDate}
                 onChange={(e) => setToDate(e.target.value)}
-                className="border border-slate-300 rounded px-2.5 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
               />
             </div>
           )}
         </div>
 
-        {/* TỔNG */}
-        <div className="bg-indigo-50 border-t border-indigo-100 px-3.5 py-3.5">
-          <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="bg-indigo-50 border-t border-indigo-100 px-3 py-3">
+          <div className="grid grid-cols-2 gap-3 text-center">
             <div>
-              <div className="text-xs text-indigo-700 uppercase font-medium tracking-wide">
-                📦 Tổng container
+              <div className="text-[10px] text-indigo-700 uppercase font-medium">
+                📦 Tổng cont
               </div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1">
+              <div className="text-xl font-extrabold text-indigo-700 mt-0.5">
                 {totalContainers.toLocaleString("vi-VN")}
               </div>
             </div>
-
             <div>
-              <div className="text-xs text-indigo-700 uppercase font-medium tracking-wide">
-                ⏰ Tổng giờ công
+              <div className="text-[10px] text-indigo-700 uppercase font-medium">
+                ⏰ Tổng giờ
               </div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-indigo-700 mt-1">
+              <div className="text-xl font-extrabold text-indigo-700 mt-0.5">
                 {formatNumber(totalHours)}h
               </div>
             </div>
@@ -197,11 +193,10 @@ const ReportDashboard = () => {
         </div>
       </header>
 
-      {/* DANH SÁCH NGÀY - CHỈ 1 DÒNG */}
-      <main className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3 pb-10">
+      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5">
         {filteredDates.length === 0 ? (
-          <div className="text-center text-slate-500 py-12 text-base">
-            Không có dữ liệu trong khoảng thời gian này
+          <div className="text-center text-slate-500 py-10 text-sm">
+            Không có dữ liệu
           </div>
         ) : (
           filteredDates.map((date) => {
@@ -224,7 +219,7 @@ const ReportDashboard = () => {
             return (
               <div
                 key={date}
-                className={`rounded-2xl border shadow-sm transition-all ${
+                className={`rounded-xl border shadow-sm transition-all ${
                   isHigh
                     ? "bg-red-50 border-red-200"
                     : "bg-white border-slate-200 hover:border-slate-300"
@@ -232,27 +227,36 @@ const ReportDashboard = () => {
               >
                 <button
                   onClick={() => setExpanded(isOpen ? null : date)}
-                  className="w-full px-4 py-3.5 flex items-center justify-between text-left"
+                  className="w-full px-3.5 py-2.5 flex items-center justify-between text-left touch-manipulation"
                 >
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
                     <span className="text-slate-500 text-base">📅</span>
-                    <div>
-                      <div className="font-semibold text-slate-800 text-base">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-slate-800 text-sm truncate">
                         {formatDateDisplay(date)}
                       </div>
-                      <div className="text-sm text-slate-600 mt-0.5">
-                        {dayContainers} cont • {formatNumber(dayHours)}h
-                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-slate-700 whitespace-nowrap">
+                      <span className="flex items-center gap-1">
+                        {dayContainers}
+                        <span className="text-indigo-500">📦</span>
+                      </span>
+                      <span className="text-slate-400">•</span>
+                      <span className="flex items-center gap-1">
+                        {formatNumber(dayHours)}
+                        <span className="text-indigo-500">⏰</span>
+                      </span>
                     </div>
                   </div>
-                  <span className="text-slate-400 text-lg font-bold">
-                    {isOpen ? "🔼" : "🔽"}
+
+                  <span className="text-slate-400 text-base ml-2">
+                    {isOpen ? "▲" : "▼"}
                   </span>
                 </button>
 
-                {/* CHI TIẾT CHỈ HIỆN KHI EXPAND */}
                 {isOpen && (
-                  <div className="px-4 pb-4 pt-1 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+                  <div className="px-3.5 pb-3 pt-1 border-t border-slate-100 bg-slate-50 rounded-b-xl">
                     {Object.entries(day)
                       .filter(
                         ([team]) =>
@@ -261,12 +265,12 @@ const ReportDashboard = () => {
                       .map(([team, value]) => (
                         <div
                           key={team}
-                          className="flex justify-between items-center py-2.5 text-sm border-b border-slate-200 last:border-0"
+                          className="flex justify-between items-center py-2 text-xs border-b border-slate-200 last:border-0"
                         >
                           <span className="text-slate-700 font-medium">
                             {team}
                           </span>
-                          <span className="text-indigo-600 font-semibold flex items-center gap-1.5">
+                          <span className="text-indigo-600 font-semibold flex items-center gap-2">
                             {value.containers} 📦 • {formatNumber(value.hours)} ⏰
                           </span>
                         </div>
