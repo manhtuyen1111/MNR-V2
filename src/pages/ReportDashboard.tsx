@@ -1,11 +1,7 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-interface ReportRow {
-  [key: string]: string;
-}
-
-export default function ReportDashboard() {
-  const [data, setData] = useState<ReportRow[]>([]);
+const ReportDashboard = () => {
+  const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,87 +9,60 @@ export default function ReportDashboard() {
       .then(res => res.json())
       .then(result => {
         if (result.success) {
-          setData(result.data);
+          setRows(result.data);
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(err => {
+        console.error("Lỗi lấy báo cáo:", err);
+        setLoading(false);
+      });
   }, []);
 
   if (loading) {
-    return <div style={{ padding: 20 }}>Đang tải báo cáo...</div>;
+    return (
+      <div className="p-6 text-center text-slate-500">
+        Đang tải báo cáo...
+      </div>
+    );
   }
 
-  if (data.length === 0) {
-    return <div style={{ padding: 20 }}>Không có dữ liệu</div>;
+  if (!rows.length) {
+    return (
+      <div className="p-6 text-center text-slate-400">
+        Không có dữ liệu
+      </div>
+    );
   }
 
-  const headers = Object.keys(data[0]);
+  const headers = Object.keys(rows[0]);
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2 style={{ marginBottom: 16 }}>📊 BÁO CÁO</h2>
-
-      <div style={{ overflowX: "auto" }}>
-        <table style={tableStyle}>
-          <thead>
-            <tr>
-              {headers.map(header => (
-                <th key={header} style={thStyle}>
-                  {header}
-                </th>
+    <div className="overflow-x-auto p-4">
+      <table className="min-w-full text-xs border border-slate-300 bg-white">
+        <thead className="bg-slate-100">
+          <tr>
+            {headers.map((h) => (
+              <th key={h} className="px-3 py-2 border text-left font-bold">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b hover:bg-slate-50">
+              {headers.map((h) => (
+                <td key={h} className="px-3 py-2 border">
+                  {row[h]}
+                </td>
               ))}
             </tr>
-          </thead>
-
-          <tbody>
-            {data.map((row, i) => (
-              <tr key={i} style={i % 2 === 0 ? rowEven : rowOdd}>
-                {headers.map(header => (
-                  <td key={header} style={tdStyle}>
-                    {formatCell(row[header])}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-}
-
-function formatCell(value: string) {
-  if (!isNaN(Number(value))) {
-    return Number(value).toLocaleString("vi-VN");
-  }
-  return value;
-}
-
-const tableStyle: React.CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-  minWidth: 600
 };
 
-const thStyle: React.CSSProperties = {
-  backgroundColor: "#1976d2",
-  color: "white",
-  padding: "10px",
-  textAlign: "left",
-  position: "sticky",
-  top: 0
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "8px",
-  borderBottom: "1px solid #ddd"
-};
-
-const rowEven: React.CSSProperties = {
-  backgroundColor: "#f9f9f9"
-};
-
-const rowOdd: React.CSSProperties = {
-  backgroundColor: "white"
-};
+export default ReportDashboard;
