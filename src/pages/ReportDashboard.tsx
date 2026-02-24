@@ -1,116 +1,177 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+type FilterType =
+  | "TODAY"
+  | "YESTERDAY"
+  | "THIS_MONTH"
+  | "LAST_MONTH"
+  | "RANGE";
+
+const formatDate = (date: Date) =>
+  date.toISOString().split("T")[0];
 
 const ReportDashboard = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedTeam, setSelectedTeam] = useState("ALL");
+  const [filterType, setFilterType] =
+    useState<FilterType>("TODAY");
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
+  // ===== FETCH DATA =====
   useEffect(() => {
-    fetch("https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec")
-      .then(res => res.json())
-      .then(result => {
-        if (result.success) {
-          setRows(result.data);
-        }
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          "https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec"
+        );
+        const result = await res.json();
+        if (result.success) setRows(result.data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+
+    fetchData();
   }, []);
 
-  // ===== LẤY DANH SÁCH TỔ TỪ HEADER =====
-  const teams = useMemo(() => {
+  // ===== FILTER LOGIC =====
+  const filteredRows = useMemo(() => {
     if (!rows.length) return [];
 
-    const headers = Object.keys(rows[0]);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
 
-    const found = headers
-      .filter(h => h.includes("TỔ"))
-      .map(h => h.split(" - ")[0]);
+    const firstThisMonth = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      1
+    );
 
-    return Array.from(new Set(found));
-  }, [rows]);
+    const firstLastMonth = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1
+    );
 
-  // ===== LỌC THEO NGÀY =====
-  const filteredRows = useMemo(() => {
-    return rows.filter(row => {
+    const lastLastMonth = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      0
+    );
+
+    return rows.filter((row) => {
       const rowDate = row["DATE"];
-
       if (!rowDate) return false;
 
-      if (fromDate && rowDate < fromDate) return false;
-      if (toDate && rowDate > toDate) return false;
+      switch (filterType) {
+        case "TODAY":
+          return rowDate === formatDate(today);
 
-      return true;
+        case "YESTERDAY":
+          return rowDate === formatDate(yesterday);
+
+        case "THIS_MONTH":
+          return rowDate >= formatDate(firstThisMonth);
+
+        case "LAST_MONTH":
+          return (
+            rowDate >= formatDate(firstLastMonth) &&
+            rowDate <= formatDate(lastLastMonth)
+          );
+
+        case "RANGE":
+          if (fromDate && rowDate < fromDate) return false;
+          if (toDate && rowDate > toDate) return false;
+          return true;
+
+        default:
+          return true;
+      }
     });
-  }, [rows, fromDate, toDate]);
+  }, [rows, filterType, fromDate, toDate]);
 
-  if (loading) {
+  // ===== TOTAL GRAND =====
+  const totalCont = useMemo(() => {
+    return filteredRows.reduce((sum, row) => {
+      const value = Number(row["Grand Total"] || 0);
+      return sum + value;
+    }, 0);
+  }, [filteredRows]);
+
+  if (loading)
     return (
-      <div className="p-6 text-center text-slate-500">
+      <div className="h-screen flex items-center justify-center text-slate-400">
         Đang tải báo cáo...
       </div>
     );
-  }
 
-  if (!rows.length) {
+  if (!rows.length)
     return (
-      <div className="p-6 text-center text-slate-400">
+      <div className="h-screen flex items-center justify-center text-slate-400">
         Không có dữ liệu
       </div>
     );
-  }
 
-  // ===== CHỌN CỘT HIỂN THỊ =====
-  const allHeaders = Object.keys(rows[0]);
-
-  const visibleHeaders = allHeaders.filter(h => {
-    if (h === "DATE") return true;
-    if (h.includes("Grand")) return true;
-
-    if (selectedTeam === "ALL") return true;
-
-    return h.startsWith(selectedTeam);
-  });
+  const headers = Object.keys(rows[0]);
 
   return (
-    <div className="h-full flex flex-col bg-slate-50 text-[12px]">
+    <div className="h-screen flex flex-col bg-slate-50 text-[12px] overflow-hidden">
 
       {/* ===== FILTER ===== */}
-      <div className="p-3 bg-white border-b space-y-2">
+      <div className="p-3 bg-white border-b space-y-3">
 
-        {/* Chọn tổ */}
-        <select
-          value={selectedTeam}
-          onChange={e => setSelectedTeam(e.target.value)}
-          className="border px-2 py-1 rounded w-full"
-        >
-          <option value="ALL">Tất cả tổ</option>
-          {teams.map(team => (
-            <option key={team} value={team}>
-              {team}
-            </option>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { label: "Hôm nay", value: "TODAY" },
+            { label: "Hôm qua", value: "YESTERDAY" },
+            { label: "Tháng này", value: "THIS_MONTH" },
+            { label: "Tháng trước", value: "LAST_MONTH" },
+          ].map((btn) => (
+            <button
+              key={btn.value}
+              onClick={() => setFilterType(btn.value as FilterType)}
+              className={`px-2 py-1 rounded border ${
+                filterType === btn.value
+                  ? "bg-blue-500 text-white"
+                  : "bg-white"
+              }`}
+            >
+              {btn.label}
+            </button>
           ))}
-        </select>
+        </div>
 
-        {/* Lọc ngày */}
         <div className="flex gap-2">
           <input
             type="date"
             value={fromDate}
-            onChange={e => setFromDate(e.target.value)}
+            onChange={(e) => {
+              setFilterType("RANGE");
+              setFromDate(e.target.value);
+            }}
             className="border px-2 py-1 rounded w-full"
           />
           <input
             type="date"
             value={toDate}
-            onChange={e => setToDate(e.target.value)}
+            onChange={(e) => {
+              setFilterType("RANGE");
+              setToDate(e.target.value);
+            }}
             className="border px-2 py-1 rounded w-full"
           />
         </div>
+      </div>
 
+      {/* ===== TOTAL ===== */}
+      <div className="p-2 bg-yellow-50 border-b font-semibold text-red-600">
+        Tổng số cont sửa: {totalCont}
       </div>
 
       {/* ===== TABLE ===== */}
@@ -118,7 +179,7 @@ const ReportDashboard = () => {
         <table className="min-w-full">
           <thead className="bg-slate-100 sticky top-0">
             <tr>
-              {visibleHeaders.map(h => (
+              {headers.map((h) => (
                 <th
                   key={h}
                   className="px-2 py-2 border-b text-left whitespace-nowrap"
@@ -138,10 +199,12 @@ const ReportDashboard = () => {
                 <tr
                   key={i}
                   className={`border-b ${
-                    isTotal ? "font-bold text-red-600 bg-red-50" : ""
+                    isTotal
+                      ? "font-bold text-red-600 bg-red-50"
+                      : ""
                   }`}
                 >
-                  {visibleHeaders.map(h => (
+                  {headers.map((h) => (
                     <td
                       key={h}
                       className="px-2 py-2 whitespace-nowrap"
