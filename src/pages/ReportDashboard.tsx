@@ -119,7 +119,7 @@ const ReportDashboard = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100">
         <div className="w-14 h-14 border-4 border-slate-300 border-t-emerald-700 rounded-full animate-spin"></div>
-        <p className="mt-5 text-slate-700 font-medium" ĐANG CẬP NHẬT BÁO CÁO, VUI LÒNG CHỜ MỘT CHÚT ...</p>
+        <p className="mt-5 text-slate-700 font-medium">Đang tải báo cáo...</p>
       </div>
     );
   }
