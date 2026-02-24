@@ -4,7 +4,6 @@ const ReportDashboard = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedTeam, setSelectedTeam] = useState("ALL");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
@@ -20,17 +19,6 @@ const ReportDashboard = () => {
       .catch(() => setLoading(false));
   }, []);
 
-  // ===== LẤY DANH SÁCH TỔ =====
-  const teams = useMemo(() => {
-    if (!rows.length) return [];
-
-    const headers = Object.keys(rows[0]);
-    const teamNames = headers
-      .filter(h => h.includes("TỔ"))
-      .map(h => h.split(" - ")[0]);
-
-    return [...new Set(teamNames)];
-  }, [rows]);
 
   // ===== LỌC DỮ LIỆU =====
   const filteredRows = useMemo(() => {
