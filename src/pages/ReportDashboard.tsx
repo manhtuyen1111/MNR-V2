@@ -23,6 +23,10 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
+  const [rangeType, setRangeType] = useState("TODAY");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
@@ -62,10 +66,37 @@ const ReportDashboard = () => {
     return ["ALL", ...Array.from(set).sort()];
   }, [data]);
 
-  // Hiện tại hiển thị tất cả ngày (sắp xếp mới → cũ)
   const filteredDates = useMemo(() => {
-    return Object.keys(data).sort((a, b) => b.localeCompare(a));
-  }, [data]);
+    const allDates = Object.keys(data).sort((a, b) => b.localeCompare(a));
+
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+
+    if (rangeType === "ALL") return allDates;
+    if (rangeType === "TODAY") return allDates.filter((d) => d === todayStr);
+    if (rangeType === "YESTERDAY") {
+      const yesterday = new Date(today);
+      yesterday.setDate(today.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      return allDates.filter((d) => d === yesterdayStr);
+    }
+
+    let compareDate = new Date();
+
+    if (rangeType === "7D") compareDate.setDate(today.getDate() - 7);
+    else if (rangeType === "30D") compareDate.setDate(today.getDate() - 30);
+    else if (rangeType === "THIS_MONTH")
+      compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    else if (rangeType === "LAST_MONTH") {
+      compareDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+      return allDates.filter((d) => d >= compareDate.toISOString().slice(0, 10) && d <= lastMonthEnd.toISOString().slice(0, 10));
+    } else if (rangeType === "CUSTOM" && fromDate && toDate)
+      return allDates.filter((d) => d >= fromDate && d <= toDate);
+
+    const compareStr = compareDate.toISOString().slice(0, 10);
+    return allDates.filter((d) => d >= compareStr);
+  }, [data, rangeType, fromDate, toDate]);
 
   const { totalContainers, totalHours } = useMemo(() => {
     let containers = 0;
@@ -109,6 +140,47 @@ const ReportDashboard = () => {
           </svg>
           BÁO CÁO TỔNG HỢP
         </h1>
+
+        {/* Range selector - Dropdown */}
+        <div className="flex items-center gap-3">
+          <select
+            value={rangeType}
+            onChange={(e) => {
+              setRangeType(e.target.value);
+              if (e.target.value !== "CUSTOM") {
+                setFromDate("");
+                setToDate("");
+              }
+            }}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-white border border-slate-400 text-slate-900 hover:bg-slate-200 transition"
+          >
+            <option value="TODAY">Hôm nay</option>
+            <option value="YESTERDAY">Hôm qua</option>
+            <option value="7D">7 ngày</option>
+            <option value="30D">30 ngày</option>
+            <option value="THIS_MONTH">Tháng này</option>
+            <option value="LAST_MONTH">Tháng trước</option>
+            <option value="CUSTOM">Custom</option>
+            <option value="ALL">Tất cả</option>
+          </select>
+
+          {rangeType === "CUSTOM" && (
+            <div className="flex gap-2">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="px-3 py-2 rounded-lg text-sm bg-white border border-slate-400 text-slate-900"
+              />
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="px-3 py-2 rounded-lg text-sm bg-white border border-slate-400 text-slate-900"
+              />
+            </div>
+          )}
+        </div>
 
         {/* Team filter */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -214,7 +286,18 @@ const ReportDashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-700">{dayContainers}</span>
+                  <span className="flex items-center gap-1 text-slate-700">
+                    <svg
+                      className="h-4 w-4 text-indigo-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    {dayContainers}
+                  </span>
                   <span className="px-2 py-1 rounded-lg bg-emerald-200 text-emerald-800 font-semibold">
                     {formatNumber(dayHours)}h
                   </span>
@@ -233,6 +316,8 @@ const ReportDashboard = () => {
                     const details = [...(day[team]?.details || [])].sort((a, b) =>
                       a.container.localeCompare(b.container)
                     );
+                    const teamContainers = day[team]?.containers || 0;
+                    const teamHours = day[team]?.hours || 0;
 
                     return (
                       <div key={team} className="bg-white rounded-xl border overflow-hidden">
@@ -241,9 +326,23 @@ const ReportDashboard = () => {
                           className="w-full flex justify-between items-center px-4 py-3 text-sm font-medium hover:bg-slate-100 transition"
                         >
                           <span className="text-slate-800">{team}</span>
-                          <span className="px-2 py-1 rounded-md bg-emerald-200 text-emerald-800 text-xs font-semibold">
-                            {formatNumber(day[team]?.hours || 0)}h
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center gap-1 text-slate-700">
+                              <svg
+                                className="h-4 w-4 text-indigo-600"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                              >
+                                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                              </svg>
+                              {teamContainers}
+                            </span>
+                            <span className="px-2 py-1 rounded-md bg-emerald-200 text-emerald-800 text-xs font-semibold">
+                              {formatNumber(teamHours)}h
+                            </span>
+                          </div>
                         </button>
 
                         <div
