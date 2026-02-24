@@ -16,7 +16,7 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
-  const [rangeType, setRangeType] = useState("7D");
+  const [rangeType, setRangeType] = useState("MONTH");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
