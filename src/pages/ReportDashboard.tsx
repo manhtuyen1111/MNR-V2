@@ -16,6 +16,8 @@ type ReportData = {
   };
 };
 
+const teamOrder = ["TỔ 1", "TỔ 2", "TỔ 3", "TỔ 4"];
+
 const ReportDashboard = () => {
   const [data, setData] = useState<ReportData>({});
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ const ReportDashboard = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,8 +56,6 @@ const ReportDashboard = () => {
     return `${day}/${month}`;
   };
 
-  const teamOrder = ["TỔ 1", "TỔ 2", "TỔ 3", "TỔ 4"];
-
   const teams = useMemo(() => {
     const set = new Set<string>();
     Object.values(data).forEach((day) =>
@@ -65,7 +65,10 @@ const ReportDashboard = () => {
   }, [data]);
 
   const filteredDates = useMemo(() => {
-    const allDates = Object.keys(data).sort((a, b) => b.localeCompare(a));
+    const allDates = Object.keys(data).sort((a, b) =>
+      b.localeCompare(a)
+    );
+
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10);
 
@@ -102,49 +105,91 @@ const ReportDashboard = () => {
     return { totalContainers: containers, totalHours: hours };
   }, [filteredDates, data, selectedTeam]);
 
-  // ✅ Loading chuyên nghiệp
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-white">
         <div className="w-20 h-20 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <div className="mt-6 text-center space-y-2">
-          <p className="text-indigo-700 font-semibold text-lg animate-pulse">
-            📊 Đang tổng hợp dữ liệu...
-          </p>
-          <p className="text-slate-500 text-sm">
-            Hệ thống đang xử lý báo cáo, vui lòng chờ một chút
-          </p>
-        </div>
+        <p className="mt-6 text-indigo-700 font-semibold text-lg animate-pulse">
+          📊 Đang tổng hợp báo cáo...
+        </p>
+        <p className="text-slate-500 text-sm mt-1">
+          Vui lòng chờ một chút
+        </p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white sticky top-0 z-10 shadow-sm">
-        <div className="px-3 py-3 space-y-2.5">
-          <h1 className="text-base font-bold text-slate-800">
-            📊 BÁO CÁO TỔNG HỢP MNR MATRAN 2026
-          </h1>
+      <header className="bg-white sticky top-0 z-10 shadow-sm px-3 py-3 space-y-3">
+        <h1 className="text-base font-bold text-slate-800">
+          📊 BÁO CÁO TỔNG HỢP MNR MATRAN 2026
+        </h1>
+
+        {/* Filter tổ */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {teams.map((team) => (
+            <button
+              key={team}
+              onClick={() => {
+                setSelectedTeam(team);
+                setExpandedDate(null);
+                setExpandedTeam(null);
+              }}
+              className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                selectedTeam === team
+                  ? "bg-indigo-600 text-white"
+                  : "bg-white border border-slate-300 text-slate-700"
+              }`}
+            >
+              {team === "ALL" ? "Tất cả" : team}
+            </button>
+          ))}
         </div>
 
-        <div className="bg-indigo-50 border-t border-indigo-100 px-3 py-3">
-          <div className="grid grid-cols-2 gap-3 text-center">
-            <div>
-              <div className="text-[10px] text-indigo-700 uppercase font-medium">
-                📦 Tổng cont
-              </div>
-              <div className="text-xl font-extrabold text-indigo-700 mt-0.5">
-                {totalContainers.toLocaleString("vi-VN")}
-              </div>
+        {/* Filter ngày */}
+        <select
+          value={rangeType}
+          onChange={(e) => setRangeType(e.target.value)}
+          className="border border-slate-300 rounded px-3 py-2 text-sm"
+        >
+          <option value="TODAY">Hôm nay</option>
+          <option value="7D">7 ngày</option>
+          <option value="30D">30 ngày</option>
+          <option value="MONTH">Tháng này</option>
+          <option value="ALL">Tất cả</option>
+          <option value="CUSTOM">Tùy chọn</option>
+        </select>
+
+        {rangeType === "CUSTOM" && (
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1"
+            />
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1"
+            />
+          </div>
+        )}
+
+        {/* Tổng */}
+        <div className="grid grid-cols-2 gap-3 text-center bg-indigo-50 rounded-lg py-3">
+          <div>
+            <div className="text-xs text-indigo-700">📦 Tổng cont</div>
+            <div className="text-xl font-bold text-indigo-700">
+              {totalContainers}
             </div>
-            <div>
-              <div className="text-[10px] text-indigo-700 uppercase font-medium">
-                ⏰ Tổng giờ
-              </div>
-              <div className="text-xl font-extrabold text-indigo-700 mt-0.5">
-                {formatNumber(totalHours)}h
-              </div>
+          </div>
+          <div>
+            <div className="text-xs text-indigo-700">⏰ Tổng giờ</div>
+            <div className="text-xl font-bold text-indigo-700">
+              {formatNumber(totalHours)}h
             </div>
           </div>
         </div>
@@ -153,109 +198,106 @@ const ReportDashboard = () => {
       <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3 pb-24">
         {filteredDates.map((date) => {
           const day = data[date] || {};
-          let dayContainers = 0;
-          let dayHours = 0;
+          const dayTeams = teamOrder.filter(
+            (team) =>
+              day[team] &&
+              (selectedTeam === "ALL" || selectedTeam === team)
+          );
 
-          Object.values(day).forEach((value) => {
-            dayContainers += value.containers;
-            dayHours += value.hours;
-          });
+          if (dayTeams.length === 0) return null;
 
-          if (dayContainers === 0) return null;
+          const dayContainers = dayTeams.reduce(
+            (sum, t) => sum + day[t].containers,
+            0
+          );
+          const dayHours = dayTeams.reduce(
+            (sum, t) => sum + day[t].hours,
+            0
+          );
 
-          const isOpen = expanded === date;
+          const isOpen = expandedDate === date;
 
           return (
-            <div key={date} className="rounded-xl border bg-white shadow-sm">
-              {/* Header ngày */}
+            <div key={date} className="bg-white rounded-xl shadow border">
               <button
                 onClick={() => {
-                  setExpanded(isOpen ? null : date);
+                  setExpandedDate(isOpen ? null : date);
                   setExpandedTeam(null);
                 }}
-                className="w-full px-3.5 py-2.5 flex justify-between items-center"
+                className="w-full flex justify-between px-3 py-2"
               >
-                <span className="font-medium text-slate-800">
-                  📅 {formatDateDisplay(date)}
-                </span>
-                <span className="text-xs text-slate-600">
+                <span>📅 {formatDateDisplay(date)}</span>
+                <span className="text-xs">
                   {dayContainers} 📦 • {formatNumber(dayHours)} ⏰
                 </span>
               </button>
 
-              {/* Nội dung khi mở ngày */}
               {isOpen && (
-                <div className="px-3 pb-3 border-t bg-slate-50">
-                  {teamOrder
-                    .filter((team) => day[team])
-                    .map((team) => {
-                      const value = day[team];
-                      const teamKey = date + "_" + team;
-                      const isTeamOpen = expandedTeam === teamKey;
+                <div className="border-t bg-slate-50 px-3 py-2">
+                  {dayTeams.map((team) => {
+                    const teamKey = date + team;
+                    const isTeamOpen = expandedTeam === teamKey;
+                    const details = [...(day[team].details || [])].sort(
+                      (a, b) =>
+                        a.container.localeCompare(b.container)
+                    );
 
-                      const sortedDetails = [...(value.details || [])].sort(
-                        (a, b) =>
-                          a.container.localeCompare(b.container)
-                      );
-
-                      return (
-                        <div
-                          key={team}
-                          className="rounded-lg bg-white mb-2 border"
+                    return (
+                      <div
+                        key={team}
+                        className="mb-2 bg-white rounded-lg border"
+                      >
+                        <button
+                          onClick={() =>
+                            setExpandedTeam(
+                              isTeamOpen ? null : teamKey
+                            )
+                          }
+                          className="w-full flex justify-between px-3 py-2 text-xs font-medium"
                         >
-                          {/* Header tổ */}
-                          <button
-                            onClick={() =>
-                              setExpandedTeam(
-                                isTeamOpen ? null : teamKey
-                              )
-                            }
-                            className="w-full flex justify-between items-center px-3 py-2 text-xs font-medium"
-                          >
-                            <span>{team}</span>
-                            <span>
-                              {value.containers} 📦 •{" "}
-                              {formatNumber(value.hours)} ⏰
-                            </span>
-                          </button>
+                          <span>{team}</span>
+                          <span>
+                            {day[team].containers} 📦 •{" "}
+                            {formatNumber(day[team].hours)} ⏰
+                          </span>
+                        </button>
 
-                          {/* Container list */}
-                          {isTeamOpen && (
-                            <div className="border-t bg-slate-50 px-2 py-2 space-y-1 max-h-72 overflow-y-auto">
-                              {sortedDetails.map((item, index) => (
-                                <div
-                                  key={item.container + index}
-                                  className="flex justify-between items-center text-[11px] bg-white px-2 py-1.5 rounded-md shadow-sm"
-                                >
-                                  <div className="flex gap-2">
-                                    <span className="text-slate-400 w-5 text-right">
-                                      {index + 1}.
-                                    </span>
-                                    {item.link ? (
-                                      <a
-                                        href={item.link}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-indigo-600 underline font-medium"
-                                      >
-                                        {item.container}
-                                      </a>
-                                    ) : (
-                                      <span className="font-medium">
-                                        {item.container}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <span className="font-semibold text-indigo-600">
-                                    {formatNumber(item.hours)}h
+                        {isTeamOpen && (
+                          <div className="border-t bg-slate-50 px-2 py-2 space-y-1 max-h-72 overflow-y-auto">
+                            {details.map((item, index) => (
+                              <div
+                                key={item.container + index}
+                                className="flex justify-between text-[11px] bg-white px-2 py-1.5 rounded shadow-sm"
+                              >
+                                <div className="flex gap-2">
+                                  <span className="text-slate-400 w-5 text-right">
+                                    {index + 1}.
                                   </span>
+                                  {item.link ? (
+                                    <a
+                                      href={item.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-indigo-600 underline font-medium"
+                                    >
+                                      {item.container}
+                                    </a>
+                                  ) : (
+                                    <span className="font-medium">
+                                      {item.container}
+                                    </span>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                                <span className="font-semibold text-indigo-600">
+                                  {formatNumber(item.hours)}h
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
