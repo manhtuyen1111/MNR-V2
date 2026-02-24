@@ -4,7 +4,7 @@ import {
   ClockIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/24/outline"; // ← thay solid bằng outline (khuyến nghị)
 
 type TeamData = {
   containers: number;
@@ -29,9 +29,9 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
-  const [rangeType, setRangeType] = useState("TODAY");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  // const [rangeType, setRangeType] = useState("TODAY");     // tạm comment vì chưa dùng
+  // const [fromDate, setFromDate] = useState("");
+  // const [toDate, setToDate] = useState("");
 
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
@@ -47,7 +47,7 @@ const ReportDashboard = () => {
           setData(result.data || {});
         }
       } catch (err) {
-        console.error(err);
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -58,7 +58,9 @@ const ReportDashboard = () => {
   const formatNumber = (num: number) => num.toFixed(1);
 
   const formatDateDisplay = (dateStr: string) => {
-    const [, month, day] = dateStr.split("-");
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return dateStr;
+    const [, month, day] = parts;
     return `${day}/${month}`;
   };
 
@@ -70,29 +72,11 @@ const ReportDashboard = () => {
     return ["ALL", ...Array.from(set).sort()];
   }, [data]);
 
+  // Tạm thời dùng ALL ngày (có thể mở lại sau khi thêm UI range)
   const filteredDates = useMemo(() => {
-    const allDates = Object.keys(data).sort((a, b) =>
-      b.localeCompare(a)
-    );
-
-    const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
-
-    if (rangeType === "ALL") return allDates;
-    if (rangeType === "TODAY") return allDates.filter((d) => d === todayStr);
-
-    let compareDate = new Date();
-
-    if (rangeType === "7D") compareDate.setDate(today.getDate() - 7);
-    else if (rangeType === "30D") compareDate.setDate(today.getDate() - 30);
-    else if (rangeType === "MONTH")
-      compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    else if (rangeType === "CUSTOM" && fromDate && toDate)
-      return allDates.filter((d) => d >= fromDate && d <= toDate);
-
-    const compareStr = compareDate.toISOString().slice(0, 10);
-    return allDates.filter((d) => d >= compareStr);
-  }, [data, rangeType, fromDate, toDate]);
+    return Object.keys(data).sort((a, b) => b.localeCompare(a));
+    // Nếu muốn bật lại range → uncomment code cũ và thêm UI chọn range
+  }, [data]);
 
   const { totalContainers, totalHours } = useMemo(() => {
     let containers = 0;
@@ -102,8 +86,8 @@ const ReportDashboard = () => {
       const day = data[date] || {};
       Object.entries(day).forEach(([team, val]) => {
         if (selectedTeam === "ALL" || selectedTeam === team) {
-          containers += val.containers;
-          hours += val.hours;
+          containers += val.containers || 0;
+          hours += val.hours || 0;
         }
       });
     });
@@ -115,9 +99,7 @@ const ReportDashboard = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100">
         <div className="w-14 h-14 border-4 border-slate-300 border-t-emerald-700 rounded-full animate-spin"></div>
-        <p className="mt-5 text-slate-700 font-medium">
-          Đang tải báo cáo...
-        </p>
+        <p className="mt-5 text-slate-700 font-medium">Đang tải báo cáo...</p>
       </div>
     );
   }
@@ -125,14 +107,13 @@ const ReportDashboard = () => {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-[15px]">
       <header className="bg-slate-200 sticky top-0 z-20 shadow-md px-4 py-4 space-y-3">
-
         <h1 className="text-base font-semibold text-slate-900 flex items-center gap-2">
           <CubeIcon className="h-6 w-6 text-indigo-700" />
           BÁO CÁO TỔNG HỢP
         </h1>
 
         {/* Team filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {teams.map((team) => (
             <button
               key={team}
@@ -157,9 +138,7 @@ const ReportDashboard = () => {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-300 hover:shadow-md transition flex items-center gap-2">
             <CubeIcon className="h-6 w-6 text-indigo-600" />
             <div>
-              <div className="text-xs text-slate-700 uppercase">
-                Container
-              </div>
+              <div className="text-xs text-slate-700 uppercase">Container</div>
               <div className="text-2xl font-bold text-slate-900 mt-1">
                 {totalContainers}
               </div>
@@ -169,9 +148,7 @@ const ReportDashboard = () => {
           <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-300 hover:shadow-md transition flex items-center gap-2">
             <ClockIcon className="h-6 w-6 text-emerald-600" />
             <div>
-              <div className="text-xs text-slate-700 uppercase">
-                Tổng giờ
-              </div>
+              <div className="text-xs text-slate-700 uppercase">Tổng giờ</div>
               <div className="text-2xl font-bold text-emerald-800 mt-1">
                 {formatNumber(totalHours)}h
               </div>
@@ -181,31 +158,21 @@ const ReportDashboard = () => {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
-
         {filteredDates.map((date) => {
           const day = data[date] || {};
           const dayTeams = teamOrder.filter(
-            (team) =>
-              day[team] &&
-              (selectedTeam === "ALL" || selectedTeam === team)
+            (team) => day[team] && (selectedTeam === "ALL" || selectedTeam === team)
           );
 
           if (dayTeams.length === 0) return null;
 
-          const dayContainers = dayTeams.reduce(
-            (sum, t) => sum + day[t].containers,
-            0
-          );
-          const dayHours = dayTeams.reduce(
-            (sum, t) => sum + day[t].hours,
-            0
-          );
+          const dayContainers = dayTeams.reduce((sum, t) => sum + (day[t]?.containers || 0), 0);
+          const dayHours = dayTeams.reduce((sum, t) => sum + (day[t]?.hours || 0), 0);
 
           const isOpen = expandedDate === date;
 
           return (
             <div key={date} className="bg-white rounded-xl border shadow-sm overflow-hidden">
-
               <button
                 onClick={() => {
                   setExpandedDate(isOpen ? null : date);
@@ -225,9 +192,7 @@ const ReportDashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-slate-700">
-                    {dayContainers}
-                  </span>
+                  <span className="text-slate-700">{dayContainers}</span>
                   <span className="px-2 py-1 rounded-lg bg-emerald-200 text-emerald-800 font-semibold">
                     {formatNumber(dayHours)}h
                   </span>
@@ -243,40 +208,31 @@ const ReportDashboard = () => {
                   {dayTeams.map((team) => {
                     const teamKey = date + team;
                     const isTeamOpen = expandedTeam === teamKey;
-                    const details = [...(day[team].details || [])].sort(
-                      (a, b) =>
-                        a.container.localeCompare(b.container)
+                    const details = [...(day[team]?.details || [])].sort((a, b) =>
+                      a.container.localeCompare(b.container)
                     );
 
                     return (
                       <div key={team} className="bg-white rounded-xl border overflow-hidden">
-
                         <button
-                          onClick={() =>
-                            setExpandedTeam(
-                              isTeamOpen ? null : teamKey
-                            )
-                          }
+                          onClick={() => setExpandedTeam(isTeamOpen ? null : teamKey)}
                           className="w-full flex justify-between items-center px-4 py-3 text-sm font-medium hover:bg-slate-100 transition"
                         >
                           <span className="text-slate-800">{team}</span>
-
                           <span className="px-2 py-1 rounded-md bg-emerald-200 text-emerald-800 text-xs font-semibold">
-                            {formatNumber(day[team].hours)}h
+                            {formatNumber(day[team]?.hours || 0)}h
                           </span>
                         </button>
 
                         <div
                           className={`transition-all duration-300 ease-in-out ${
-                            isTeamOpen
-                              ? "max-h-[600px] opacity-100"
-                              : "max-h-0 opacity-0"
+                            isTeamOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"
                           } overflow-hidden`}
                         >
                           <div className="border-t bg-slate-50 px-3 py-2 space-y-2 max-h-72 overflow-y-auto">
                             {details.map((item, index) => (
                               <div
-                                key={item.container + index}
+                                key={`${item.container}-${index}`}
                                 className="flex justify-between items-center bg-white px-3 py-2 rounded-lg border border-slate-300 hover:bg-slate-100 transition"
                               >
                                 <div className="flex gap-3 items-center">
@@ -307,17 +263,14 @@ const ReportDashboard = () => {
                             ))}
                           </div>
                         </div>
-
                       </div>
                     );
                   })}
                 </div>
               </div>
-
             </div>
           );
         })}
-
       </main>
     </div>
   );
