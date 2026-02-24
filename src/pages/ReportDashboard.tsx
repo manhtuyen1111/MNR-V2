@@ -49,8 +49,9 @@ const ReportDashboard = () => {
 
   // Format ngày: 24/02 thay vì 2026-02-24 → gọn cho mobile
   const formatDateDisplay = (dateStr: string) => {
-    const [year, month, day] = dateStr.split("-");
-    return `${day}/${month}`;
+  const [, month, day] = dateStr.split("-");   // Bỏ year đi
+  return `${day}/${month}`;
+};
   };
 
   // TEAMS
