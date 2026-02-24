@@ -109,10 +109,9 @@ const ReportDashboard = () => {
       <header className="bg-white sticky top-0 z-10 shadow-md">
         <div className="px-3.5 pt-3.5 pb-2.5 space-y-3">
           <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            📊 TỔNG HỢP BÁO CÁO MNR MATRAN 2026
+            📊 Báo cáo Container 2026
           </h1>
 
-          {/* Team filter */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
             <span className="text-sm text-slate-500 whitespace-nowrap">👥</span>
             {teams.map((team) => (
@@ -133,7 +132,6 @@ const ReportDashboard = () => {
             ))}
           </div>
 
-          {/* Range filter */}
           <div className="flex flex-wrap gap-1.5">
             {[
               { key: "TODAY", label: "Hôm nay" },
@@ -175,7 +173,7 @@ const ReportDashboard = () => {
           )}
         </div>
 
-        {/* TỔNG - 2 cột */}
+        {/* TỔNG */}
         <div className="bg-indigo-50 border-t border-indigo-100 px-3.5 py-3.5">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
@@ -199,8 +197,8 @@ const ReportDashboard = () => {
         </div>
       </header>
 
-      {/* DANH SÁCH NGÀY */}
-      <main className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3.5 pb-10">
+      {/* DANH SÁCH NGÀY - CHỈ 1 DÒNG */}
+      <main className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3 pb-10">
         {filteredDates.length === 0 ? (
           <div className="text-center text-slate-500 py-12 text-base">
             Không có dữ liệu trong khoảng thời gian này
@@ -237,7 +235,7 @@ const ReportDashboard = () => {
                   className="w-full px-4 py-3.5 flex items-center justify-between text-left"
                 >
                   <div className="flex items-center gap-2.5">
-                    <span className="text-slate-500">📅</span>
+                    <span className="text-slate-500 text-base">📅</span>
                     <div>
                       <div className="font-semibold text-slate-800 text-base">
                         {formatDateDisplay(date)}
@@ -252,8 +250,9 @@ const ReportDashboard = () => {
                   </span>
                 </button>
 
+                {/* CHI TIẾT CHỈ HIỆN KHI EXPAND */}
                 {isOpen && (
-                  <div className="px-4 pb-4 pt-1 border-t border-slate-100">
+                  <div className="px-4 pb-4 pt-1 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
                     {Object.entries(day)
                       .filter(
                         ([team]) =>
@@ -262,12 +261,12 @@ const ReportDashboard = () => {
                       .map(([team, value]) => (
                         <div
                           key={team}
-                          className="flex justify-between items-center py-2.5 text-sm border-b border-slate-100 last:border-0"
+                          className="flex justify-between items-center py-2.5 text-sm border-b border-slate-200 last:border-0"
                         >
                           <span className="text-slate-700 font-medium">
                             {team}
                           </span>
-                          <span className="text-indigo-600 font-semibold">
+                          <span className="text-indigo-600 font-semibold flex items-center gap-1.5">
                             {value.containers} 📦 • {formatNumber(value.hours)} ⏰
                           </span>
                         </div>
