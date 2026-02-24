@@ -21,17 +21,17 @@ const ReportDashboard = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
   const headers = rows.length ? Object.keys(rows[0]) : [];
 
+  // ===== TEAMS =====
   const teams = useMemo(() => {
     if (!rows.length) return ["ALL"];
 
     const found = headers
-      .filter((h) => h.includes("TỔ"))
+      .filter((h) => h.includes("TỔ") && h.includes("SL"))
       .map((h) => h.split(" - ")[0]);
 
     return ["ALL", ...Array.from(new Set(found))];
@@ -39,21 +39,27 @@ const ReportDashboard = () => {
 
   const selectedTeam = teams[selectedIndex];
 
-  const getRowTotal = (row: any) => {
-    if (selectedTeam === "ALL")
-      return Number(row["Grand Total"] || 0);
+  // ===== TÍNH SL (CONT) =====
+  const getRowTotalSL = (row: any) => {
+    if (selectedTeam === "ALL") {
+      return Number(row["Grand Total - SL"] || 0);
+    }
 
-    return headers
-      .filter((h) => h.startsWith(selectedTeam))
-      .reduce(
-        (sum, h) => sum + Number(row[h] || 0),
-        0
-      );
+    return Number(row[`${selectedTeam} - SL`] || 0);
+  };
+
+  // ===== TÍNH GIỜ =====
+  const getRowTotalHours = (row: any) => {
+    if (selectedTeam === "ALL") {
+      return Number(row["Grand Total - Giờ"] || 0);
+    }
+
+    return Number(row[`${selectedTeam} - Giờ`] || 0);
   };
 
   const totalCont = useMemo(() => {
     return rows.reduce(
-      (sum, row) => sum + getRowTotal(row),
+      (sum, row) => sum + getRowTotalSL(row),
       0
     );
   }, [rows, selectedTeam]);
@@ -68,14 +74,14 @@ const ReportDashboard = () => {
   return (
     <div className="h-screen flex flex-col bg-slate-100">
 
-      {/* APP HEADER */}
+      {/* HEADER */}
       <div className="bg-white shadow p-4 sticky top-0 z-50">
         <div className="text-lg font-bold text-slate-800">
-          📊 Báo cáo Cont
+          📊 Báo cáo Cont 2026
         </div>
 
-        {/* SWIPE TEAM SELECTOR */}
-        <div className="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
+        {/* TEAM SELECTOR */}
+        <div className="flex gap-2 mt-3 overflow-x-auto">
           {teams.map((team, index) => (
             <button
               key={team}
@@ -83,7 +89,7 @@ const ReportDashboard = () => {
                 setSelectedIndex(index);
                 setExpanded(null);
               }}
-              className={`px-4 py-2 rounded-full whitespace-nowrap text-sm transition ${
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition ${
                 selectedIndex === index
                   ? "bg-indigo-600 text-white shadow"
                   : "bg-slate-200 text-slate-600"
@@ -95,7 +101,7 @@ const ReportDashboard = () => {
         </div>
       </div>
 
-      {/* FLOATING TOTAL */}
+      {/* TOTAL BAR */}
       <div className="bg-indigo-600 text-white text-center py-3 font-semibold shadow-md">
         Tổng: {totalCont.toLocaleString()} cont
       </div>
@@ -104,20 +110,21 @@ const ReportDashboard = () => {
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {rows.map((row, index) => {
           const date = row["DATE"];
-          const total = getRowTotal(row);
+          const totalSL = getRowTotalSL(row);
+          const totalHours = getRowTotalHours(row);
           const isOpen = expanded === date;
-          const highlight = total > 100;
+          const highlight = totalSL > 70;
 
           return (
             <div
               key={index}
-              className={`rounded-2xl shadow transition-all ${
+              className={`rounded-2xl shadow transition ${
                 highlight
                   ? "bg-red-50 border border-red-200"
                   : "bg-white"
               }`}
             >
-              {/* CARD HEADER */}
+              {/* HEADER CARD */}
               <button
                 onClick={() =>
                   setExpanded(isOpen ? null : date)
@@ -129,11 +136,11 @@ const ReportDashboard = () => {
                     📅 {date}
                   </div>
                   <div className="text-sm text-slate-500">
-                    {total} cont
+                    {totalSL} cont • {totalHours} giờ
                   </div>
                 </div>
 
-                <div className="text-xl transition-transform duration-300">
+                <div className="text-xl">
                   {isOpen ? "▲" : "▼"}
                 </div>
               </button>
@@ -144,23 +151,34 @@ const ReportDashboard = () => {
                   isOpen ? "max-h-96 px-4 pb-4" : "max-h-0"
                 }`}
               >
-                {headers
-                  .filter((h) =>
-                    selectedTeam === "ALL"
-                      ? h.includes("TỔ")
-                      : h.startsWith(selectedTeam)
-                  )
-                  .map((h) => (
-                    <div
-                      key={h}
-                      className="flex justify-between py-2 text-sm border-b last:border-none"
-                    >
-                      <span>{h}</span>
-                      <span className="font-semibold text-indigo-600">
-                        {row[h]}
-                      </span>
-                    </div>
-                  ))}
+                {teams
+                  .filter((t) => t !== "ALL")
+                  .map((team) => {
+                    const sl = Number(
+                      row[`${team} - SL`] || 0
+                    );
+                    const hours = Number(
+                      row[`${team} - Giờ`] || 0
+                    );
+
+                    if (
+                      selectedTeam !== "ALL" &&
+                      selectedTeam !== team
+                    )
+                      return null;
+
+                    return (
+                      <div
+                        key={team}
+                        className="flex justify-between py-2 border-b last:border-none text-sm"
+                      >
+                        <span>{team}</span>
+                        <span className="font-semibold text-indigo-600">
+                          {sl} cont • {hours} giờ
+                        </span>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           );
