@@ -42,16 +42,13 @@ const ReportDashboard = () => {
     fetchData();
   }, []);
 
-  // Format số: giữ 1 chữ số thập phân
-  const formatNumber = (num: number) => {
-    return num.toFixed(1);
-  };
+  // Format số: 1 chữ số thập phân
+  const formatNumber = (num: number) => num.toFixed(1);
 
-  // Format ngày: 24/02 thay vì 2026-02-24 → gọn cho mobile
+  // Format ngày: 24/02 (gọn cho mobile)
   const formatDateDisplay = (dateStr: string) => {
-  const [, month, day] = dateStr.split("-");   // Bỏ year đi
-  return `${day}/${month}`;
-};
+    const [, month, day] = dateStr.split("-");
+    return `${day}/${month}`;
   };
 
   // TEAMS
@@ -93,7 +90,7 @@ const ReportDashboard = () => {
   const totalContainers = useMemo(() => {
     let total = 0;
     filteredDates.forEach((date) => {
-      const day = data[date];
+      const day = data[date] || {};
       Object.entries(day).forEach(([team, val]) => {
         if (selectedTeam === "ALL" || selectedTeam === team) {
           total += val.containers;
@@ -113,14 +110,12 @@ const ReportDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* HEADER - sticky */}
       <header className="bg-white sticky top-0 z-10 shadow-md">
         <div className="px-4 pt-4 pb-3 space-y-3.5">
           <h1 className="text-xl font-bold text-slate-800">
             📊 Báo cáo Container 2026
           </h1>
 
-          {/* Team filter - scroll ngang */}
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
             {teams.map((team) => (
               <button
@@ -140,7 +135,6 @@ const ReportDashboard = () => {
             ))}
           </div>
 
-          {/* Range filter */}
           <div className="flex flex-wrap gap-2">
             {[
               { key: "TODAY", label: "Hôm nay" },
@@ -182,7 +176,6 @@ const ReportDashboard = () => {
           )}
         </div>
 
-        {/* Tổng container */}
         <div className="bg-indigo-50 border-t border-indigo-100 px-4 py-3.5 text-center">
           <div className="text-xs text-indigo-700 uppercase tracking-wide font-medium">
             Tổng container
@@ -193,7 +186,6 @@ const ReportDashboard = () => {
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
       <main className="flex-1 overflow-y-auto px-4 py-5 space-y-4 pb-8">
         {filteredDates.length === 0 ? (
           <div className="text-center text-slate-500 py-10">
@@ -201,23 +193,15 @@ const ReportDashboard = () => {
           </div>
         ) : (
           filteredDates.map((date) => {
-            const day = data[date];
+            const day = data[date] || {};
             let dayContainers = 0;
             let dayHours = 0;
 
-            Object.values(day).forEach((v) => {
-              if (selectedTeam === "ALL" || selectedTeam in day) {
-                if (selectedTeam === "ALL" || selectedTeam === Object.keys(day)[0] /* fix logic if needed */) {
-                  dayContainers += v.containers;
-                  dayHours += v.hours;
-                }
-              }
-            });
-
-            Object.entries(day).forEach(([team, v]) => {
+            // Chỉ tính một lần, logic đúng
+            Object.entries(day).forEach(([team, value]) => {
               if (selectedTeam === "ALL" || selectedTeam === team) {
-                dayContainers += v.containers;
-                dayHours += v.hours;
+                dayContainers += value.containers;
+                dayHours += value.hours;
               }
             });
 
