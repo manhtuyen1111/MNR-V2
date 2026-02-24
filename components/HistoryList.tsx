@@ -38,19 +38,6 @@ const HistoryList: React.FC<HistoryListProps> = ({
   const [range, setRange] = useState({ start: '', end: '' });
   const [searchCont, setSearchCont] = useState('');
 
-  /* ===== SEARCH GỢI Ý CONT ===== */
-  const contSuggestions = useMemo(() => {
-    if (!searchCont.trim()) return [];
-    const key = searchCont.toLowerCase();
-    return Array.from(
-      new Set(
-        records
-          .map((r) => r.containerNumber)
-          .filter((c) => c.toLowerCase().startsWith(key))
-      )
-    ).slice(0, 5);
-  }, [searchCont, records]);
-
   /* ===== FILTER ===== */
   const filtered = useMemo(() => {
     return records.filter((r) => {
@@ -108,21 +95,6 @@ const HistoryList: React.FC<HistoryListProps> = ({
             placeholder="Tìm container..."
             className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
           />
-
-          {contSuggestions.length > 0 && (
-            <div className="border rounded-lg overflow-hidden">
-              {contSuggestions.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setSearchCont(c)}
-                  className="w-full text-left px-3 py-2 text-sm font-mono hover:bg-slate-100"
-                >
-                  {c.slice(0, 4)}
-                  <span className="text-red-600">{c.slice(4)}</span>
-                </button>
-              ))}
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-2">
             <select
