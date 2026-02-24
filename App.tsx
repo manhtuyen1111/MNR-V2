@@ -502,25 +502,6 @@ const handleAddImage = async (imgData: string) => {
     )}
   </div>
 )}
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            {user.role === 'admin' ? (
-              <Settings settings={settings} onSave={handleSaveSettings} />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8 text-center animate-fadeIn">
-                <div className="bg-slate-200 p-6 rounded-full mb-6 shadow-inner border border-white">
-                  <ShieldAlert className="w-16 h-16 text-slate-500" />
-                </div>
-                <h3 className="text-xl font-black text-slate-700 uppercase tracking-tight">Quyền hạn hạn chế</h3>
-                <p className="text-sm mt-3 text-slate-500 max-w-[250px] leading-relaxed">
-                  Chỉ tài khoản <span className="font-bold text-slate-800">Admin</span> mới được phép thay đổi cấu hình hệ thống.
-                </p>
-                <div className="mt-8 px-4 py-2 bg-slate-200/50 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-400 border border-slate-300/30">
-                  User Role: {user.role.toUpperCase()}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {activeTab === 'capture' && isFormComplete && (
   <div className="fixed bottom-28 right-4 sm:right-6 z-50 animate-fadeIn">
