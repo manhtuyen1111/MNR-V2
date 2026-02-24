@@ -3,8 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 const ReportDashboard = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTeam, setSelectedTeam] = useState("ALL");
-  const [search, setSearch] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   // ===== FETCH DATA =====
@@ -26,39 +25,23 @@ const ReportDashboard = () => {
     fetchData();
   }, []);
 
-  // ===== LẤY DANH SÁCH TỔ =====
+  const headers = rows.length ? Object.keys(rows[0]) : [];
+
   const teams = useMemo(() => {
-    if (!rows.length) return [];
-    const headers = Object.keys(rows[0]);
+    if (!rows.length) return ["ALL"];
+
     const found = headers
       .filter((h) => h.includes("TỔ"))
       .map((h) => h.split(" - ")[0]);
 
-    return Array.from(new Set(found));
+    return ["ALL", ...Array.from(new Set(found))];
   }, [rows]);
 
-  const headers = rows.length ? Object.keys(rows[0]) : [];
-
-  // ===== FILTER THEO TỔ =====
-  const filteredRows = useMemo(() => {
-    let data = rows;
-
-    if (search) {
-      data = data.filter((row) =>
-        row["DATE"]
-          ?.toString()
-          .toLowerCase()
-          .includes(search.toLowerCase())
-      );
-    }
-
-    return data;
-  }, [rows, search]);
+  const selectedTeam = teams[selectedIndex];
 
   const getRowTotal = (row: any) => {
-    if (selectedTeam === "ALL") {
+    if (selectedTeam === "ALL")
       return Number(row["Grand Total"] || 0);
-    }
 
     return headers
       .filter((h) => h.startsWith(selectedTeam))
@@ -69,91 +52,96 @@ const ReportDashboard = () => {
   };
 
   const totalCont = useMemo(() => {
-    return filteredRows.reduce(
+    return rows.reduce(
       (sum, row) => sum + getRowTotal(row),
       0
     );
-  }, [filteredRows, selectedTeam]);
+  }, [rows, selectedTeam]);
 
   if (loading)
     return (
       <div className="h-screen flex items-center justify-center text-slate-400">
-        Đang tải...
+        Loading...
       </div>
     );
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-slate-100">
 
-      {/* HEADER APP STYLE */}
-      <div className="bg-white shadow-sm p-4 space-y-3">
+      {/* APP HEADER */}
+      <div className="bg-white shadow p-4 sticky top-0 z-50">
         <div className="text-lg font-bold text-slate-800">
           📊 Báo cáo Cont
         </div>
 
-        <input
-          placeholder="Tìm theo ngày..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm"
-        />
-
-        <select
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm"
-        >
-          <option value="ALL">Tất cả tổ</option>
-          {teams.map((team) => (
-            <option key={team} value={team}>
-              {team}
-            </option>
+        {/* SWIPE TEAM SELECTOR */}
+        <div className="flex gap-2 mt-3 overflow-x-auto no-scrollbar">
+          {teams.map((team, index) => (
+            <button
+              key={team}
+              onClick={() => {
+                setSelectedIndex(index);
+                setExpanded(null);
+              }}
+              className={`px-4 py-2 rounded-full whitespace-nowrap text-sm transition ${
+                selectedIndex === index
+                  ? "bg-indigo-600 text-white shadow"
+                  : "bg-slate-200 text-slate-600"
+              }`}
+            >
+              {team === "ALL" ? "Tất cả" : team}
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
-      {/* TOTAL FLOAT */}
-      <div className="bg-indigo-600 text-white text-center py-3 font-semibold shadow">
+      {/* FLOATING TOTAL */}
+      <div className="bg-indigo-600 text-white text-center py-3 font-semibold shadow-md">
         Tổng: {totalCont.toLocaleString()} cont
       </div>
 
-      {/* LIST CARD */}
-      <div className="flex-1 overflow-auto p-3 space-y-3">
-        {filteredRows.map((row, index) => {
+      {/* CARD LIST */}
+      <div className="flex-1 overflow-auto p-4 space-y-4">
+        {rows.map((row, index) => {
           const date = row["DATE"];
           const total = getRowTotal(row);
           const isOpen = expanded === date;
+          const highlight = total > 100;
 
           return (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-sm overflow-hidden transition-all"
+              className={`rounded-2xl shadow transition-all ${
+                highlight
+                  ? "bg-red-50 border border-red-200"
+                  : "bg-white"
+              }`}
             >
               {/* CARD HEADER */}
               <button
                 onClick={() =>
                   setExpanded(isOpen ? null : date)
                 }
-                className="w-full text-left p-4 flex justify-between items-center"
+                className="w-full p-4 flex justify-between items-center"
               >
                 <div>
                   <div className="font-semibold text-slate-700">
                     📅 {date}
                   </div>
                   <div className="text-sm text-slate-500">
-                    Tổng: {total} cont
+                    {total} cont
                   </div>
                 </div>
 
-                <div className="text-xl">
+                <div className="text-xl transition-transform duration-300">
                   {isOpen ? "▲" : "▼"}
                 </div>
               </button>
 
-              {/* DETAIL */}
+              {/* DETAILS */}
               <div
-                className={`transition-all duration-300 overflow-hidden ${
-                  isOpen ? "max-h-96 p-4 pt-0" : "max-h-0"
+                className={`overflow-hidden transition-all duration-300 ${
+                  isOpen ? "max-h-96 px-4 pb-4" : "max-h-0"
                 }`}
               >
                 {headers
@@ -165,7 +153,7 @@ const ReportDashboard = () => {
                   .map((h) => (
                     <div
                       key={h}
-                      className="flex justify-between py-1 text-sm"
+                      className="flex justify-between py-2 text-sm border-b last:border-none"
                     >
                       <span>{h}</span>
                       <span className="font-semibold text-indigo-600">
