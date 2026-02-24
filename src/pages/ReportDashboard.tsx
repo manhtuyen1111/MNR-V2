@@ -4,11 +4,12 @@ const ReportDashboard = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedTeam, setSelectedTeam] = useState("ALL");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
   useEffect(() => {
-    fetch("https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec")
+    fetch("DÁN_URL_SCRIPT_CỦA_BẠN_Ở_ĐÂY")
       .then(res => res.json())
       .then(result => {
         if (result.success) {
@@ -19,11 +20,25 @@ const ReportDashboard = () => {
       .catch(() => setLoading(false));
   }, []);
 
+  // ===== LẤY DANH SÁCH TỔ TỪ HEADER =====
+  const teams = useMemo(() => {
+    if (!rows.length) return [];
 
-  // ===== LỌC DỮ LIỆU =====
+    const headers = Object.keys(rows[0]);
+
+    const found = headers
+      .filter(h => h.includes("TỔ"))
+      .map(h => h.split(" - ")[0]);
+
+    return Array.from(new Set(found));
+  }, [rows]);
+
+  // ===== LỌC THEO NGÀY =====
   const filteredRows = useMemo(() => {
     return rows.filter(row => {
       const rowDate = row["DATE"];
+
+      if (!rowDate) return false;
 
       if (fromDate && rowDate < fromDate) return false;
       if (toDate && rowDate > toDate) return false;
@@ -48,12 +63,39 @@ const ReportDashboard = () => {
     );
   }
 
+  // ===== CHỌN CỘT HIỂN THỊ =====
+  const allHeaders = Object.keys(rows[0]);
+
+  const visibleHeaders = allHeaders.filter(h => {
+    if (h === "DATE") return true;
+    if (h.includes("Grand")) return true;
+
+    if (selectedTeam === "ALL") return true;
+
+    return h.startsWith(selectedTeam);
+  });
+
   return (
     <div className="h-full flex flex-col bg-slate-50 text-[12px]">
 
       {/* ===== FILTER ===== */}
       <div className="p-3 bg-white border-b space-y-2">
 
+        {/* Chọn tổ */}
+        <select
+          value={selectedTeam}
+          onChange={e => setSelectedTeam(e.target.value)}
+          className="border px-2 py-1 rounded w-full"
+        >
+          <option value="ALL">Tất cả tổ</option>
+          {teams.map(team => (
+            <option key={team} value={team}>
+              {team}
+            </option>
+          ))}
+        </select>
+
+        {/* Lọc ngày */}
         <div className="flex gap-2">
           <input
             type="date"
@@ -76,7 +118,7 @@ const ReportDashboard = () => {
         <table className="min-w-full">
           <thead className="bg-slate-100 sticky top-0">
             <tr>
-              {Object.keys(rows[0]).map(h => (
+              {visibleHeaders.map(h => (
                 <th
                   key={h}
                   className="px-2 py-2 border-b text-left whitespace-nowrap"
@@ -99,7 +141,7 @@ const ReportDashboard = () => {
                     isTotal ? "font-bold text-red-600 bg-red-50" : ""
                   }`}
                 >
-                  {Object.keys(row).map(h => (
+                  {visibleHeaders.map(h => (
                     <td
                       key={h}
                       className="px-2 py-2 whitespace-nowrap"
