@@ -73,7 +73,7 @@ const ReportDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+   <div className="h-screen overflow-hidden bg-slate-100 flex flex-col">
 
       {/* ===== HEADER ===== */}
       <div className="bg-white sticky top-0 z-50 shadow-sm">
@@ -115,7 +115,13 @@ const ReportDashboard = () => {
       </div>
 
       {/* ===== LIST ===== */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
+     <div
+  className="flex-1 overflow-y-auto p-4 space-y-4"
+  style={{
+    WebkitOverflowScrolling: "touch",
+    paddingBottom: "calc(120px + env(safe-area-inset-bottom))",
+  }}
+>
         {rows.map((row, index) => {
           const date = row["DATE"];
           const sl = getRowSL(row);
@@ -125,7 +131,7 @@ const ReportDashboard = () => {
 
           return (
             <div
-              key={index}
+              key={`${date}-${index}`}
               className={`rounded-2xl border shadow-sm transition ${
                 highlight
                   ? "bg-red-50 border-red-300"
