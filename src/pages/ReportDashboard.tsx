@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 const ReportDashboard = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedTeam, setSelectedTeam] = useState("ALL");
   const [expanded, setExpanded] = useState<string | null>(null);
 
   // ===== FETCH DATA =====
@@ -14,7 +14,13 @@ const ReportDashboard = () => {
           "https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec"
         );
         const result = await res.json();
-        if (result.success) setRows(result.data);
+        if (result.success) {
+          // bỏ dòng rác & Grand Total
+          const clean = result.data.filter(
+            (r: any) => r.DATE && r.DATE !== "Grand Total"
+          );
+          setRows(clean);
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -24,104 +30,106 @@ const ReportDashboard = () => {
     fetchData();
   }, []);
 
+  // ===== HEADER KEYS =====
   const headers = rows.length ? Object.keys(rows[0]) : [];
 
   // ===== TEAMS =====
   const teams = useMemo(() => {
-    if (!rows.length) return ["ALL"];
+    if (!headers.length) return ["ALL"];
 
     const found = headers
-      .filter((h) => h.includes("TỔ") && h.includes("SL"))
+      .filter((h) => h.includes("TỔ") && h.includes("Số lượng"))
       .map((h) => h.split(" - ")[0]);
 
     return ["ALL", ...Array.from(new Set(found))];
-  }, [rows]);
+  }, [headers]);
 
-  const selectedTeam = teams[selectedIndex];
-
-  // ===== TÍNH SL (CONT) =====
-  const getRowTotalSL = (row: any) => {
+  // ===== TÍNH SL =====
+  const getRowSL = (row: any) => {
     if (selectedTeam === "ALL") {
       return Number(row["Grand Total - Số lượng"] || 0);
     }
-
     return Number(row[`${selectedTeam} - Số lượng`] || 0);
   };
 
   // ===== TÍNH GIỜ =====
-  const getRowTotalHours = (row: any) => {
+  const getRowHours = (row: any) => {
     if (selectedTeam === "ALL") {
       return Number(row["Grand Total - Giờ"] || 0);
     }
-
     return Number(row[`${selectedTeam} - Giờ`] || 0);
   };
 
   const totalCont = useMemo(() => {
-    return rows.reduce(
-      (sum, row) => sum + getRowTotalSL(row),
-      0
-    );
+    return rows.reduce((sum, row) => sum + getRowSL(row), 0);
   }, [rows, selectedTeam]);
 
-  if (loading)
+  if (loading) {
     return (
       <div className="h-screen flex items-center justify-center text-slate-400">
         Loading...
       </div>
     );
+  }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-100">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
 
-      {/* HEADER */}
-      <div className="bg-white shadow p-4 sticky top-0 z-50">
-        <div className="text-lg font-bold text-slate-800">
-          📊 Báo cáo Cont 2026
+      {/* ===== HEADER ===== */}
+      <div className="bg-white sticky top-0 z-50 shadow-sm">
+        <div className="p-4">
+          <div className="text-lg font-bold text-slate-800">
+            📊 Báo cáo Cont 2026
+          </div>
+
+          {/* TEAM SELECTOR */}
+          <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+            {teams.map((team) => (
+              <button
+                key={team}
+                onClick={() => {
+                  setSelectedTeam(team);
+                  setExpanded(null);
+                }}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
+                  selectedTeam === team
+                    ? "bg-indigo-600 text-white shadow-md scale-105"
+                    : "bg-white border border-slate-300 text-slate-600"
+                }`}
+              >
+                {team === "ALL" ? "Tất cả" : team}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* TEAM SELECTOR */}
-        <div className="flex gap-2 mt-3 overflow-x-auto">
-          {teams.map((team, index) => (
-            <button
-              key={team}
-              onClick={() => {
-                setSelectedIndex(index);
-                setExpanded(null);
-              }}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition ${
-                selectedIndex === index
-                  ? "bg-indigo-600 text-white shadow"
-                  : "bg-slate-200 text-slate-600"
-              }`}
-            >
-              {team === "ALL" ? "Tất cả" : team}
-            </button>
-          ))}
+        {/* TOTAL */}
+        <div className="border-t px-4 py-3 bg-slate-50">
+          <div className="text-center text-xs text-slate-500 uppercase tracking-wide">
+            Tổng container
+          </div>
+          <div className="text-center text-2xl font-bold text-indigo-600">
+            {totalCont.toLocaleString()}
+          </div>
         </div>
       </div>
 
-      {/* TOTAL BAR */}
-      <div className="bg-indigo-600 text-white text-center py-3 font-semibold shadow-md">
-        Tổng: {totalCont.toLocaleString()} cont
-      </div>
-
-      {/* CARD LIST */}
+      {/* ===== LIST ===== */}
       <div className="flex-1 overflow-auto p-4 space-y-4">
         {rows.map((row, index) => {
           const date = row["DATE"];
-          const totalSL = getRowTotalSL(row);
-          const totalHours = getRowTotalHours(row);
+          const sl = getRowSL(row);
+          const hours = getRowHours(row);
           const isOpen = expanded === date;
-          const highlight = totalSL > 70;
+          const highlight = sl > 70;
 
           return (
             <div
               key={index}
-              className={`rounded-2xl shadow transition ${
+              className={`rounded-2xl border shadow-sm transition ${
                 highlight
-                  ? "bg-red-50 border border-red-200"
-                  : "bg-white"
+                  ? "bg-red-50 border-red-300"
+                  : "bg-white border-slate-200"
               }`}
             >
               {/* HEADER CARD */}
@@ -136,36 +144,36 @@ const ReportDashboard = () => {
                     📅 {date}
                   </div>
                   <div className="text-sm text-slate-500">
-                    {totalSL} cont • {totalHours} giờ
+                    {sl} cont • {hours} giờ
                   </div>
                 </div>
 
-                <div className="text-xl">
+                <div className="text-lg text-slate-400">
                   {isOpen ? "▲" : "▼"}
                 </div>
               </button>
 
               {/* DETAILS */}
               <div
-                className={`overflow-hidden transition-all duration-300 ${
+                className={`transition-all duration-300 overflow-hidden ${
                   isOpen ? "max-h-96 px-4 pb-4" : "max-h-0"
                 }`}
               >
                 {teams
                   .filter((t) => t !== "ALL")
                   .map((team) => {
-                    const sl = Number(
-                      row[`${team} - Số lượng`] || 0
-                    );
-                    const hours = Number(
-                      row[`${team} - Giờ`] || 0
-                    );
-
                     if (
                       selectedTeam !== "ALL" &&
                       selectedTeam !== team
                     )
                       return null;
+
+                    const teamSL = Number(
+                      row[`${team} - Số lượng`] || 0
+                    );
+                    const teamHours = Number(
+                      row[`${team} - Giờ`] || 0
+                    );
 
                     return (
                       <div
@@ -174,7 +182,7 @@ const ReportDashboard = () => {
                       >
                         <span>{team}</span>
                         <span className="font-semibold text-indigo-600">
-                          {sl} cont • {hours} giờ
+                          {teamSL} cont • {teamHours} giờ
                         </span>
                       </div>
                     );
