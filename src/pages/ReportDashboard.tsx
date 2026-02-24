@@ -3,6 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 type TeamData = {
   containers: number;
   hours: number;
+  details: {
+    container: string;
+    hours: number;
+    link: string | null;
+  }[];
 };
 
 type ReportData = {
@@ -16,11 +21,12 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
-  const [rangeType, setRangeType] = useState("TODAY"); // Mặc định là Hôm nay
+  const [rangeType, setRangeType] = useState("TODAY");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,7 +54,6 @@ const ReportDashboard = () => {
     return `${day}/${month}`;
   };
 
-  // Thứ tự cố định các tổ: TỔ 1 → TỔ 2 → TỔ 3 → TỔ 4
   const teamOrder = ["TỔ 1", "TỔ 2", "TỔ 3", "TỔ 4"];
 
   const teams = useMemo(() => {
@@ -97,10 +102,19 @@ const ReportDashboard = () => {
     return { totalContainers: containers, totalHours: hours };
   }, [filteredDates, data, selectedTeam]);
 
+  // ✅ Loading chuyên nghiệp
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">
-        Đang tải...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-50 to-white">
+        <div className="w-20 h-20 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <div className="mt-6 text-center space-y-2">
+          <p className="text-indigo-700 font-semibold text-lg animate-pulse">
+            📊 Đang tổng hợp dữ liệu...
+          </p>
+          <p className="text-slate-500 text-sm">
+            Hệ thống đang xử lý báo cáo, vui lòng chờ một chút
+          </p>
+        </div>
       </div>
     );
   }
@@ -109,62 +123,9 @@ const ReportDashboard = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <header className="bg-white sticky top-0 z-10 shadow-sm">
         <div className="px-3 py-3 space-y-2.5">
-          <h1 className="text-base font-bold text-slate-800 flex items-center gap-1.5">
+          <h1 className="text-base font-bold text-slate-800">
             📊 BÁO CÁO TỔNG HỢP MNR MATRAN 2026
           </h1>
-
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
-            <span className="text-xs text-slate-500 whitespace-nowrap">👥</span>
-            {teams.map((team) => (
-              <button
-                key={team}
-                onClick={() => {
-                  setSelectedTeam(team);
-                  setExpanded(null);
-                }}
-                className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all touch-manipulation ${
-                  selectedTeam === team
-                    ? "bg-indigo-600 text-white shadow"
-                    : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 active:bg-slate-100"
-                }`}
-              >
-                {team === "ALL" ? "Tất cả" : team}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-slate-600">Khoảng thời gian</label>
-            <select
-              value={rangeType}
-              onChange={(e) => setRangeType(e.target.value)}
-              className="border border-slate-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
-            >
-              <option value="TODAY">Hôm nay</option>
-              <option value="7D">7 ngày</option>
-              <option value="30D">30 ngày</option>
-              <option value="MONTH">Tháng này</option>
-              <option value="ALL">Tất cả</option>
-              <option value="CUSTOM">Tùy chọn</option>
-            </select>
-
-            {rangeType === "CUSTOM" && (
-              <div className="flex gap-2 mt-1">
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                />
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                />
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="bg-indigo-50 border-t border-indigo-100 px-3 py-3">
@@ -189,99 +150,117 @@ const ReportDashboard = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5 pb-24">
-        {filteredDates.length === 0 ? (
-          <div className="text-center text-slate-500 py-10 text-sm">
-            Không có dữ liệu
-          </div>
-        ) : (
-          filteredDates.map((date) => {
-            const day = data[date] || {};
-            let dayContainers = 0;
-            let dayHours = 0;
+      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-3 pb-24">
+        {filteredDates.map((date) => {
+          const day = data[date] || {};
+          let dayContainers = 0;
+          let dayHours = 0;
 
-            Object.entries(day).forEach(([team, value]) => {
-              if (selectedTeam === "ALL" || selectedTeam === team) {
-                dayContainers += value.containers;
-                dayHours += value.hours;
-              }
-            });
+          Object.values(day).forEach((value) => {
+            dayContainers += value.containers;
+            dayHours += value.hours;
+          });
 
-            if (dayContainers === 0) return null;
+          if (dayContainers === 0) return null;
 
-            const isOpen = expanded === date;
-            const isHigh = dayContainers >= 70;
+          const isOpen = expanded === date;
 
-            return (
-              <div
-                key={date}
-                className={`rounded-xl border shadow-sm transition-all ${
-                  isHigh
-                    ? "bg-red-50 border-red-200"
-                    : "bg-white border-slate-200 hover:border-slate-300"
-                }`}
+          return (
+            <div key={date} className="rounded-xl border bg-white shadow-sm">
+              {/* Header ngày */}
+              <button
+                onClick={() => {
+                  setExpanded(isOpen ? null : date);
+                  setExpandedTeam(null);
+                }}
+                className="w-full px-3.5 py-2.5 flex justify-between items-center"
               >
-                <button
-                  onClick={() => setExpanded(isOpen ? null : date)}
-                  className="w-full px-3.5 py-2.5 flex items-center justify-between text-left touch-manipulation"
-                >
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <span className="text-slate-500 text-base">📅</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-slate-800 text-sm truncate">
-                        {formatDateDisplay(date)}
-                      </div>
-                    </div>
+                <span className="font-medium text-slate-800">
+                  📅 {formatDateDisplay(date)}
+                </span>
+                <span className="text-xs text-slate-600">
+                  {dayContainers} 📦 • {formatNumber(dayHours)} ⏰
+                </span>
+              </button>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-700 whitespace-nowrap">
-                      <span className="flex items-center gap-1">
-                        {dayContainers}
-                        <span className="text-indigo-500">📦</span>
-                      </span>
-                      <span className="text-slate-400">•</span>
-                      <span className="flex items-center gap-1">
-                        {formatNumber(dayHours)}
-                        <span className="text-indigo-500">⏰</span>
-                      </span>
-                    </div>
-                  </div>
+              {/* Nội dung khi mở ngày */}
+              {isOpen && (
+                <div className="px-3 pb-3 border-t bg-slate-50">
+                  {teamOrder
+                    .filter((team) => day[team])
+                    .map((team) => {
+                      const value = day[team];
+                      const teamKey = date + "_" + team;
+                      const isTeamOpen = expandedTeam === teamKey;
 
-                  <span className="text-slate-400 text-base ml-2">
-                    {isOpen ? "▲" : "▼"}
-                  </span>
-                </button>
+                      const sortedDetails = [...(value.details || [])].sort(
+                        (a, b) =>
+                          a.container.localeCompare(b.container)
+                      );
 
-                {isOpen && (
-                  <div className="px-3.5 pb-3 pt-1 border-t border-slate-100 bg-slate-50 rounded-b-xl">
-                    {/* Sắp xếp theo thứ tự cố định TỔ 1 → 2 → 3 → 4 */}
-                    {teamOrder
-                      .filter((team) => day[team]) // Chỉ hiển thị tổ có dữ liệu
-                      .filter(
-                        (team) =>
-                          selectedTeam === "ALL" || selectedTeam === team
-                      )
-                      .map((team) => {
-                        const value = day[team];
-                        return (
-                          <div
-                            key={team}
-                            className="flex justify-between items-center py-2 text-xs border-b border-slate-200 last:border-0"
+                      return (
+                        <div
+                          key={team}
+                          className="rounded-lg bg-white mb-2 border"
+                        >
+                          {/* Header tổ */}
+                          <button
+                            onClick={() =>
+                              setExpandedTeam(
+                                isTeamOpen ? null : teamKey
+                              )
+                            }
+                            className="w-full flex justify-between items-center px-3 py-2 text-xs font-medium"
                           >
-                            <span className="text-slate-700 font-medium">
-                              {team}
+                            <span>{team}</span>
+                            <span>
+                              {value.containers} 📦 •{" "}
+                              {formatNumber(value.hours)} ⏰
                             </span>
-                            <span className="text-indigo-600 font-semibold flex items-center gap-2">
-                              {value.containers} 📦 • {formatNumber(value.hours)} ⏰
-                            </span>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+                          </button>
+
+                          {/* Container list */}
+                          {isTeamOpen && (
+                            <div className="border-t bg-slate-50 px-2 py-2 space-y-1 max-h-72 overflow-y-auto">
+                              {sortedDetails.map((item, index) => (
+                                <div
+                                  key={item.container + index}
+                                  className="flex justify-between items-center text-[11px] bg-white px-2 py-1.5 rounded-md shadow-sm"
+                                >
+                                  <div className="flex gap-2">
+                                    <span className="text-slate-400 w-5 text-right">
+                                      {index + 1}.
+                                    </span>
+                                    {item.link ? (
+                                      <a
+                                        href={item.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-indigo-600 underline font-medium"
+                                      >
+                                        {item.container}
+                                      </a>
+                                    ) : (
+                                      <span className="font-medium">
+                                        {item.container}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="font-semibold text-indigo-600">
+                                    {formatNumber(item.hours)}h
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </main>
     </div>
   );
