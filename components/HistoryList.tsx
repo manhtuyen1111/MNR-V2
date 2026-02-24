@@ -172,110 +172,108 @@ useEffect(() => {
         </div>
 
         {/* LIST */}
-        {sorted.length > 0 ? (
-          sorted.map((r) => (
-            <div
-              key={r.id}
-              onClick={() => setViewing(r)}
-              className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
+  {/* LIST */}
+{sorted.length > 0 ? (
+  sorted.map((r) => (
+    <div
+      key={r.id}
+      onClick={() => setViewing(r)}
+      className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
+    >
+      {/* LEFT */}
+      <div className="flex items-center space-x-3">
+        <div
+          className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+            r.status === 'synced'
+              ? 'bg-green-100 text-green-600'
+              : r.status === 'error'
+              ? 'bg-red-100 text-red-600'
+              : 'bg-amber-100 text-amber-600'
+          }`}
+        >
+          {r.status === 'synced' && <CheckCircle size={18} />}
+          {r.status === 'error' && <AlertTriangle size={18} />}
+          {r.status === 'pending' && <Clock size={18} />}
+        </div>
+
+        <div className="flex items-baseline gap-1.5 font-mono">
+          <div className="font-bold text-lg">
+            <span className="text-black">
+              {r.containerNumber.slice(0, 4)}
+            </span>
+            <span className="text-green-700">
+              {r.containerNumber.slice(4)}
+            </span>
+          </div>
+
+          <div className="text-[10.5px] text-slate-400 whitespace-nowrap">
+            {r.teamName} {formatDate(r.timestamp)}
+          </div>
+        </div>
+      </div>
+
+      {/* ACTION */}
+      <div className="flex items-center space-x-2">
+        {r.status === 'error' && (
+          <button
+            disabled={retryingId === r.id}
+            onClick={(e) => {
+              e.stopPropagation();
+              setRetryingId(r.id);
+              onRetry(r.id);
+            }}
+            className={`p-2 rounded-lg ${
+              retryingId === r.id
+                ? 'bg-red-100 text-red-400 opacity-50 cursor-not-allowed'
+                : 'bg-red-100 text-red-600'
+            }`}
+          >
+            <RefreshCw
+              size={16}
+              className={retryingId === r.id ? 'animate-spin' : ''}
+            />
+          </button>
+        )}
+
+        {r.status === 'pending' &&
+          isOver2Minutes(r.timestamp) && (
+            <button
+              disabled={retryingId === r.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                setRetryingId(r.id);
+                onRetry(r.id);
+              }}
+              className={`p-2 rounded-lg ${
+                retryingId === r.id
+                  ? 'bg-amber-100 text-amber-400 opacity-50 cursor-not-allowed'
+                  : 'bg-amber-100 text-amber-600'
+              }`}
             >
-              <div className="flex items-center space-x-3">
-                {/* STATUS ICON */}
-                <div
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                    r.status === 'synced'
-                      ? 'bg-green-100 text-green-600'
-                      : r.status === 'error'
-                      ? 'bg-red-100 text-red-600'
-                      : 'bg-amber-100 text-amber-600'
-                  }`}
-                >
-                  {r.status === 'synced' && <CheckCircle size={18} />}
-                  {r.status === 'error' && <AlertTriangle size={18} />}
-                  {r.status === 'pending' && <Clock size={18} />}
-                </div>
+              <RefreshCw
+                size={16}
+                className={retryingId === r.id ? 'animate-spin' : ''}
+              />
+            </button>
+          )}
 
-                {/* ====== HIỂN THỊ 1 DÒNG THEO YÊU CẦU ====== */}
-                <div className="flex items-baseline gap-1.5 font-mono">
-                  {/* CONTAINER */}
-                  <div className="font-bold text-lg">
-                    <span className="text-black">
-                      {r.containerNumber.slice(0, 4)}
-                    </span>
-                    <span className="text-green-700">
-                      {r.containerNumber.slice(4)}
-                    </span>
-                  </div>
-
-                  {/* META */}
-                  <div className="text-[10.5px] text-slate-400 whitespace-nowrap">
-                    {r.teamName}  {formatDate(r.timestamp)}
-                  </div>
-                </div>
-              </div>
-
-              {/* ACTION */}
-     {/* ACTION */}
-<div className="flex items-center space-x-2">
-  {/* ERROR -> hiện ngay */}
-  {r.status === 'error' && (
-    <button
-      disabled={retryingId === r.id}
-      onClick={(e) => {
-        e.stopPropagation();
-        setRetryingId(r.id);
-        onRetry(r.id);
-      }}
-      className={`p-2 rounded-lg ${
-        retryingId === r.id
-          ? 'bg-red-100 text-red-400 opacity-50 cursor-not-allowed'
-          : 'bg-red-100 text-red-600'
-      }`}
-    >
-      <RefreshCw
-        size={16}
-        className={retryingId === r.id ? 'animate-spin' : ''}
-      />
-    </button>
-  )}
-
-  {/* PENDING -> chỉ hiện sau 2 phút */}
-  {r.status === 'pending' && isOver2Minutes(r.timestamp) && (
-    <button
-      disabled={retryingId === r.id}
-      onClick={(e) => {
-        e.stopPropagation();
-        setRetryingId(r.id);
-        onRetry(r.id);
-      }}
-      className={`p-2 rounded-lg ${
-        retryingId === r.id
-          ? 'bg-amber-100 text-amber-400 opacity-50 cursor-not-allowed'
-          : 'bg-amber-100 text-amber-600'
-      }`}
-    >
-      <RefreshCw
-        size={16}
-        className={retryingId === r.id ? 'animate-spin' : ''}
-      />
-    </button>
-  )}
-
-  {/* DELETE */}
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onDelete(r.id);
-    }}
-    className="p-2 rounded-lg bg-red-50 text-red-500"
-  >
-    <Trash2 size={16} />
-  </button>
-</div>
-               
-              </div>
-            </div>
-          ))
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(r.id);
+          }}
+          className="p-2 rounded-lg bg-red-50 text-red-500"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  ))
+) : (
+  <div className="text-center py-10 text-slate-500 italic">
+    Không có bản ghi nào khớp với bộ lọc hiện tại
+  </div>
+)}
         ) : (
           <div className="text-center py-10 text-slate-500 italic">
             Không có bản ghi nào khớp với bộ lọc hiện tại
