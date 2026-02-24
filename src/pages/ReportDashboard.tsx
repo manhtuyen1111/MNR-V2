@@ -130,45 +130,39 @@ const ReportDashboard = () => {
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            {[
-              { key: "TODAY", label: "Hôm nay" },
-              { key: "7D", label: "7 ngày" },
-              { key: "30D", label: "30 ngày" },
-              { key: "MONTH", label: "Tháng này" },
-              { key: "ALL", label: "Tất cả" },
-              { key: "CUSTOM", label: "Tùy chọn" },
-            ].map((r) => (
-              <button
-                key={r.key}
-                onClick={() => setRangeType(r.key)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition touch-manipulation ${
-                  rangeType === r.key
-                    ? "bg-indigo-100 text-indigo-700 border border-indigo-300"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 active:bg-slate-300"
-                }`}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+          {/* Bộ lọc thời gian dạng dropdown */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs text-slate-600">Khoảng thời gian</label>
+            <select
+              value={rangeType}
+              onChange={(e) => setRangeType(e.target.value)}
+              className="border border-slate-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-indigo-400"
+            >
+              <option value="TODAY">Hôm nay</option>
+              <option value="7D">7 ngày</option>
+              <option value="30D">30 ngày</option>
+              <option value="MONTH">Tháng này</option>
+              <option value="ALL">Tất cả</option>
+              <option value="CUSTOM">Tùy chọn</option>
+            </select>
 
-          {rangeType === "CUSTOM" && (
-            <div className="flex gap-2">
-              <input
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-              />
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
-              />
-            </div>
-          )}
+            {rangeType === "CUSTOM" && (
+              <div className="flex gap-2 mt-1">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="border border-slate-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="bg-indigo-50 border-t border-indigo-100 px-3 py-3">
@@ -193,7 +187,7 @@ const ReportDashboard = () => {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5">
+      <main className="flex-1 overflow-y-auto px-3 py-3 space-y-2.5 pb-24">
         {filteredDates.length === 0 ? (
           <div className="text-center text-slate-500 py-10 text-sm">
             Không có dữ liệu
