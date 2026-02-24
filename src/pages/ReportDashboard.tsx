@@ -115,14 +115,59 @@ const ReportDashboard = () => {
     return { totalContainers: containers, totalHours: hours };
   }, [filteredDates, data, selectedTeam]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-100">
-        <div className="w-14 h-14 border-4 border-slate-300 border-t-emerald-700 rounded-full animate-spin"></div>
-        <p className="mt-5 text-slate-700 font-medium">Đang tải báo cáo...</p>
+ if (loading) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex flex-col items-center justify-center p-6">
+      {/* Con mèo chính - wave cute */}
+      <div className="text-9xl mb-8 animate-wave transform-gpu">
+        😼🐱
       </div>
-    );
-  }
+
+      <h2 className="text-3xl md:text-4xl font-bold text-indigo-700 mb-4 text-center drop-shadow-md">
+        Đang mèo mắn dữ liệu nè...
+      </h2>
+
+      <p className="text-lg text-slate-600 mb-8 text-center max-w-md">
+        Chờ chút xíu thôi nha, mèo đang chạy siêu tốc để mang container về cho cậu đây~ 🚀🐾
+      </p>
+
+      {/* Thanh progress cute gradient */}
+      <div className="w-80 sm:w-96 h-4 bg-slate-200/60 rounded-full overflow-hidden shadow-inner">
+        <div 
+          className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full animate-loading-bar"
+        ></div>
+      </div>
+
+      {/* Các icon nhỏ nhảy nhót xung quanh */}
+      <div className="mt-10 flex gap-6">
+        <span className="text-4xl animate-bounce" style={{ animationDelay: "0.1s" }}>📦</span>
+        <span className="text-4xl animate-bounce" style={{ animationDelay: "0.3s" }}>⏳</span>
+        <span className="text-4xl animate-bounce" style={{ animationDelay: "0.5s" }}>✨</span>
+      </div>
+
+      {/* Animation keyframes */}
+      <style jsx>{`
+        @keyframes wave {
+          0%, 100% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(15deg) scale(1.1); }
+          75% { transform: rotate(-15deg) scale(1.1); }
+        }
+        .animate-wave {
+          animation: wave 2.2s infinite ease-in-out;
+          transform-origin: bottom center;
+        }
+        @keyframes loading-bar {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(300%); }
+        }
+        .animate-loading-bar {
+          animation: loading-bar 3s infinite linear;
+          width: 40%;
+        }
+      `}</style>
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col text-[15px]">
