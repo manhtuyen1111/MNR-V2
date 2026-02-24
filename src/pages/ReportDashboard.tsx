@@ -133,23 +133,22 @@ const ReportDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
-      {/* Header - Sticky, gọn trên mobile */}
+      {/* Header - Sticky, siêu gọn */}
       <header className="sticky top-0 z-20 bg-white shadow-md border-b border-gray-300">
-        <div className="px-4 py-3 sm:py-4 max-w-5xl mx-auto">
-          {/* Title - nhỏ hơn trên mobile */}
-          <div className="flex items-center gap-2.5 mb-3 sm:mb-4">
-            <svg className="w-7 h-7 sm:w-8 sm:h-8 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <div className="px-3 py-2.5 max-w-5xl mx-auto">
+          {/* Title */}
+          <div className="flex items-center gap-2 mb-2.5">
+            <svg className="w-6 h-6 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
             </svg>
-            <h1 className="text-base sm:text-lg font-bold text-green-900 truncate">
+            <h1 className="text-base font-bold text-green-900 truncate">
               Báo cáo nghiệm thu MNR Matran 2026
             </h1>
           </div>
 
-          {/* Filters - stack vertical trên mobile, row trên sm+ */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            {/* Range + Custom dates */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-1">
+          {/* Filters */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -163,7 +162,7 @@ const ReportDashboard = () => {
                       setToDate("");
                     }
                   }}
-                  className="w-full sm:w-auto px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
                 >
                   <option value="TODAY">Hôm nay</option>
                   <option value="YESTERDAY">Hôm qua</option>
@@ -177,25 +176,17 @@ const ReportDashboard = () => {
               </div>
 
               {rangeType === "CUSTOM" && (
-                <div className="flex flex-col sm:flex-row gap-2 flex-1">
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
+                <div className="flex gap-2">
+                  <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+                  <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" />
                 </div>
               )}
             </div>
 
-            {/* Team chips - scroll ngang, lớn hơn để dễ chạm */}
-            <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide sm:ml-auto sm:pb-0">
+            {/* Team chips */}
+            <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide">
               {teams.map((team) => (
                 <button
                   key={team}
@@ -204,44 +195,45 @@ const ReportDashboard = () => {
                     setExpandedDate(null);
                     setExpandedTeam(null);
                   }}
-                  className={`px-4 py-2.5 text-sm font-medium rounded-full whitespace-nowrap transition-all active:scale-95 ${
-                    selectedTeam === team
-                      ? "bg-green-800 text-white shadow-md"
-                      : "bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300"
+                  className={`px-3.5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all active:scale-95 min-w-[70px] text-center ${
+                    selectedTeam === team ? "bg-green-800 text-white shadow" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {team === "ALL" ? "Tất cả" : team}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Summary Cards - stack 1 cột trên mobile, 2 cột trên sm+ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 sm:mt-5">
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
-              <svg className="w-7 h-7 text-green-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              <div>
-                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-1">Container</div>
-                <div className="text-2xl sm:text-3xl font-bold text-green-900">{totalContainers}</div>
+            {/* Summary - 1 dòng ngang */}
+            <div className="flex items-center gap-3 mt-2">
+              {/* Container */}
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center gap-2.5">
+                <svg className="w-6 h-6 text-green-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <div>
+                  <div className="text-xs text-gray-500 uppercase">Container</div>
+                  <div className="text-xl font-bold text-green-900">{totalContainers}</div>
+                </div>
               </div>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center gap-3">
-              <svg className="w-7 h-7 text-blue-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div>
-                <div className="text-xs sm:text-sm text-gray-500 uppercase tracking-wide mb-1">Tổng giờ</div>
-                <div className="text-2xl sm:text-3xl font-bold text-blue-900">{formatNumber(totalHours)} h</div>
+
+              {/* Tổng giờ */}
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center gap-2.5">
+                <svg className="w-6 h-6 text-blue-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <div className="text-xs text-gray-500 uppercase">Tổng giờ</div>
+                  <div className="text-xl font-bold text-blue-900">{formatNumber(totalHours)} h</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main content - padding nhỏ hơn trên mobile */}
-      <main className="flex-1 px-3 sm:px-4 py-4 sm:py-6 max-w-5xl mx-auto w-full space-y-4 sm:space-y-5 pb-24 sm:pb-20">
+      {/* Main - list danh sách */}
+      <main className="flex-1 px-3 py-3 max-w-5xl mx-auto w-full space-y-3 pb-20">
         {filteredDates.map((date) => {
           const day = data[date] || {};
           const dayTeams = teamOrder.filter(
@@ -256,40 +248,37 @@ const ReportDashboard = () => {
           const isOpen = expandedDate === date;
 
           return (
-            <div
-              key={date}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
+            <div key={date} className="bg-gray-100 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <button
                 onClick={() => {
                   setExpandedDate(isOpen ? null : date);
                   setExpandedTeam(null);
                 }}
-                className="w-full px-4 py-4 flex items-center justify-between text-left hover:bg-gray-50 active:bg-gray-100 transition"
+                className="w-full px-3.5 py-3 flex items-center justify-between text-left hover:bg-gray-200 active:bg-gray-300 transition"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   {isOpen ? (
-                    <svg className="w-6 h-6 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                     </svg>
                   ) : (
-                    <svg className="w-6 h-6 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   )}
-                  <span className="font-semibold text-blue-900 text-base sm:text-lg">
+                  <span className="font-semibold text-blue-900 text-base">
                     {formatDateDisplay(date)}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-sm sm:text-base">
-                  <div className="flex items-center gap-1.5 text-blue-800">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1.5 text-red-700 font-medium">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                     {dayContainers}
                   </div>
-                  <div className="px-3 py-1.5 bg-blue-100 text-blue-900 rounded-md font-medium">
+                  <div className="px-3 py-1 bg-blue-100 text-blue-900 rounded-md font-medium">
                     {formatNumber(dayHours)} h
                   </div>
                 </div>
@@ -300,7 +289,7 @@ const ReportDashboard = () => {
                   isOpen ? "max-h-[3000px] opacity-100" : "max-h-0 opacity-0"
                 }`}
               >
-                <div className="border-t bg-gray-50 px-4 py-4 space-y-4">
+                <div className="border-t bg-white px-3 py-3 space-y-3">
                   {dayTeams.map((team) => {
                     const teamKey = date + team;
                     const isTeamOpen = expandedTeam === teamKey;
@@ -309,10 +298,10 @@ const ReportDashboard = () => {
                     );
 
                     return (
-                      <div key={team} className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                      <div key={team} className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
                         <button
                           onClick={() => setExpandedTeam(isTeamOpen ? null : teamKey)}
-                          className="w-full px-4 py-3.5 flex justify-between items-center text-sm sm:text-base hover:bg-gray-50 active:bg-gray-100 transition"
+                          className="w-full px-3.5 py-3 flex justify-between items-center text-sm hover:bg-gray-100 active:bg-gray-200 transition"
                         >
                           <div className="flex items-center gap-2.5">
                             <svg className="w-5 h-5 text-gray-900 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -327,7 +316,7 @@ const ReportDashboard = () => {
                               </svg>
                               {day[team]?.containers || 0}
                             </div>
-                            <div className="px-3 py-1.5 bg-blue-100 text-blue-900 rounded text-sm sm:text-base font-medium">
+                            <div className="px-3 py-1 bg-blue-100 text-blue-900 rounded text-sm font-medium">
                               {formatNumber(day[team]?.hours || 0)} h
                             </div>
                           </div>
@@ -338,14 +327,14 @@ const ReportDashboard = () => {
                             isTeamOpen ? "max-h-[1200px] opacity-100" : "max-h-0 opacity-0"
                           }`}
                         >
-                          <div className="border-t bg-white divide-y divide-gray-100 max-h-80 sm:max-h-[500px] overflow-y-auto">
+                          <div className="border-t bg-white divide-y divide-gray-100 max-h-72 overflow-y-auto">
                             {details.map((item, idx) => (
                               <div
                                 key={`${item.container}-${idx}`}
-                                className="px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition text-sm sm:text-base"
+                                className="px-3.5 py-2.5 flex items-center justify-between hover:bg-gray-50 transition text-sm"
                               >
                                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                                  <span className="text-xs sm:text-sm text-gray-500 w-6 text-right flex-shrink-0">
+                                  <span className="text-xs text-gray-500 w-6 text-right flex-shrink-0">
                                     {idx + 1}.
                                   </span>
                                   {item.link ? (
@@ -355,7 +344,7 @@ const ReportDashboard = () => {
                                       rel="noopener noreferrer"
                                       className="text-green-800 hover:text-green-900 font-medium truncate flex items-center gap-1.5"
                                     >
-                                      <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                       </svg>
                                       {item.container}
@@ -364,7 +353,7 @@ const ReportDashboard = () => {
                                     <span className="font-medium truncate">{item.container}</span>
                                   )}
                                 </div>
-                                <div className="px-3 py-1 bg-blue-50 text-blue-900 rounded text-sm sm:text-base font-medium flex-shrink-0">
+                                <div className="px-3 py-1 bg-blue-50 text-blue-900 rounded text-sm font-medium flex-shrink-0">
                                   {formatNumber(item.hours)} h
                                 </div>
                               </div>
@@ -381,11 +370,11 @@ const ReportDashboard = () => {
         })}
 
         {filteredDates.length === 0 && (
-          <div className="text-center py-12 sm:py-16 text-gray-600 flex flex-col items-center gap-3 sm:gap-4">
-            <svg className="w-16 h-16 sm:w-20 sm:h-20 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="text-center py-10 text-gray-600 flex flex-col items-center gap-3">
+            <svg className="w-14 h-14 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-base sm:text-lg font-medium">Không có dữ liệu trong khoảng thời gian đã chọn</p>
+            <p className="text-base font-medium">Không có dữ liệu trong khoảng thời gian đã chọn</p>
           </div>
         )}
       </main>
