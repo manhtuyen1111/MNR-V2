@@ -1,10 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  CubeIcon,
-  ClockIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from "@heroicons/react/24/outline"; // ← thay solid bằng outline (khuyến nghị)
 
 type TeamData = {
   containers: number;
@@ -29,10 +23,6 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
-  // const [rangeType, setRangeType] = useState("TODAY");     // tạm comment vì chưa dùng
-  // const [fromDate, setFromDate] = useState("");
-  // const [toDate, setToDate] = useState("");
-
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
@@ -72,10 +62,9 @@ const ReportDashboard = () => {
     return ["ALL", ...Array.from(set).sort()];
   }, [data]);
 
-  // Tạm thời dùng ALL ngày (có thể mở lại sau khi thêm UI range)
+  // Hiện tại hiển thị tất cả ngày (sắp xếp mới → cũ)
   const filteredDates = useMemo(() => {
     return Object.keys(data).sort((a, b) => b.localeCompare(a));
-    // Nếu muốn bật lại range → uncomment code cũ và thêm UI chọn range
   }, [data]);
 
   const { totalContainers, totalHours } = useMemo(() => {
@@ -108,7 +97,16 @@ const ReportDashboard = () => {
     <div className="min-h-screen bg-slate-100 flex flex-col text-[15px]">
       <header className="bg-slate-200 sticky top-0 z-20 shadow-md px-4 py-4 space-y-3">
         <h1 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-          <CubeIcon className="h-6 w-6 text-indigo-700" />
+          {/* Cube SVG inline */}
+          <svg
+            className="h-6 w-6 text-indigo-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
           BÁO CÁO TỔNG HỢP
         </h1>
 
@@ -136,7 +134,16 @@ const ReportDashboard = () => {
         {/* Summary cards */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-300 hover:shadow-md transition flex items-center gap-2">
-            <CubeIcon className="h-6 w-6 text-indigo-600" />
+            {/* Cube SVG inline (nhỏ hơn) */}
+            <svg
+              className="h-6 w-6 text-indigo-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
             <div>
               <div className="text-xs text-slate-700 uppercase">Container</div>
               <div className="text-2xl font-bold text-slate-900 mt-1">
@@ -146,7 +153,16 @@ const ReportDashboard = () => {
           </div>
 
           <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-300 hover:shadow-md transition flex items-center gap-2">
-            <ClockIcon className="h-6 w-6 text-emerald-600" />
+            {/* Clock SVG inline */}
+            <svg
+              className="h-6 w-6 text-emerald-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
             <div>
               <div className="text-xs text-slate-700 uppercase">Tổng giờ</div>
               <div className="text-2xl font-bold text-emerald-800 mt-1">
@@ -182,9 +198,15 @@ const ReportDashboard = () => {
               >
                 <div className="flex items-center gap-2">
                   {isOpen ? (
-                    <ChevronUpIcon className="h-5 w-5 text-slate-600" />
+                    // Chevron Up SVG
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                    </svg>
                   ) : (
-                    <ChevronDownIcon className="h-5 w-5 text-slate-600" />
+                    // Chevron Down SVG
+                    <svg className="h-5 w-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
                   )}
                   <span className="font-semibold text-slate-900">
                     {formatDateDisplay(date)}
