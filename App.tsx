@@ -436,41 +436,7 @@ const handleAddImage = async (imgData: string) => {
               onFocus={() => handleStepClick(3)}
             />
           </div>
-      {activeTab === 'capture' ? (
-  <div className="flex-1 flex flex-col px-4 py-4 space-y-5 min-h-0 overflow-y-auto pb-32 scrollbar-hide">
-    <ContainerInput 
-      value={containerNum} 
-      onChange={setContainerNum}
-      isValid={isContainerValid}
-      isActive={activeStep === 1}
-      isCompleted={isContainerValid}
-      isDisabled={false} 
-      onFocus={() => handleStepClick(1)}
-    />
-
-    <TeamSelector 
-      teams={teams}
-      selectedTeamId={selectedTeamId}
-      onSelect={handleSelectTeam}
-      onManageTeams={() => setIsTeamManagerOpen(true)}
-      isActive={activeStep === 2}
-      isCompleted={isTeamSelected}
-      isDisabled={!isContainerValid}
-      onFocus={() => handleStepClick(2)}
-      assignedTeamId={user.assignedTeamId}
-      userRole={user.role}
-    />
-
-    <CameraCapture 
-      images={images}
-      onAddImage={handleAddImage}
-      onRemoveImage={(idx) => setImages(prev => prev.filter((_, i) => i !== idx))}
-      isActive={activeStep === 3}
-      isCompleted={images.length > 0}
-      isDisabled={!isTeamSelected}
-      onFocus={() => handleStepClick(3)}
-    />
-  </div>
+  
 ) : activeTab === 'history' ? (
   <HistoryWithReport
     records={records}
