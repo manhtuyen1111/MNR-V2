@@ -16,7 +16,7 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
-  const [rangeType, setRangeType] = useState("MONTH");
+  const [rangeType, setRangeType] = useState("TODAY"); // Mặc định là Hôm nay
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
@@ -47,6 +47,9 @@ const ReportDashboard = () => {
     const [, month, day] = dateStr.split("-");
     return `${day}/${month}`;
   };
+
+  // Thứ tự cố định các tổ: TỔ 1 → TỔ 2 → TỔ 3 → TỔ 4
+  const teamOrder = ["TỔ 1", "TỔ 2", "TỔ 3", "TỔ 4"];
 
   const teams = useMemo(() => {
     const set = new Set<string>();
@@ -130,7 +133,6 @@ const ReportDashboard = () => {
             ))}
           </div>
 
-          {/* Bộ lọc thời gian dạng dropdown */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs text-slate-600">Khoảng thời gian</label>
             <select
@@ -251,24 +253,29 @@ const ReportDashboard = () => {
 
                 {isOpen && (
                   <div className="px-3.5 pb-3 pt-1 border-t border-slate-100 bg-slate-50 rounded-b-xl">
-                    {Object.entries(day)
+                    {/* Sắp xếp theo thứ tự cố định TỔ 1 → 2 → 3 → 4 */}
+                    {teamOrder
+                      .filter((team) => day[team]) // Chỉ hiển thị tổ có dữ liệu
                       .filter(
-                        ([team]) =>
+                        (team) =>
                           selectedTeam === "ALL" || selectedTeam === team
                       )
-                      .map(([team, value]) => (
-                        <div
-                          key={team}
-                          className="flex justify-between items-center py-2 text-xs border-b border-slate-200 last:border-0"
-                        >
-                          <span className="text-slate-700 font-medium">
-                            {team}
-                          </span>
-                          <span className="text-indigo-600 font-semibold flex items-center gap-2">
-                            {value.containers} 📦 • {formatNumber(value.hours)} ⏰
-                          </span>
-                        </div>
-                      ))}
+                      .map((team) => {
+                        const value = day[team];
+                        return (
+                          <div
+                            key={team}
+                            className="flex justify-between items-center py-2 text-xs border-b border-slate-200 last:border-0"
+                          >
+                            <span className="text-slate-700 font-medium">
+                              {team}
+                            </span>
+                            <span className="text-indigo-600 font-semibold flex items-center gap-2">
+                              {value.containers} 📦 • {formatNumber(value.hours)} ⏰
+                            </span>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>
