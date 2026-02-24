@@ -12,7 +12,7 @@ import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert, Zap } from 'lucide-react';
-import ReportDashboard from "./pages/ReportDashboard";
+import ReportDashboard from "./src/pages/ReportDashboard";
 
 // Hàm tính hash SHA-256 cho ảnh base64 (để tránh duplicate trên server)
 async function getImageHash(base64: string): Promise<string> {
