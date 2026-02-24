@@ -107,7 +107,7 @@ const ReportDashboard = () => {
       <header className="bg-white sticky top-0 z-10 shadow-sm">
         <div className="px-3 py-3 space-y-2.5">
           <h1 className="text-base font-bold text-slate-800 flex items-center gap-1.5">
-            📊 Báo cáo Container 2026
+            📊 BÁO CÁO TỔNG HỢP MNR MATRAN 2026
           </h1>
 
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
