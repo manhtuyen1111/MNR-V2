@@ -121,11 +121,13 @@ const ReportDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="flex flex-col items-center gap-5 text-center max-w-sm">
-          <div className="w-16 h-16 border-4 border-gray-200 border-t-green-800 rounded-full animate-spin"></div>
-          <p className="text-gray-700 font-medium text-xl">Đang chuẩn bị báo cáo cho bạn...</p>
-          <p className="text-gray-500 text-base">Chúng tôi đang tổng hợp dữ liệu mới nhất. Chỉ mất vài giây thôi! ☕</p>
+      <div className="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-5 text-center max-w-xs sm:max-w-sm">
+          <div className="w-16 h-16 border-4 border-gray-300 border-t-green-800 rounded-full animate-spin"></div>
+          <p className="text-gray-800 font-semibold text-xl">Đang chuẩn bị báo cáo cho bạn...</p>
+          <p className="text-gray-600 text-base">
+            Chúng tôi đang tổng hợp dữ liệu mới nhất. Chỉ mất vài giây thôi! ☕
+          </p>
         </div>
       </div>
     );
@@ -133,22 +135,13 @@ const ReportDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
-      {/* Header - Sticky, siêu gọn */}
+      {/* Header - Sticky, siêu gọn, không title */}
       <header className="sticky top-0 z-20 bg-white shadow-md border-b border-gray-300">
-        <div className="px-3 py-2.5 max-w-5xl mx-auto">
-          {/* Title */}
-          <div className="flex items-center gap-2 mb-2.5">
-            <svg className="w-6 h-6 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <h1 className="text-base font-bold text-green-900 truncate">
-              Báo cáo nghiệm thu MNR Matran 2026
-            </h1>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-col gap-2.5">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+        <div className="px-3 pt-2 pb-2.5 max-w-5xl mx-auto">
+          {/* Filters + Summary - đẩy sát top */}
+          <div className="flex flex-col gap-2">
+            {/* Range + Custom */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <div className="flex items-center gap-2">
                 <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -177,10 +170,18 @@ const ReportDashboard = () => {
 
               {rangeType === "CUSTOM" && (
                 <div className="flex gap-2">
-                  <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" />
-                  <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
                 </div>
               )}
             </div>
@@ -196,7 +197,9 @@ const ReportDashboard = () => {
                     setExpandedTeam(null);
                   }}
                   className={`px-3.5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all active:scale-95 min-w-[70px] text-center ${
-                    selectedTeam === team ? "bg-green-800 text-white shadow" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    selectedTeam === team
+                      ? "bg-green-800 text-white shadow"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
                   {team === "ALL" ? "Tất cả" : team}
@@ -205,26 +208,24 @@ const ReportDashboard = () => {
             </div>
 
             {/* Summary - 1 dòng ngang */}
-            <div className="flex items-center gap-3 mt-2">
-              {/* Container */}
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center gap-2.5">
+            <div className="flex items-center gap-3 mt-1">
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center gap-2">
                 <svg className="w-6 h-6 text-green-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
                 <div>
                   <div className="text-xs text-gray-500 uppercase">Container</div>
-                  <div className="text-xl font-bold text-green-900">{totalContainers}</div>
+                  <div className="text-lg font-bold text-green-900">{totalContainers}</div>
                 </div>
               </div>
 
-              {/* Tổng giờ */}
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-3 shadow-sm flex items-center gap-2.5">
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center gap-2">
                 <svg className="w-6 h-6 text-blue-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <div>
                   <div className="text-xs text-gray-500 uppercase">Tổng giờ</div>
-                  <div className="text-xl font-bold text-blue-900">{formatNumber(totalHours)} h</div>
+                  <div className="text-lg font-bold text-blue-900">{formatNumber(totalHours)} h</div>
                 </div>
               </div>
             </div>
@@ -266,6 +267,10 @@ const ReportDashboard = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   )}
+                  {/* Icon lịch cạnh ngày */}
+                  <svg className="w-5 h-5 text-blue-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
                   <span className="font-semibold text-blue-900 text-base">
                     {formatDateDisplay(date)}
                   </span>
