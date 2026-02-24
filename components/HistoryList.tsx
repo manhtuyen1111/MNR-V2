@@ -274,11 +274,6 @@ useEffect(() => {
     Không có bản ghi nào khớp với bộ lọc hiện tại
   </div>
 )}
-        ) : (
-          <div className="text-center py-10 text-slate-500 italic">
-            Không có bản ghi nào khớp với bộ lọc hiện tại
-          </div>
-        )}
       </div>
 
       {viewing && (
