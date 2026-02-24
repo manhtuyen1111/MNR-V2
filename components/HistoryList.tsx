@@ -37,7 +37,9 @@ const HistoryList: React.FC<HistoryListProps> = ({
     useState<'all' | 'today' | 'yesterday' | 'custom'>('today');
   const [range, setRange] = useState({ start: '', end: '' });
   const [searchCont, setSearchCont] = useState('');
-
+  const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [now, setNow] = useState(Date.now());
+  
   /* ===== FILTER ===== */
   const filtered = useMemo(() => {
     return records.filter((r) => {
@@ -74,7 +76,28 @@ const HistoryList: React.FC<HistoryListProps> = ({
     () => [...filtered].sort((a, b) => b.timestamp - a.timestamp),
     [filtered]
   );
+// Cập nhật thời gian mỗi 30 giây
+useEffect(() => {
+  const interval = setInterval(() => {
+    setNow(Date.now());
+  }, 30000);
 
+  return () => clearInterval(interval);
+}, []);
+  // 👇 THÊM ĐOẠN NÀY NGAY BÊN DƯỚI
+useEffect(() => {
+  if (retryingId) {
+    const record = records.find((r) => r.id === retryingId);
+
+    // Nếu record không còn pending nữa -> mở lại nút
+    if (!record || record.status !== 'pending') {
+      setRetryingId(null);
+    }
+  }
+}, [records, retryingId]);
+  const isOver2Minutes = (timestamp: number) => {
+  return now - timestamp > 2 * 60 * 1000;
+};
   return (
     <>
       <div className="p-4 space-y-3 pb-28 relative">
@@ -192,31 +215,64 @@ const HistoryList: React.FC<HistoryListProps> = ({
               </div>
 
               {/* ACTION */}
-              <div className="flex items-center space-x-2">
-                {(r.status === 'error' || r.status === 'pending')&& (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRetry(r.id);
-                    }}
-                  className={`p-2 rounded-lg ${
-  r.status === 'pending'
-    ? 'bg-amber-100 text-amber-600'
-    : 'bg-slate-100'
-}`}
-                  >
-                    <RefreshCw size={16} />
-                  </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(r.id);
-                  }}
-                  className="p-2 rounded-lg bg-red-50 text-red-500"
-                >
-                  <Trash2 size={16} />
-                </button>
+     {/* ACTION */}
+<div className="flex items-center space-x-2">
+  {/* ERROR -> hiện ngay */}
+  {r.status === 'error' && (
+    <button
+      disabled={retryingId === r.id}
+      onClick={(e) => {
+        e.stopPropagation();
+        setRetryingId(r.id);
+        onRetry(r.id);
+      }}
+      className={`p-2 rounded-lg ${
+        retryingId === r.id
+          ? 'bg-red-100 text-red-400 opacity-50 cursor-not-allowed'
+          : 'bg-red-100 text-red-600'
+      }`}
+    >
+      <RefreshCw
+        size={16}
+        className={retryingId === r.id ? 'animate-spin' : ''}
+      />
+    </button>
+  )}
+
+  {/* PENDING -> chỉ hiện sau 2 phút */}
+  {r.status === 'pending' && isOver2Minutes(r.timestamp) && (
+    <button
+      disabled={retryingId === r.id}
+      onClick={(e) => {
+        e.stopPropagation();
+        setRetryingId(r.id);
+        onRetry(r.id);
+      }}
+      className={`p-2 rounded-lg ${
+        retryingId === r.id
+          ? 'bg-amber-100 text-amber-400 opacity-50 cursor-not-allowed'
+          : 'bg-amber-100 text-amber-600'
+      }`}
+    >
+      <RefreshCw
+        size={16}
+        className={retryingId === r.id ? 'animate-spin' : ''}
+      />
+    </button>
+  )}
+
+  {/* DELETE */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onDelete(r.id);
+    }}
+    className="p-2 rounded-lg bg-red-50 text-red-500"
+  >
+    <Trash2 size={16} />
+  </button>
+</div>
+               
               </div>
             </div>
           ))
