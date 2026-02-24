@@ -35,7 +35,7 @@ const ReportDashboard = () => {
       try {
         const res = await fetch(
           "https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec",
-          { cache: "force-cache" } // Tăng tốc bằng caching response (nếu browser hỗ trợ, giảm fetch lặp lại)
+          { cache: "force-cache" }
         );
         const result = await res.json();
         if (result.success) {
@@ -146,9 +146,8 @@ const ReportDashboard = () => {
             </h1>
           </div>
 
-          {/* Filters - compact on mobile */}
+          {/* Filters */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            {/* Range */}
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -192,7 +191,6 @@ const ReportDashboard = () => {
               </div>
             )}
 
-            {/* Team chips - horizontal scroll */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide sm:ml-auto">
               {teams.map((team) => (
                 <button
@@ -275,13 +273,13 @@ const ReportDashboard = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   )}
-                  <span className="font-semibold text-gray-900">
+                  <span className="font-semibold text-blue-900">
                     {formatDateDisplay(date)}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1.5 text-green-800">
+                  <div className="flex items-center gap-1.5 text-blue-800">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
@@ -313,8 +311,9 @@ const ReportDashboard = () => {
                           className="w-full px-4 py-3 flex justify-between items-center text-sm hover:bg-gray-50 active:bg-gray-100 transition"
                         >
                           <div className="flex items-center gap-2">
-                            <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5-5m0 0h-5m5 0V4h5-5m0 16H7m-5 0h5-5m0 0V4h5-5m10 16V4" />
+                            {/* Icon mới: 2 người đơn giản (users pair) */}
+                            <svg className="w-4 h-4 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM6 9a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             <span className="font-medium text-gray-900">{team}</span>
                           </div>
