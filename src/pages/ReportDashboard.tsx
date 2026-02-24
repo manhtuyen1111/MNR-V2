@@ -108,23 +108,24 @@ const ReportDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-        <div className="w-16 h-16 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-        <p className="mt-6 text-slate-700 font-medium">
-          Đang tổng hợp báo cáo...
+        <div className="w-14 h-14 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <p className="mt-5 text-slate-600 text-sm">
+          Đang tải báo cáo...
         </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="bg-white sticky top-0 z-10 shadow-sm px-4 py-4 space-y-4">
-        <h1 className="text-lg font-semibold text-slate-800 tracking-tight">
-          BÁO CÁO TỔNG HỢP MNR MATRAN 2026
+    <div className="min-h-screen bg-slate-50 flex flex-col text-[15px]">
+      <header className="bg-white sticky top-0 z-20 shadow-sm px-4 py-4 space-y-4">
+
+        <h1 className="text-base font-semibold text-slate-800">
+          BÁO CÁO TỔNG HỢP
         </h1>
 
-        {/* Filter tổ */}
-        <div className="flex gap-2 overflow-x-auto">
+        {/* Team filter */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {teams.map((team) => (
             <button
               key={team}
@@ -133,10 +134,10 @@ const ReportDashboard = () => {
                 setExpandedDate(null);
                 setExpandedTeam(null);
               }}
-              className={`px-4 py-1.5 rounded-md text-xs font-medium transition ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 active:scale-95 ${
                 selectedTeam === team
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-50"
+                  ? "bg-indigo-600 text-white shadow-md"
+                  : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
               }`}
             >
               {team === "ALL" ? "TẤT CẢ" : team}
@@ -144,51 +145,20 @@ const ReportDashboard = () => {
           ))}
         </div>
 
-        {/* Filter ngày */}
-        <select
-          value={rangeType}
-          onChange={(e) => setRangeType(e.target.value)}
-          className="border border-slate-300 rounded-md px-3 py-2 text-sm bg-white"
-        >
-          <option value="TODAY">Hôm nay</option>
-          <option value="7D">7 ngày</option>
-          <option value="30D">30 ngày</option>
-          <option value="MONTH">Tháng này</option>
-          <option value="ALL">Tất cả</option>
-          <option value="CUSTOM">Tùy chọn</option>
-        </select>
-
-        {rangeType === "CUSTOM" && (
-          <div className="flex gap-2">
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="border border-slate-300 rounded-md px-2 py-1.5 text-sm flex-1"
-            />
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="border border-slate-300 rounded-md px-2 py-1.5 text-sm flex-1"
-            />
-          </div>
-        )}
-
-        {/* Tổng */}
-        <div className="grid grid-cols-2 gap-4 bg-white border rounded-xl p-4 shadow-sm">
-          <div>
-            <div className="text-xs uppercase tracking-wide text-slate-500 font-medium">
-              Tổng Container
+        {/* Summary */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
+            <div className="text-xs text-slate-500 uppercase">
+              Container
             </div>
             <div className="text-2xl font-bold text-slate-800 mt-1">
               {totalContainers}
             </div>
           </div>
 
-          <div className="border-l pl-4">
-            <div className="text-xs uppercase tracking-wide text-slate-500 font-medium">
-              Tổng Giờ
+          <div className="bg-white rounded-xl p-4 shadow-sm border hover:shadow-md transition">
+            <div className="text-xs text-slate-500 uppercase">
+              Tổng giờ
             </div>
             <div className="text-2xl font-bold text-emerald-600 mt-1">
               {formatNumber(totalHours)}h
@@ -198,6 +168,7 @@ const ReportDashboard = () => {
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
+
         {filteredDates.map((date) => {
           const day = data[date] || {};
           const dayTeams = teamOrder.filter(
@@ -220,30 +191,37 @@ const ReportDashboard = () => {
           const isOpen = expandedDate === date;
 
           return (
-            <div key={date} className="bg-white rounded-xl border shadow-sm">
+            <div key={date} className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+
+              {/* Date header */}
               <button
                 onClick={() => {
                   setExpandedDate(isOpen ? null : date);
                   setExpandedTeam(null);
                 }}
-                className="w-full flex justify-between items-center px-4 py-3"
+                className="w-full flex justify-between items-center px-4 py-4 active:scale-[0.99] transition"
               >
                 <span className="font-semibold text-slate-800">
                   {formatDateDisplay(date)}
                 </span>
 
-                <div className="flex items-center gap-3 text-xs">
-                  <span className="text-slate-600">
-                    {dayContainers} Cont
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-slate-500">
+                    {dayContainers}
                   </span>
-                  <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-semibold">
+                  <span className="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 font-semibold">
                     {formatNumber(dayHours)}h
                   </span>
                 </div>
               </button>
 
-              {isOpen && (
-                <div className="border-t bg-slate-50 px-4 py-3">
+              {/* Animated content */}
+              <div
+                className={`transition-all duration-300 ease-in-out ${
+                  isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+                } overflow-hidden`}
+              >
+                <div className="border-t bg-slate-50 px-4 py-3 space-y-3">
                   {dayTeams.map((team) => {
                     const teamKey = date + team;
                     const isTeamOpen = expandedTeam === teamKey;
@@ -253,72 +231,75 @@ const ReportDashboard = () => {
                     );
 
                     return (
-                      <div
-                        key={team}
-                        className="mb-3 bg-white rounded-lg border"
-                      >
+                      <div key={team} className="bg-white rounded-xl border overflow-hidden">
+
                         <button
                           onClick={() =>
                             setExpandedTeam(
                               isTeamOpen ? null : teamKey
                             )
                           }
-                          className="w-full flex justify-between items-center px-4 py-2 text-sm font-medium"
+                          className="w-full flex justify-between items-center px-4 py-3 text-sm font-medium hover:bg-slate-50 transition active:scale-[0.99]"
                         >
-                          <span className="text-slate-700">{team}</span>
+                          <span>{team}</span>
 
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className="text-slate-600">
-                              {day[team].containers} Cont
-                            </span>
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-semibold">
-                              {formatNumber(day[team].hours)}h
-                            </span>
-                          </div>
+                          <span className="px-2 py-1 rounded-md bg-emerald-50 text-emerald-600 text-xs font-semibold">
+                            {formatNumber(day[team].hours)}h
+                          </span>
                         </button>
 
-                        {isTeamOpen && (
+                        <div
+                          className={`transition-all duration-300 ease-in-out ${
+                            isTeamOpen
+                              ? "max-h-[600px] opacity-100"
+                              : "max-h-0 opacity-0"
+                          } overflow-hidden`}
+                        >
                           <div className="border-t bg-slate-50 px-3 py-2 space-y-2 max-h-72 overflow-y-auto">
                             {details.map((item, index) => (
                               <div
                                 key={item.container + index}
-                                className="flex justify-between items-center text-xs bg-white px-3 py-2 rounded-md border border-slate-200 hover:bg-slate-50 transition"
+                                className="flex justify-between items-center bg-white px-3 py-2 rounded-lg border hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                               >
                                 <div className="flex gap-3 items-center">
-                                  <span className="text-slate-400 w-6 text-right">
+                                  <span className="text-slate-400 w-6 text-right text-xs">
                                     {index + 1}.
                                   </span>
+
                                   {item.link ? (
                                     <a
                                       href={item.link}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="text-slate-800 font-medium hover:text-indigo-600"
+                                      className="font-medium text-slate-800 hover:text-indigo-600 transition"
                                     >
                                       {item.container}
                                     </a>
                                   ) : (
-                                    <span className="text-slate-800 font-medium">
+                                    <span className="font-medium text-slate-800">
                                       {item.container}
                                     </span>
                                   )}
                                 </div>
 
-                                <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 font-semibold">
+                                <span className="text-emerald-600 font-semibold text-sm">
                                   {formatNumber(item.hours)}h
                                 </span>
                               </div>
                             ))}
                           </div>
-                        )}
+                        </div>
+
                       </div>
                     );
                   })}
                 </div>
-              )}
+              </div>
+
             </div>
           );
         })}
+
       </main>
     </div>
   );
