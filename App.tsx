@@ -12,6 +12,7 @@ import { TabView, Team, AppSettings, RepairRecord, User } from './types';
 import { REPAIR_TEAMS } from './constants';
 import { compressImage, dbService } from './utils';
 import { Check, AlertTriangle, Send, Loader2, WifiOff, ShieldAlert, Zap } from 'lucide-react';
+import ReportDashboard from "./pages/ReportDashboard";
 
 // Hàm tính hash SHA-256 cho ảnh base64 (để tránh duplicate trên server)
 async function getImageHash(base64: string): Promise<string> {
@@ -436,12 +437,14 @@ const handleAddImage = async (imgData: string) => {
             />
           </div>
         ) : activeTab === 'history' ? (
-          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide bg-slate-50">
-            {isLoadingRecords ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                <span className="text-xs">Đang tải dữ liệu...</span>
-              </div>
+           <HistoryWithReport
+    records={records}
+    teams={teams}
+    isLoadingRecords={isLoadingRecords}
+    onRetry={handleRetry}
+    onDelete={handleDeleteRecord}
+    onUpdateRecord={handleUpdateRecord}
+  />
             ) : (
               <HistoryList 
                 records={records} 
@@ -518,5 +521,66 @@ const handleAddImage = async (imgData: string) => {
     </div>
   );
 };
+const HistoryWithReport = ({
+  records,
+  teams,
+  isLoadingRecords,
+  onRetry,
+  onDelete,
+  onUpdateRecord
+}: any) => {
+  const [subTab, setSubTab] = useState<'list' | 'report'>('list');
 
+  return (
+    <div className="flex flex-col h-full">
+
+      {/* SUB TAB HEADER */}
+      <div className="flex bg-white shadow-sm border-b">
+        <button
+          onClick={() => setSubTab('list')}
+          className={`flex-1 py-3 text-xs font-black uppercase tracking-wider ${
+            subTab === 'list'
+              ? 'text-sky-600 border-b-2 border-sky-600'
+              : 'text-slate-400'
+          }`}
+        >
+          Danh sách
+        </button>
+
+        <button
+          onClick={() => setSubTab('report')}
+          className={`flex-1 py-3 text-xs font-black uppercase tracking-wider ${
+            subTab === 'report'
+              ? 'text-sky-600 border-b-2 border-sky-600'
+              : 'text-slate-400'
+          }`}
+        >
+          Báo cáo
+        </button>
+      </div>
+
+      {/* CONTENT */}
+      <div className="flex-1 overflow-y-auto bg-slate-50">
+        {subTab === 'list' ? (
+          isLoadingRecords ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <Loader2 className="w-8 h-8 animate-spin mb-2" />
+              <span className="text-xs">Đang tải dữ liệu...</span>
+            </div>
+          ) : (
+            <HistoryList
+              records={records}
+              teams={teams}
+              onRetry={onRetry}
+              onDelete={onDelete}
+              onUpdateRecord={onUpdateRecord}
+            />
+          )
+        ) : (
+          <ReportDashboard />
+        )}
+      </div>
+    </div>
+  );
+};
 export default App;
