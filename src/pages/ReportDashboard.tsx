@@ -14,8 +14,12 @@ const ReportDashboard = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedTeam, setSelectedTeam] = useState("ALL");
   const [filterType, setFilterType] =
     useState<FilterType>("TODAY");
+
+  const [showCustomRange, setShowCustomRange] =
+    useState(false);
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -30,7 +34,7 @@ const ReportDashboard = () => {
         const result = await res.json();
         if (result.success) setRows(result.data);
       } catch (err) {
-        console.error("Fetch error:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -39,8 +43,20 @@ const ReportDashboard = () => {
     fetchData();
   }, []);
 
-  // ===== FILTER LOGIC =====
-  const filteredRows = useMemo(() => {
+  // ===== LẤY DANH SÁCH TỔ =====
+  const teams = useMemo(() => {
+    if (!rows.length) return [];
+    const headers = Object.keys(rows[0]);
+
+    const found = headers
+      .filter((h) => h.includes("TỔ"))
+      .map((h) => h.split(" - ")[0]);
+
+    return Array.from(new Set(found));
+  }, [rows]);
+
+  // ===== FILTER THEO NGÀY =====
+  const filteredByDate = useMemo(() => {
     if (!rows.length) return [];
 
     const today = new Date();
@@ -96,13 +112,35 @@ const ReportDashboard = () => {
     });
   }, [rows, filterType, fromDate, toDate]);
 
-  // ===== TOTAL GRAND =====
+  // ===== HEADER THEO TỔ =====
+  const headers = rows.length ? Object.keys(rows[0]) : [];
+
+  const visibleHeaders = useMemo(() => {
+    return headers.filter((h) => {
+      if (h === "DATE") return true;
+      if (h.includes("Grand")) return true;
+      if (selectedTeam === "ALL") return true;
+      return h.startsWith(selectedTeam);
+    });
+  }, [headers, selectedTeam]);
+
+  // ===== TỔNG CONT =====
   const totalCont = useMemo(() => {
-    return filteredRows.reduce((sum, row) => {
-      const value = Number(row["Grand Total"] || 0);
+    return filteredByDate.reduce((sum, row) => {
+      const value =
+        selectedTeam === "ALL"
+          ? Number(row["Grand Total"] || 0)
+          : visibleHeaders
+              .filter((h) => h !== "DATE")
+              .reduce(
+                (teamSum, h) =>
+                  teamSum + Number(row[h] || 0),
+                0
+              );
+
       return sum + value;
     }, 0);
-  }, [filteredRows]);
+  }, [filteredByDate, selectedTeam, visibleHeaders]);
 
   if (loading)
     return (
@@ -118,59 +156,104 @@ const ReportDashboard = () => {
       </div>
     );
 
-  const headers = Object.keys(rows[0]);
-
   return (
-    <div className="h-screen flex flex-col bg-slate-50 text-[12px] overflow-hidden">
+    <div className="h-screen flex flex-col bg-slate-50 text-[13px] overflow-hidden">
 
-      {/* ===== FILTER ===== */}
-      <div className="p-3 bg-white border-b space-y-3">
+      {/* ===== FILTER AREA ===== */}
+      <div className="p-4 bg-white border-b space-y-4 shadow-sm">
 
-        <div className="grid grid-cols-2 gap-2">
-          {[
-            { label: "Hôm nay", value: "TODAY" },
-            { label: "Hôm qua", value: "YESTERDAY" },
-            { label: "Tháng này", value: "THIS_MONTH" },
-            { label: "Tháng trước", value: "LAST_MONTH" },
-          ].map((btn) => (
-            <button
-              key={btn.value}
-              onClick={() => setFilterType(btn.value as FilterType)}
-              className={`px-2 py-1 rounded border ${
-                filterType === btn.value
-                  ? "bg-blue-500 text-white"
-                  : "bg-white"
-              }`}
-            >
-              {btn.label}
-            </button>
-          ))}
+        {/* Chọn tổ */}
+        <div>
+          <label className="block mb-1 font-semibold text-slate-600">
+            Chọn tổ
+          </label>
+          <select
+            value={selectedTeam}
+            onChange={(e) =>
+              setSelectedTeam(e.target.value)
+            }
+            className="border px-3 py-2 rounded w-full"
+          >
+            <option value="ALL">Tất cả tổ</option>
+            {teams.map((team) => (
+              <option key={team} value={team}>
+                {team}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="flex gap-2">
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => {
-              setFilterType("RANGE");
-              setFromDate(e.target.value);
-            }}
-            className="border px-2 py-1 rounded w-full"
-          />
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => {
-              setFilterType("RANGE");
-              setToDate(e.target.value);
-            }}
-            className="border px-2 py-1 rounded w-full"
-          />
+        {/* Bộ lọc thời gian */}
+        <div>
+          <label className="block mb-2 font-semibold text-slate-600">
+            Chọn thời gian
+          </label>
+
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: "Hôm nay", value: "TODAY" },
+              { label: "Hôm qua", value: "YESTERDAY" },
+              { label: "Tháng này", value: "THIS_MONTH" },
+              { label: "Tháng trước", value: "LAST_MONTH" },
+            ].map((btn) => (
+              <button
+                key={btn.value}
+                onClick={() => {
+                  setFilterType(
+                    btn.value as FilterType
+                  );
+                  setShowCustomRange(false);
+                }}
+                className={`px-3 py-2 rounded border transition ${
+                  filterType === btn.value
+                    ? "bg-blue-600 text-white border-blue-600"
+                    : "bg-white hover:bg-slate-100"
+                }`}
+              >
+                {btn.label}
+              </button>
+            ))}
+
+            <button
+              onClick={() => {
+                setFilterType("RANGE");
+                setShowCustomRange(true);
+              }}
+              className={`px-3 py-2 rounded border transition ${
+                showCustomRange
+                  ? "bg-indigo-600 text-white border-indigo-600"
+                  : "bg-white hover:bg-slate-100"
+              }`}
+            >
+              Tùy chọn
+            </button>
+          </div>
+
+          {showCustomRange && (
+            <div className="flex gap-2 mt-3">
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) =>
+                  setFromDate(e.target.value)
+                }
+                className="border px-3 py-2 rounded w-full"
+              />
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) =>
+                  setToDate(e.target.value)
+                }
+                className="border px-3 py-2 rounded w-full"
+              />
+            </div>
+          )}
         </div>
       </div>
 
       {/* ===== TOTAL ===== */}
-      <div className="p-2 bg-yellow-50 border-b font-semibold text-red-600">
+      <div className="p-3 bg-yellow-50 border-b font-semibold text-red-600">
         Tổng số cont sửa: {totalCont}
       </div>
 
@@ -179,10 +262,10 @@ const ReportDashboard = () => {
         <table className="min-w-full">
           <thead className="bg-slate-100 sticky top-0">
             <tr>
-              {headers.map((h) => (
+              {visibleHeaders.map((h) => (
                 <th
                   key={h}
-                  className="px-2 py-2 border-b text-left whitespace-nowrap"
+                  className="px-3 py-2 border-b text-left whitespace-nowrap"
                 >
                   {h}
                 </th>
@@ -191,9 +274,12 @@ const ReportDashboard = () => {
           </thead>
 
           <tbody>
-            {filteredRows.map((row, i) => {
+            {filteredByDate.map((row, i) => {
               const isTotal =
-                row["DATE"]?.toString().toLowerCase().includes("total");
+                row["DATE"]
+                  ?.toString()
+                  .toLowerCase()
+                  .includes("total");
 
               return (
                 <tr
@@ -204,10 +290,10 @@ const ReportDashboard = () => {
                       : ""
                   }`}
                 >
-                  {headers.map((h) => (
+                  {visibleHeaders.map((h) => (
                     <td
                       key={h}
-                      className="px-2 py-2 whitespace-nowrap"
+                      className="px-3 py-2 whitespace-nowrap"
                     >
                       {row[h]}
                     </td>
