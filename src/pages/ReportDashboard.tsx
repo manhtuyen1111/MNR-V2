@@ -167,7 +167,6 @@ const ReportDashboard = () => {
         }`}
       >
         <div className="px-3 pt-2 pb-2 max-w-5xl mx-auto space-y-2">
-
           {/* RANGE */}
           <div className="flex flex-col sm:flex-row gap-2">
             <select
@@ -231,20 +230,19 @@ const ReportDashboard = () => {
           </div>
 
           {/* SUMMARY */}
-          <div className="flex items-center gap-2">
-            <div className="flex-1 text-center font-bold text-green-900">
-              {totalContainers}
-            </div>
-            <div className="flex-1 text-center font-bold text-blue-900">
+          <div className="flex items-center justify-between text-sm font-semibold">
+            <span className="text-green-900">
+              {totalContainers} cont
+            </span>
+            <span className="text-blue-900">
               {formatNumber(totalHours)}h
-            </div>
+            </span>
           </div>
         </div>
       </header>
 
       {/* MAIN */}
-      <main className="px-3 pt-40 pb-20 max-w-5xl mx-auto space-y-3">
-        {/* FULL LIST GIỮ NGUYÊN LOGIC CỦA BẠN */}
+      <main className="px-3 pt-44 pb-20 max-w-5xl mx-auto space-y-3">
         {filteredDates.map((date) => {
           const day = data[date] || {};
           const dayTeams = teamOrder.filter(
@@ -255,21 +253,101 @@ const ReportDashboard = () => {
 
           if (dayTeams.length === 0) return null;
 
-          const isOpen = expandedDate === date;
+          const isDateOpen = expandedDate === date;
+
+          const dayContainers = dayTeams.reduce(
+            (sum, t) => sum + (day[t]?.containers || 0),
+            0
+          );
+          const dayHours = dayTeams.reduce(
+            (sum, t) => sum + (day[t]?.hours || 0),
+            0
+          );
 
           return (
-            <div key={date} className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
+            <div
+              key={date}
+              className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden"
+            >
+              {/* DATE HEADER */}
               <button
                 onClick={() => {
-                  setExpandedDate(isOpen ? null : date);
+                  setExpandedDate(isDateOpen ? null : date);
                   setExpandedTeam(null);
                 }}
-                className="w-full px-3.5 py-3 flex justify-between"
+                className="w-full px-3.5 py-3 flex justify-between items-center"
               >
                 <span className="font-semibold text-blue-900">
                   {formatDateDisplay(date)}
                 </span>
+                <div className="text-sm flex gap-4">
+                  <span className="text-red-700">
+                    {dayContainers}
+                  </span>
+                  <span className="text-blue-800">
+                    {formatNumber(dayHours)}h
+                  </span>
+                </div>
               </button>
+
+              {/* TEAM LIST */}
+              {isDateOpen &&
+                dayTeams.map((team) => {
+                  const teamKey = `${date}-${team}`;
+                  const isTeamOpen = expandedTeam === teamKey;
+                  const teamData = day[team];
+
+                  return (
+                    <div key={team} className="border-t border-gray-200">
+                      <button
+                        onClick={() =>
+                          setExpandedTeam(
+                            isTeamOpen ? null : teamKey
+                          )
+                        }
+                        className="w-full px-5 py-2 flex justify-between text-sm"
+                      >
+                        <span className="font-medium text-gray-800">
+                          {team}
+                        </span>
+                        <span>
+                          {teamData.containers} |{" "}
+                          {formatNumber(teamData.hours)}h
+                        </span>
+                      </button>
+
+                      {/* DETAIL */}
+                      {isTeamOpen && (
+                        <div className="px-8 pb-3 space-y-1 text-xs text-gray-700">
+                          {teamData.details.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="flex justify-between"
+                            >
+                              <span>
+                                {item.link ? (
+                                  <a
+                                    href={item.link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-blue-600 underline"
+                                  >
+                                    {item.container}
+                                  </a>
+                                ) : (
+                                  item.container
+                                )}
+                              </span>
+                              <span>
+                                {formatNumber(item.hours)}h
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
           );
         })}
