@@ -4,11 +4,9 @@ const Header: React.FC = () => {
     <header className="bg-white shadow-sm shrink-0 z-50 h-14 flex items-center">
       <div className="w-full max-w-md mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center space-x-2">
-  <img
-    src="https://tse1.mm.bing.net/th/id/OIP.9bio_K4GFGouFcMlpl_3PAHaEK?pid=Api"
-    alt="Logo"
-    className="w-7 h-7 object-contain"
-  />
+  <div className="bg-sky-800 p-1.5 rounded-lg shadow-sm">
+     <Camera className="w-5 h-5 text-white" />
+  </div>
   <div className="flex flex-col">
     <h1 className="text-base font-black text-slate-800 tracking-tight leading-none">
       MATRAN MNR TEAM
