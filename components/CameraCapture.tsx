@@ -241,6 +241,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   }
 
   /* ================= DEFAULT VIEW ================= */
+/* ================= DEFAULT VIEW ================= */
 return (
   <div
     onClick={!isDisabled ? startCamera : undefined}
@@ -256,7 +257,7 @@ return (
       }
     `}
   >
-    {/* DÒNG CHẠM ĐỂ CHỤP */}
+    {/* DÒNG CHẠM ĐỂ CHỤP ẢNH */}
     <div className="flex items-center space-x-2 mb-4">
       <Camera className="w-5 h-5 text-slate-500" />
       <span className="font-bold text-sm text-slate-600">
@@ -266,7 +267,7 @@ return (
 
     {/* NÚT + CHỌN THƯ VIỆN */}
     <label
-      onClick={(e) => e.stopPropagation()} 
+      onClick={(e) => e.stopPropagation()}
       className="w-full h-20 flex items-center justify-center rounded-xl border-2 border-dashed border-sky-400 bg-sky-50 active:scale-95 transition cursor-pointer"
     >
       <span className="text-4xl font-black text-sky-600">+</span>
@@ -282,7 +283,7 @@ return (
 
           onFocus();
 
-          Array.from(files).forEach(file => {
+          Array.from(files).forEach((file) => {
             const reader = new FileReader();
             reader.onloadend = () => {
               if (reader.result) {
@@ -302,5 +303,5 @@ return (
     </div>
   </div>
 );
-
+};
 export default CameraCapture;
