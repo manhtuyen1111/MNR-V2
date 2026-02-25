@@ -29,7 +29,7 @@ const formattedDate = `${weekday}, Ngày ${day} Tháng ${month} Năm ${year}`;
             <div className="flex items-center space-x-1 mt-0.5">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
               <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                by [MT]
+                deV [MT]
               </span>
             </div>
           </div>
