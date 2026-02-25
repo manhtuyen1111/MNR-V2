@@ -37,7 +37,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
         video: {
           facingMode: 'environment',
           width: { ideal: 1200 },
-          height: { ideal: 900 }
+          height: { ideal: 720 }
         }
       });
 
@@ -298,6 +298,33 @@ return (
         />
       </label>
     </div>
+       {/* ===== THÊM ĐOẠN NÀY NGAY TẠI ĐÂY ===== */}
+    {images.length > 0 && (
+      <div className="mt-4 flex gap-3 overflow-x-auto scrollbar-hide">
+        {images.map((img, idx) => (
+          <div
+            key={idx}
+            className="relative w-20 h-20 rounded-xl overflow-hidden border border-slate-200 shrink-0"
+          >
+            <img
+              src={img}
+              alt={`preview-${idx}`}
+              className="w-full h-full object-cover"
+            />
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveImage(idx);
+              }}
+              className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
   </div>
 );
 };
