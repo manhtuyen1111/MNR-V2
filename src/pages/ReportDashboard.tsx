@@ -30,6 +30,30 @@ const ReportDashboard = () => {
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
 
+  // 🔥 HEADER AUTO HIDE
+  const [showHeader, setShowHeader] = useState(true);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY <= 10) {
+        setShowHeader(true);
+      } else if (currentScrollY > lastScrollY) {
+        setShowHeader(false); // scroll xuống
+      } else {
+        setShowHeader(true); // scroll lên
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -152,60 +176,41 @@ const ReportDashboard = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center px-4">
-        <div className="flex flex-col items-center gap-5 text-center max-w-xs sm:max-w-sm">
-          <div className="w-16 h-16 border-4 border-gray-300 border-t-green-800 rounded-full animate-spin"></div>
-          <p className="text-gray-800 font-semibold text-xl">
-            Đang chuẩn bị báo cáo cho bạn...
-          </p>
-          <p className="text-gray-600 text-base">
-            Chúng tôi đang tổng hợp dữ liệu mới nhất.
-          </p>
-        </div>
+      <div className="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-gray-300 border-t-green-800 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
-      {/* HEADER TỐI ƯU */}
-      <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
-        <div className="px-3 pt-1.5 pb-2 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
+      {/* 🔥 HEADER AUTO HIDE */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 transition-transform duration-300 ${
+          showHeader ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
+        <div className="px-3 pt-2 pb-2 max-w-5xl mx-auto">
           <div className="flex flex-col gap-2">
-            {/* RANGE */}
-            <div className="flex items-center gap-2">
-              <select
-                value={rangeType}
-                onChange={(e) => {
-                  setRangeType(e.target.value);
-                  if (e.target.value !== "CUSTOM") {
-                    setFromDate("");
-                    setToDate("");
-                  }
-                }}
-                className="w-full px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-              >
-                <option value="TODAY">Hôm nay</option>
-                <option value="YESTERDAY">Hôm qua</option>
-                <option value="7D">7 ngày</option>
-                <option value="30D">30 ngày</option>
-                <option value="THIS_MONTH">Tháng này</option>
-                <option value="LAST_MONTH">Tháng trước</option>
-                <option value="CUSTOM">Tùy chọn</option>
-                <option value="ALL">Tất cả</option>
-              </select>
-            </div>
+            <select
+              value={rangeType}
+              onChange={(e) => setRangeType(e.target.value)}
+              className="w-full px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg"
+            >
+              <option value="TODAY">Hôm nay</option>
+              <option value="YESTERDAY">Hôm qua</option>
+              <option value="7D">7 ngày</option>
+              <option value="30D">30 ngày</option>
+              <option value="THIS_MONTH">Tháng này</option>
+              <option value="LAST_MONTH">Tháng trước</option>
+              <option value="CUSTOM">Tùy chọn</option>
+              <option value="ALL">Tất cả</option>
+            </select>
 
             {/* SUMMARY ICON ONLY */}
             <div className="flex items-center gap-2 mt-1">
               <div className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-1.5 flex items-center justify-center gap-2">
-                <svg
-                  className="w-5 h-5 text-green-800"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
+                <svg className="w-5 h-5 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
                 <span className="text-base font-bold text-green-900">
@@ -214,18 +219,8 @@ const ReportDashboard = () => {
               </div>
 
               <div className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-1.5 flex items-center justify-center gap-2">
-                <svg
-                  className="w-5 h-5 text-blue-800"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
+                <svg className="w-5 h-5 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-base font-bold text-blue-900">
                   {formatNumber(totalHours)}h
@@ -236,9 +231,54 @@ const ReportDashboard = () => {
         </div>
       </header>
 
-      {/* MAIN GIỮ NGUYÊN */}
-      <main className="flex-1 px-3 py-3 max-w-5xl mx-auto w-full space-y-3 pb-20">
-        {/* phần dưới bạn giữ nguyên như file gốc */}
+      {/* MAIN */}
+      <main className="px-3 pt-24 pb-20 max-w-5xl mx-auto space-y-3">
+        {filteredDates.map((date) => {
+          const day = data[date] || {};
+          const dayTeams = teamOrder.filter(
+            (team) =>
+              day[team] &&
+              (selectedTeam === "ALL" ||
+                selectedTeam === team)
+          );
+
+          if (dayTeams.length === 0) return null;
+
+          const dayContainers = dayTeams.reduce(
+            (sum, t) => sum + (day[t]?.containers || 0),
+            0
+          );
+          const dayHours = dayTeams.reduce(
+            (sum, t) => sum + (day[t]?.hours || 0),
+            0
+          );
+
+          const isOpen = expandedDate === date;
+
+          return (
+            <div key={date} className="bg-gray-100 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <button
+                onClick={() => {
+                  setExpandedDate(isOpen ? null : date);
+                  setExpandedTeam(null);
+                }}
+                className="w-full px-3.5 py-3 flex items-center justify-between text-left"
+              >
+                <span className="font-semibold text-blue-900">
+                  {formatDateDisplay(date)}
+                </span>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="text-red-700 font-medium">
+                    {dayContainers}
+                  </span>
+                  <span className="px-2 py-1 bg-blue-100 text-blue-900 rounded-md font-medium">
+                    {formatNumber(dayHours)}h
+                  </span>
+                </div>
+              </button>
+            </div>
+          );
+        })}
       </main>
     </div>
   );
