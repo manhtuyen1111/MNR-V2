@@ -304,7 +304,7 @@ return (
         {images.map((img, idx) => (
           <div
             key={idx}
-            className="relative w-17 h-17 rounded-xl overflow-hidden border border-slate-200 shrink-0"
+            className="relative w-16 h-16 rounded-xl overflow-hidden border border-slate-200 shrink-0"
           >
             <img
               src={img}
