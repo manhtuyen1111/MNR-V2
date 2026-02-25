@@ -10,7 +10,6 @@ interface CameraCaptureProps {
   isDisabled: boolean;
   onFocus: () => void;
 }
-
 const CameraCapture: React.FC<CameraCaptureProps> = ({
   images,
   onAddImage,
