@@ -245,8 +245,7 @@ return (
   <div
     onClick={!isDisabled ? startCamera : undefined}
     className={`
-      relative transition-all duration-300 rounded-2xl p-4 border flex flex-col bg-white
-      cursor-pointer touch-none
+      transition-all duration-300 rounded-2xl p-4 border flex flex-col bg-white cursor-pointer
       ${isActive
         ? 'scale-[1.03] shadow-md border-sky-600'
         : isDisabled
@@ -256,48 +255,48 @@ return (
             : 'border-slate-200'
       }
     `}
-    style={{ minHeight: 120 }}
   >
-    {/* Text CHỤP ẢNH */}
-    <div className="flex items-center space-x-2">
-      <Camera className="w-5 h-5 text-slate-500" />
-      <span className="font-bold text-sm text-slate-600">
-        CHẠM ĐỂ CHỤP ẢNH ({images.length})
-      </span>
+    {/* 1 dòng CHỤP ẢNH và nút + */}
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-2">
+        <Camera className="w-5 h-5 text-slate-600" />
+        <span className="font-bold text-sm text-slate-600">
+          CHẠM ĐỂ CHỤP ẢNH ({images.length})
+        </span>
+      </div>
+
+      {/* nút + chọn ảnh thư viện */}
+      <label
+        onClick={(e) => e.stopPropagation()}
+        className="w-8 h-8 flex items-center justify-center rounded-full bg-sky-600 text-white text-lg font-bold active:scale-95 transition"
+      >
+        +
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            const files = e.target.files;
+            if (!files) return;
+
+            onFocus();
+
+            Array.from(files).forEach((file) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                if (reader.result) {
+                  onAddImage(reader.result as string);
+                }
+              };
+              reader.readAsDataURL(file);
+            });
+
+            e.target.value = '';
+          }}
+        />
+      </label>
     </div>
-
-    {/* NÚT + CHỌN ẢNH THƯ VIỆN (góc phải dưới) */}
-    <label
-      onClick={(e) => e.stopPropagation()}
-      className="absolute bottom-3 right-3 w-12 h-12 flex items-center justify-center rounded-full bg-sky-600 text-white text-2xl shadow-lg active:scale-95 transition"
-    >
-      +
-      <input
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          const files = e.target.files;
-          if (!files) return;
-
-          onFocus();
-
-          Array.from(files).forEach((file) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              if (reader.result) {
-                onAddImage(reader.result as string);
-              }
-            };
-            reader.readAsDataURL(file);
-          });
-
-          e.target.value = '';
-        }}
-      />
-    </label>
-
   </div>
 );
 };
