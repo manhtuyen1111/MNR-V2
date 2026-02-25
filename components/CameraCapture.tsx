@@ -122,8 +122,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  ctx.filter = "brightness(1.22) contrast(1.1) saturate(1.05)";
   ctx.drawImage(video, 0, 0, w, h);
-
+  ctx.filter = "none";
+    
   canvas.toBlob(
     (blob) => {
       if (!blob) return;
