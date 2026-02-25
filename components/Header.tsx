@@ -21,7 +21,7 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-2">
            {/* Enterprise branding element */}
            <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
-              <span className="text-xs font-bold text-slate-600">QC</span>
+              <span className="text-xs font-bold text-slate-600">😊</span>
            </div>
         </div>
       </div>
