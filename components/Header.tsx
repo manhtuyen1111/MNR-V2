@@ -20,9 +20,17 @@ const Header: React.FC = () => {
         
         <div className="flex items-center space-x-2">
            {/* Enterprise branding element */}
-           <div className="h-8 w-8 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200">
-              <span className="text-xs font-bold text-slate-600">😊</span>
-           </div>
+          <div className="relative h-8 w-8 flex items-center justify-center">
+  
+  {/* Halo glow */}
+  <div className="absolute inset-0 rounded-full bg-yellow-300 blur-md opacity-60 animate-pulse"></div>
+  
+  {/* Main circle */}
+  <div className="relative h-8 w-8 bg-white rounded-full flex items-center justify-center border border-yellow-300 shadow-md">
+    <span className="text-sm">😊</span>
+  </div>
+
+</div>
         </div>
       </div>
     </header>
