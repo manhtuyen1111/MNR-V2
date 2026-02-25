@@ -29,7 +29,7 @@ const Header: React.FC = () => {
   
   {/* Main circle */}
   <div className="relative h-8 w-8 bg-white rounded-full flex items-center justify-center border border-yellow-300 shadow-md">
-    <span className="text-sm">👑</span>
+    <span className="text-sm">⚓</span>
   </div>
 
 </div>
