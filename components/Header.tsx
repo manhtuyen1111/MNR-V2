@@ -1,4 +1,5 @@
 import React from 'react';
+import { Camera } from 'lucide-react';
 const Header: React.FC = () => {
   return (
     <header className="bg-white shadow-sm shrink-0 z-50 h-14 flex items-center">
