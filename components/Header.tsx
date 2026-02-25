@@ -5,12 +5,12 @@ const Header: React.FC = () => {
   // 📅 Lấy ngày hiện tại
   const today = new Date();
 
-  const formattedDate = today.toLocaleDateString("vi-VN", {
-    weekday: "long",
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+const weekday = today.toLocaleDateString("vi-VN", { weekday: "long" });
+const day = String(today.getDate()).padStart(2, "0");
+const month = String(today.getMonth() + 1).padStart(2, "0");
+const year = today.getFullYear();
+
+const formattedDate = `${weekday}, Ngày ${day} Tháng ${month} Năm ${year}`;
 
   return (
     <header className="bg-white shadow-sm shrink-0 z-50 h-14 flex items-center">
@@ -37,9 +37,12 @@ const Header: React.FC = () => {
 
         {/* CENTER - DATE RUNNING */}
         <div className="flex-1 overflow-hidden mx-3">
-          <div className="text-xs text-sky-800 whitespace-nowrap animate-marquee">
-            📅 {formattedDate}
-          </div>
+         <div className="flex overflow-hidden">
+  <div className="marquee flex whitespace-nowrap text-xs text-sky-800">
+    <span className="mx-4">📅 {formattedDate}</span>
+    <span className="mx-4">📅 {formattedDate}</span>
+  </div>
+</div>
         </div>
 
         {/* RIGHT */}
