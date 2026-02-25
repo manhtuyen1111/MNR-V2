@@ -528,29 +528,32 @@ const HistoryWithReport = ({
     <div className="flex flex-col h-full">
 
       {/* SUB TAB HEADER */}
-      <div className="flex bg-white shadow-sm border-b">
-        <button
-          onClick={() => setSubTab('list')}
-          className={`flex-1 py-3 text-xs font-black uppercase tracking-wider ${
-            subTab === 'list'
-              ? 'text-sky-600 border-b-2 border-sky-600'
-              : 'text-slate-400'
-          }`}
-        >
-          Danh sách
-        </button>
+    {/* SUB TAB HEADER */}
+<div className="flex bg-slate-100 p-1 m-2 rounded-xl">
 
-        <button
-          onClick={() => setSubTab('report')}
-          className={`flex-1 py-3 text-xs font-black uppercase tracking-wider ${
-            subTab === 'report'
-              ? 'text-sky-600 border-b-2 border-sky-600'
-              : 'text-slate-400'
-          }`}
-        >
-          Báo cáo
-        </button>
-      </div>
+  <button
+    onClick={() => setSubTab('list')}
+    className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+      subTab === 'list'
+        ? 'bg-blue-800 text-white shadow-md scale-[1.02]'
+        : 'text-slate-500'
+    }`}
+  >
+    Danh sách
+  </button>
+
+  <button
+    onClick={() => setSubTab('report')}
+    className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 ${
+      subTab === 'report'
+        ? 'bg-blue-800 text-white shadow-md scale-[1.02]'
+        : 'text-slate-500'
+    }`}
+  >
+    Báo cáo
+  </button>
+
+</div>
 
       {/* CONTENT */}
       <div className="flex-1 overflow-y-auto bg-slate-50">
