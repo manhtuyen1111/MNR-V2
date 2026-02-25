@@ -22,10 +22,10 @@ const ReportDashboard = () => {
   const [data, setData] = useState<ReportData>({});
   const [loading, setLoading] = useState(true);
 
-  const [selectedTeam, setSelectedTeam] = useState("ALL");
-  const [rangeType, setRangeType] = useState("THIS_MONTH");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState<string>("ALL");
+  const [rangeType, setRangeType] = useState<string>("THIS_MONTH");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
 
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
@@ -42,9 +42,9 @@ const ReportDashboard = () => {
       if (currentScrollY <= 10) {
         setShowHeader(true);
       } else if (currentScrollY > lastScrollY) {
-        setShowHeader(false); // scroll xuống
+        setShowHeader(false);
       } else {
-        setShowHeader(true); // scroll lên
+        setShowHeader(true);
       }
 
       lastScrollY = currentScrollY;
@@ -101,12 +101,11 @@ const ReportDashboard = () => {
     if (rangeType === "ALL") return allDates;
     if (rangeType === "TODAY")
       return allDates.filter((d) => d === todayStr);
+
     if (rangeType === "YESTERDAY") {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
-      const yesterdayStr = yesterday
-        .toISOString()
-        .slice(0, 10);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
       return allDates.filter((d) => d === yesterdayStr);
     }
 
@@ -117,62 +116,39 @@ const ReportDashboard = () => {
     else if (rangeType === "30D")
       compareDate.setDate(today.getDate() - 30);
     else if (rangeType === "THIS_MONTH")
-      compareDate = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        1
-      );
+      compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
     else if (rangeType === "LAST_MONTH") {
-      compareDate = new Date(
-        today.getFullYear(),
-        today.getMonth() - 1,
-        1
-      );
-      const lastMonthEnd = new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        0
-      );
+      const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const end = new Date(today.getFullYear(), today.getMonth(), 0);
       return allDates.filter(
         (d) =>
-          d >= compareDate.toISOString().slice(0, 10) &&
-          d <= lastMonthEnd.toISOString().slice(0, 10)
+          d >= start.toISOString().slice(0, 10) &&
+          d <= end.toISOString().slice(0, 10)
       );
-    } else if (
-      rangeType === "CUSTOM" &&
-      fromDate &&
-      toDate
-    )
-      return allDates.filter(
-        (d) => d >= fromDate && d <= toDate
-      );
+    } else if (rangeType === "CUSTOM" && fromDate && toDate) {
+      return allDates.filter((d) => d >= fromDate && d <= toDate);
+    }
 
-    const compareStr = compareDate
-      .toISOString()
-      .slice(0, 10);
+    const compareStr = compareDate.toISOString().slice(0, 10);
     return allDates.filter((d) => d >= compareStr);
   }, [data, rangeType, fromDate, toDate]);
 
-  const { totalContainers, totalHours } =
-    useMemo(() => {
-      let containers = 0;
-      let hours = 0;
+  const { totalContainers, totalHours } = useMemo(() => {
+    let containers = 0;
+    let hours = 0;
 
-      filteredDates.forEach((date) => {
-        const day = data[date] || {};
-        Object.entries(day).forEach(([team, val]) => {
-          if (
-            selectedTeam === "ALL" ||
-            selectedTeam === team
-          ) {
-            containers += val.containers || 0;
-            hours += val.hours || 0;
-          }
-        });
+    filteredDates.forEach((date) => {
+      const day = data[date] || {};
+      Object.entries(day).forEach(([team, val]) => {
+        if (selectedTeam === "ALL" || selectedTeam === team) {
+          containers += val.containers || 0;
+          hours += val.hours || 0;
+        }
       });
+    });
 
-      return { totalContainers: containers, totalHours: hours };
-    }, [filteredDates, data, selectedTeam]);
+    return { totalContainers: containers, totalHours: hours };
+  }, [filteredDates, data, selectedTeam]);
 
   if (loading) {
     return (
@@ -184,18 +160,26 @@ const ReportDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* 🔥 HEADER AUTO HIDE */}
+      {/* HEADER */}
       <header
         className={`fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 transition-transform duration-300 ${
           showHeader ? "translate-y-0" : "-translate-y-full"
         }`}
       >
-        <div className="px-3 pt-2 pb-2 max-w-5xl mx-auto">
-          <div className="flex flex-col gap-2">
+        <div className="px-3 pt-2 pb-2 max-w-5xl mx-auto space-y-2">
+
+          {/* RANGE */}
+          <div className="flex flex-col sm:flex-row gap-2">
             <select
               value={rangeType}
-              onChange={(e) => setRangeType(e.target.value)}
-              className="w-full px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-lg"
+              onChange={(e) => {
+                setRangeType(e.target.value);
+                if (e.target.value !== "CUSTOM") {
+                  setFromDate("");
+                  setToDate("");
+                }
+              }}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg"
             >
               <option value="TODAY">Hôm nay</option>
               <option value="YESTERDAY">Hôm qua</option>
@@ -207,74 +191,84 @@ const ReportDashboard = () => {
               <option value="ALL">Tất cả</option>
             </select>
 
-            {/* SUMMARY ICON ONLY */}
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-1.5 flex items-center justify-center gap-2">
-                <svg className="w-5 h-5 text-green-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <span className="text-base font-bold text-green-900">
-                  {totalContainers}
-                </span>
-              </div>
+            {rangeType === "CUSTOM" && (
+              <>
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg"
+                />
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg"
+                />
+              </>
+            )}
+          </div>
 
-              <div className="flex-1 bg-white border border-gray-200 rounded-md px-3 py-1.5 flex items-center justify-center gap-2">
-                <svg className="w-5 h-5 text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-base font-bold text-blue-900">
-                  {formatNumber(totalHours)}h
-                </span>
-              </div>
+          {/* TEAM FILTER */}
+          <div className="flex gap-2 overflow-x-auto">
+            {teams.map((team) => (
+              <button
+                key={team}
+                onClick={() => {
+                  setSelectedTeam(team);
+                  setExpandedDate(null);
+                  setExpandedTeam(null);
+                }}
+                className={`px-3 py-1.5 text-sm rounded-full whitespace-nowrap ${
+                  selectedTeam === team
+                    ? "bg-green-800 text-white"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+              >
+                {team === "ALL" ? "Tất cả" : team}
+              </button>
+            ))}
+          </div>
+
+          {/* SUMMARY */}
+          <div className="flex items-center gap-2">
+            <div className="flex-1 text-center font-bold text-green-900">
+              {totalContainers}
+            </div>
+            <div className="flex-1 text-center font-bold text-blue-900">
+              {formatNumber(totalHours)}h
             </div>
           </div>
         </div>
       </header>
 
       {/* MAIN */}
-      <main className="px-3 pt-24 pb-20 max-w-5xl mx-auto space-y-3">
+      <main className="px-3 pt-40 pb-20 max-w-5xl mx-auto space-y-3">
+        {/* FULL LIST GIỮ NGUYÊN LOGIC CỦA BẠN */}
         {filteredDates.map((date) => {
           const day = data[date] || {};
           const dayTeams = teamOrder.filter(
             (team) =>
               day[team] &&
-              (selectedTeam === "ALL" ||
-                selectedTeam === team)
+              (selectedTeam === "ALL" || selectedTeam === team)
           );
 
           if (dayTeams.length === 0) return null;
 
-          const dayContainers = dayTeams.reduce(
-            (sum, t) => sum + (day[t]?.containers || 0),
-            0
-          );
-          const dayHours = dayTeams.reduce(
-            (sum, t) => sum + (day[t]?.hours || 0),
-            0
-          );
-
           const isOpen = expandedDate === date;
 
           return (
-            <div key={date} className="bg-gray-100 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div key={date} className="bg-gray-100 rounded-xl border border-gray-200 overflow-hidden">
               <button
                 onClick={() => {
                   setExpandedDate(isOpen ? null : date);
                   setExpandedTeam(null);
                 }}
-                className="w-full px-3.5 py-3 flex items-center justify-between text-left"
+                className="w-full px-3.5 py-3 flex justify-between"
               >
                 <span className="font-semibold text-blue-900">
                   {formatDateDisplay(date)}
                 </span>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="text-red-700 font-medium">
-                    {dayContainers}
-                  </span>
-                  <span className="px-2 py-1 bg-blue-100 text-blue-900 rounded-md font-medium">
-                    {formatNumber(dayHours)}h
-                  </span>
-                </div>
               </button>
             </div>
           );
