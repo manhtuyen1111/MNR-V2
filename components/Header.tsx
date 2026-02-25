@@ -39,8 +39,34 @@ const formattedDate = `${weekday}, Ngày ${day} Tháng ${month} Năm ${year}`;
         <div className="flex-1 overflow-hidden mx-3">
          <div className="flex overflow-hidden">
   <div className="marquee flex whitespace-nowrap text-xs text-sky-800">
-    <span className="mx-4">📅 {formattedDate}</span>
-    <span className="mx-4">📅 {formattedDate}</span>
+    {/* Block 1 */}
+  <span className="mx-4 flex items-center gap-2">
+    <div className="relative w-7 h-7 rounded-lg border border-sky-800 bg-white shadow-sm flex flex-col items-center justify-center leading-none">
+      <div className="absolute top-0 left-0 w-full h-2 bg-yellow-300 rounded-t-lg"></div>
+      <span className="text-[10px] font-black text-sky-800 mt-1">
+        {day}
+      </span>
+    </div>
+
+    <span className="text-xs text-sky-800 font-semibold whitespace-nowrap">
+      {formattedDate}
+    </span>
+  </span>
+
+  {/* Block 2 (duplicate để chạy mượt) */}
+  <span className="mx-4 flex items-center gap-2">
+    <div className="relative w-7 h-7 rounded-lg border border-sky-800 bg-white shadow-sm flex flex-col items-center justify-center leading-none">
+      <div className="absolute top-0 left-0 w-full h-2 bg-yellow-300 rounded-t-lg"></div>
+      <span className="text-[10px] font-black text-sky-800 mt-1">
+        {day}
+      </span>
+    </div>
+
+    <span className="text-xs text-sky-800 font-semibold whitespace-nowrap">
+      {formattedDate}
+    </span>
+  </span>
+
   </div>
 </div>
         </div>
