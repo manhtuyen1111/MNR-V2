@@ -241,29 +241,66 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   }
 
   /* ================= DEFAULT VIEW ================= */
-  return (
-    <div
-      onClick={!isDisabled ? startCamera : undefined}
-      className={`
-        transition-all duration-300 rounded-2xl p-4 border flex flex-col cursor-pointer bg-white
-        ${isActive 
-          ? 'scale-[1.03] shadow-md border-sky-600' 
-          : isDisabled
-            ? 'opacity-60 grayscale border-slate-200 bg-slate-50 pointer-events-none'
-            : isCompleted
-              ? 'border-green-500'
-              : 'border-slate-200'
-        }
-      `}
-    >
-      <div className="flex items-center space-x-2">
-        <Camera className="w-5 h-5 text-slate-500" />
-        <span className="font-bold text-sm text-slate-600">
-          CHẠM ĐỂ CHỤP ẢNH ({images.length})
-        </span>
-      </div>
+return (
+  <div
+    onClick={!isDisabled ? startCamera : undefined}
+    className={`
+      transition-all duration-300 rounded-2xl p-4 border flex flex-col bg-white cursor-pointer
+      ${isActive 
+        ? 'scale-[1.03] shadow-md border-sky-600' 
+        : isDisabled
+          ? 'opacity-60 grayscale border-slate-200 bg-slate-50 pointer-events-none'
+          : isCompleted
+            ? 'border-green-500'
+            : 'border-slate-200'
+      }
+    `}
+  >
+    {/* DÒNG CHẠM ĐỂ CHỤP */}
+    <div className="flex items-center space-x-2 mb-4">
+      <Camera className="w-5 h-5 text-slate-500" />
+      <span className="font-bold text-sm text-slate-600">
+        CHẠM ĐỂ CHỤP ẢNH ({images.length})
+      </span>
     </div>
-  );
-};
+
+    {/* NÚT + CHỌN THƯ VIỆN */}
+    <label
+      onClick={(e) => e.stopPropagation()} 
+      className="w-full h-20 flex items-center justify-center rounded-xl border-2 border-dashed border-sky-400 bg-sky-50 active:scale-95 transition cursor-pointer"
+    >
+      <span className="text-4xl font-black text-sky-600">+</span>
+
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = e.target.files;
+          if (!files) return;
+
+          onFocus();
+
+          Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              if (reader.result) {
+                onAddImage(reader.result as string);
+              }
+            };
+            reader.readAsDataURL(file);
+          });
+
+          e.target.value = '';
+        }}
+      />
+    </label>
+
+    <div className="text-[11px] text-slate-400 text-center mt-2 font-medium">
+      Chọn ảnh từ thư viện
+    </div>
+  </div>
+);
 
 export default CameraCapture;
