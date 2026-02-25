@@ -174,7 +174,8 @@ const handleAddImage = async (imgData: string) => {
         images: imagesToSend,
         startIdx: startIdx,
         imageHashes: hashesToSend,          // <-- Mới: gửi hashes để server check duplicate
-        editor: user?.username || 'unknown'
+        editor: user?.username || 'unknown',
+        secret: 'anhtuyen12345689'   // ← THAY BẰNG KEY CỦA ANH
       };
 
       const response = await fetch(settings.googleScriptUrl, {
