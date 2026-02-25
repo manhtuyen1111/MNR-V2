@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, History, Settings, Lock } from 'lucide-react';
+import { Camera, History, Settings } from 'lucide-react';
 import { TabView } from '../types';
 
 interface BottomNavProps {
@@ -65,6 +65,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
           </button>
 
           {/* Cài đặt - Đổi chữ thành CÀI ĐẶT, giữ màu đỏ cảnh báo */}
+          {isAdmin && (
           <button 
             onClick={() => onChangeTab('settings')}
             className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-all duration-300 relative
@@ -81,11 +82,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
                     : 'stroke-slate-500 stroke-[2]'}`
                 } 
               />
-              {!isAdmin && (
-                <div className="absolute -top-1 -right-2 bg-white/80 rounded-full p-0.5 border border-slate-300 shadow-sm">
-                  <Lock className="w-3 h-3 text-slate-500" />
-                </div>
-              )}
             </div>
             <span 
               className={`text-xs font-black uppercase tracking-tighter transition-colors duration-300
@@ -101,7 +97,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ currentTab, onChangeTab, pendingC
             )}
             <div className="absolute inset-0 rounded-2xl shadow-inner pointer-events-none opacity-50" />
           </button>
-
+)}
         </div>
       </div>
     </div>
