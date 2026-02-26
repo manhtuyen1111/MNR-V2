@@ -373,6 +373,12 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
 }) => {
   const [images, setImages] = useState<string[]>(record.images);
   const [added, setAdded] = useState<string[]>([]);
+  
+  /*  Bấm nút 🔁 Retry, Hiện modal nhập mật khẩu */
+  
+  const [showAuth, setShowAuth] = useState(false);
+  const [secretInput, setSecretInput] = useState('');
+  const [authError, setAuthError] = useState('');
 
   useEffect(() => {
     setImages(record.images);
@@ -396,7 +402,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
             </div>
             <button
               disabled={retryingId === record.id}
-              onClick={() => onRetry(record.id)}
+              onClick={() => setShowAuth(true)}
               className="p-1.5 rounded-lg bg-amber-100 text-amber-600"
             >
               <RefreshCw
@@ -462,8 +468,66 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
           </button>
         </div>
       )}
+      {showAuth && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200]">
+          <div className="bg-white rounded-xl p-5 w-80 space-y-3">
+            <div className="font-semibold text-lg text-center">
+              Xác nhận quyền Retry
+            </div>
+
+            <input
+              type="password"
+              value={secretInput}
+              onChange={(e) => {
+                setSecretInput(e.target.value);
+                setAuthError('');
+              }}
+              placeholder="Nhập mật khẩu bí mật"
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+            />
+
+            {authError && (
+              <div className="text-red-500 text-xs text-center">
+                {authError}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowAuth(false);
+                  setSecretInput('');
+                  setAuthError('');
+                }}
+                className="flex-1 border rounded-lg py-2"
+              >
+                Hủy
+              </button>
+
+              <button
+                onClick={() => {
+                  const SECRET =
+                    import.meta.env.VITE_RETRY_SECRET || '123456';
+
+                  if (secretInput === SECRET) {
+                    setShowAuth(false);
+                    setSecretInput('');
+                    onRetry(record.id);
+                  } else {
+                    setAuthError('Sai mật khẩu');
+                  }
+                }}
+                className="flex-1 bg-amber-500 text-white rounded-lg py-2"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
+}; 
+
 
 export default HistoryList;
