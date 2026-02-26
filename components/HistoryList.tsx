@@ -472,7 +472,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200]">
           <div className="bg-white rounded-xl p-5 w-80 space-y-3">
             <div className="font-semibold text-lg text-center">
-              Xác nhận quyền Retry
+             VUI LÒNG NHẬP MÃ XÁC NHẬN TỪ QTV
             </div>
 
             <input
@@ -482,12 +482,12 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                 setSecretInput(e.target.value);
                 setAuthError('');
               }}
-              placeholder="Nhập mật khẩu bí mật"
+              placeholder="Mã bí mật của QTV "
               className="w-full border rounded-lg px-3 py-2 text-sm"
             />
 
             {authError && (
-              <div className="text-red-500 text-xs text-center">
+              <div className="text-sky-700 text-xs text-center">
                 {authError}
               </div>
             )}
