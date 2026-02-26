@@ -5,7 +5,10 @@ import React, {
   useCallback,
   memo,
 } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import {
+  FixedSizeList as List,
+  ListChildComponentProps
+} from 'react-window';
 import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
 import {
@@ -223,8 +226,6 @@ const HistoryList: React.FC<HistoryListProps> = ({
   );
 
   /* ===== VIRTUAL ROW ===== */
-
-import { ListChildComponentProps } from 'react-window';
 
 const Row = ({ index, style }: ListChildComponentProps) => {
     const record = sorted[index];
