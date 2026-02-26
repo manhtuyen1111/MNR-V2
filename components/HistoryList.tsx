@@ -224,7 +224,9 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
   /* ===== VIRTUAL ROW ===== */
 
-  const Row = ({ index, style }: any) => {
+import { ListChildComponentProps } from 'react-window';
+
+const Row = ({ index, style }: ListChildComponentProps) => {
     const record = sorted[index];
     return (
       <div style={style}>
@@ -336,7 +338,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
           onClose={() => setViewing(null)}
           onRetry={handleRetry}
           retryingId={retryingId}
-          onUpdate={(all, added) => {
+           onUpdate={(all: string[], added: string[]) => {
             const updated: RepairRecord = {
               ...viewing,
               images: all,
@@ -353,7 +355,15 @@ const HistoryList: React.FC<HistoryListProps> = ({
 
 /* ================= IMAGE VIEWER ================= */
 
-const ImageViewer: React.FC<any> = ({
+interface ImageViewerProps {
+  record: RepairRecord;
+  onClose: () => void;
+  onRetry: (id: string) => void;
+  retryingId: string | null;
+  onUpdate: (all: string[], added: string[]) => void;
+}
+
+const ImageViewer: React.FC<ImageViewerProps> = ({
   record,
   onClose,
   onRetry,
