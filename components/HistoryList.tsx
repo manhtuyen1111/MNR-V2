@@ -277,31 +277,37 @@ useEffect(() => {
       </div>
 
       {viewing && (
-        <ImageViewer
-          record={viewing}
-          onClose={() => setViewing(null)}
-          onUpdate={(all, added) => {
-            const updated: RepairRecord = {
-              ...viewing,
-              images: all,
-              status: 'pending',
-            };
-            setViewing(updated);
-            onUpdateRecord(updated, added);
-          }}
-        />
-      )}
+<ImageViewer
+  record={viewing}
+  onClose={() => setViewing(null)}
+  onRetry={(id) => {
+    setRetryingId(id);
+    onRetry(id);
+  }}
+  retryingId={retryingId}
+    onUpdate={(all, added) => {
+      const updated: RepairRecord = {
+        ...viewing,
+        images: all,
+        status: 'pending',
+      };
+      setViewing(updated);
+      onUpdateRecord(updated, added);
+    }}
+  />
+)}
     </>
   );
 };
 
 /* ================= IMAGE VIEWER ================= */
-
 const ImageViewer: React.FC<{
   record: RepairRecord;
   onClose: () => void;
+  onRetry: (id: string) => void;
+  retryingId: string | null;   // 👈 THÊM DÒNG NÀY
   onUpdate: (all: string[], added: string[]) => void;
-}> = ({ record, onClose, onUpdate }) => {
+}> = ({ record, onClose, onRetry, retryingId, onUpdate }) => {
   const [images, setImages] = useState<string[]>(record.images);
   const [added, setAdded] = useState<string[]>([]);
 
@@ -314,9 +320,25 @@ const ImageViewer: React.FC<{
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
       <div className="h-16 px-5 flex justify-between items-center bg-black/80 text-white">
         <div>
-          <div className="font-mono font-bold text-lg">
-            {record.containerNumber}
-          </div>
+        <div className="flex items-center gap-2">
+  <div className="font-mono font-bold text-lg">
+    {record.containerNumber}
+  </div>
+<button
+  disabled={retryingId === record.id}
+  onClick={() => onRetry(record.id)}
+  className={`p-1.5 rounded-lg ${
+    retryingId === record.id
+      ? 'bg-amber-100 text-amber-400 opacity-50'
+      : 'bg-amber-100 text-amber-600'
+  }`}
+>
+  <RefreshCw
+    size={16}
+    className={retryingId === record.id ? 'animate-spin' : ''}
+  />
+</button>
+</div>
           <div className="flex items-center text-xs text-slate-300 space-x-2">
             <Users size={12} />
             <span>{record.teamName}</span>
