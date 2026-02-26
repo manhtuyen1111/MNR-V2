@@ -1,4 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  memo,
+} from 'react';
+import { FixedSizeList as List } from 'react-window';
 import { RepairRecord, Team } from '../types';
 import { formatDate } from '../utils';
 import {
@@ -12,7 +19,104 @@ import {
 } from 'lucide-react';
 import CameraCapture from './CameraCapture';
 
-/* ================= PROPS ================= */
+/* ================= DEBOUNCE HOOK ================= */
+
+function useDebounce<T>(value: T, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
+/* ================= HISTORY ITEM ================= */
+
+interface HistoryItemProps {
+  record: RepairRecord;
+  retryingId: string | null;
+  onRetry: (id: string) => void;
+  onDelete: (id: string) => void;
+  onView: (r: RepairRecord) => void;
+}
+
+const HistoryItem = memo(
+  ({ record, retryingId, onRetry, onDelete, onView }: HistoryItemProps) => {
+    const isOver2Minutes =
+      record.status === 'pending' &&
+      Date.now() - record.timestamp > 120000;
+
+    return (
+      <div
+        onClick={() => onView(record)}
+        className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
+      >
+        <div className="flex items-center space-x-3">
+          <div
+            className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+              record.status === 'synced'
+                ? 'bg-green-100 text-green-600'
+                : record.status === 'error'
+                ? 'bg-red-100 text-red-600'
+                : 'bg-amber-100 text-amber-600'
+            }`}
+          >
+            {record.status === 'synced' && <CheckCircle size={18} />}
+            {record.status === 'error' && <AlertTriangle size={18} />}
+            {record.status === 'pending' && <Clock size={18} />}
+          </div>
+
+          {(record.status === 'error' || isOver2Minutes) && (
+            <button
+              disabled={retryingId === record.id}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRetry(record.id);
+              }}
+              className={`p-2 rounded-lg ${
+                retryingId === record.id
+                  ? 'bg-amber-100 text-amber-400 opacity-50'
+                  : 'bg-amber-100 text-amber-600'
+              }`}
+            >
+              <RefreshCw
+                size={16}
+                className={retryingId === record.id ? 'animate-spin' : ''}
+              />
+            </button>
+          )}
+
+          <div className="flex items-baseline gap-1.5 font-mono">
+            <div className="font-bold text-lg">
+              <span>{record.containerNumber.slice(0, 4)}</span>
+              <span className="text-green-700">
+                {record.containerNumber.slice(4)}
+              </span>
+            </div>
+
+            <div className="text-[10px] text-slate-400 whitespace-nowrap">
+              {record.teamName} {formatDate(record.timestamp)}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(record.id);
+          }}
+          className="p-2 rounded-lg bg-red-50 text-red-500"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    );
+  }
+);
+
+/* ================= MAIN ================= */
 
 interface HistoryListProps {
   records: RepairRecord[];
@@ -21,8 +125,6 @@ interface HistoryListProps {
   onDelete: (id: string) => void;
   onUpdateRecord: (updated: RepairRecord, newImages: string[]) => void;
 }
-
-/* ================= MAIN ================= */
 
 const HistoryList: React.FC<HistoryListProps> = ({
   records,
@@ -36,16 +138,25 @@ const HistoryList: React.FC<HistoryListProps> = ({
   const [quickDate, setQuickDate] =
     useState<'all' | 'today' | 'yesterday' | 'custom'>('today');
   const [range, setRange] = useState({ start: '', end: '' });
-  const [searchCont, setSearchCont] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const searchCont = useDebounce(searchInput, 300);
   const [retryingId, setRetryingId] = useState<string | null>(null);
-  const [now, setNow] = useState(Date.now());
-  
+
   /* ===== FILTER ===== */
+
   const filtered = useMemo(() => {
+    const searchLower = searchCont.trim().toLowerCase();
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
     return records.filter((r) => {
       if (
-        searchCont &&
-        !r.containerNumber.toLowerCase().includes(searchCont.toLowerCase())
+        searchLower &&
+        !r.containerNumber.toLowerCase().includes(searchLower)
       )
         return false;
 
@@ -54,18 +165,24 @@ const HistoryList: React.FC<HistoryListProps> = ({
       const d = new Date(r.timestamp);
       d.setHours(0, 0, 0, 0);
 
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      if (quickDate === 'today' && d.getTime() !== today.getTime())
+        return false;
 
-      const y = new Date(today);
-      y.setDate(y.getDate() - 1);
-
-      if (quickDate === 'today' && d.getTime() !== today.getTime()) return false;
-      if (quickDate === 'yesterday' && d.getTime() !== y.getTime()) return false;
+      if (quickDate === 'yesterday' && d.getTime() !== yesterday.getTime())
+        return false;
 
       if (quickDate === 'custom') {
-        if (range.start && d < new Date(range.start)) return false;
-        if (range.end && d > new Date(range.end)) return false;
+        if (range.start) {
+          const start = new Date(range.start);
+          start.setHours(0, 0, 0, 0);
+          if (d < start) return false;
+        }
+
+        if (range.end) {
+          const end = new Date(range.end);
+          end.setHours(23, 59, 59, 999);
+          if (d > end) return false;
+        }
       }
 
       return true;
@@ -76,35 +193,60 @@ const HistoryList: React.FC<HistoryListProps> = ({
     () => [...filtered].sort((a, b) => b.timestamp - a.timestamp),
     [filtered]
   );
-// Cập nhật thời gian mỗi 30 giây
-useEffect(() => {
-  const interval = setInterval(() => {
-    setNow(Date.now());
-  }, 30000);
 
-  return () => clearInterval(interval);
-}, []);
-  // 👇 THÊM ĐOẠN NÀY NGAY BÊN DƯỚI
-useEffect(() => {
-  if (retryingId) {
-    const record = records.find((r) => r.id === retryingId);
+  /* ===== RESET RETRY ===== */
 
-    // Nếu record không còn pending nữa -> mở lại nút
-    if (!record || record.status !== 'pending') {
-      setRetryingId(null);
+  useEffect(() => {
+    if (retryingId) {
+      const record = records.find((r) => r.id === retryingId);
+      if (!record || record.status !== 'pending') {
+        setRetryingId(null);
+      }
     }
-  }
-}, [records, retryingId]);
-  const isOver2Minutes = (timestamp: number) => {
-  return now - timestamp > 2 * 60 * 1000;
-};
+  }, [records, retryingId]);
+
+  /* ===== HANDLERS ===== */
+
+  const handleRetry = useCallback(
+    (id: string) => {
+      setRetryingId(id);
+      onRetry(id);
+    },
+    [onRetry]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      onDelete(id);
+    },
+    [onDelete]
+  );
+
+  /* ===== VIRTUAL ROW ===== */
+
+  const Row = ({ index, style }: any) => {
+    const record = sorted[index];
+    return (
+      <div style={style}>
+        <HistoryItem
+          record={record}
+          retryingId={retryingId}
+          onRetry={handleRetry}
+          onDelete={handleDelete}
+          onView={setViewing}
+        />
+      </div>
+    );
+  };
+
   return (
     <>
       <div className="p-4 space-y-3 pb-28 relative">
-        {/* CARD ĐẾM */}
         <div className="absolute top-3 right-4 z-10 pointer-events-none">
-          <div className="bg-white/90 backdrop-blur-sm shadow-sm border border-slate-200 px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
-            <span className="font-semibold text-indigo-600">{sorted.length}</span>
+          <div className="bg-white/90 backdrop-blur-sm shadow-sm border px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
+            <span className="font-semibold text-indigo-600">
+              {sorted.length}
+            </span>
             <span className="text-slate-500">/</span>
             <span className="text-slate-500">{records.length}</span>
           </div>
@@ -113,8 +255,8 @@ useEffect(() => {
         {/* FILTER */}
         <div className="bg-white rounded-xl border p-3 space-y-2">
           <input
-            value={searchCont}
-            onChange={(e) => setSearchCont(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm container..."
             className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
           />
@@ -172,146 +314,52 @@ useEffect(() => {
         </div>
 
         {/* LIST */}
-  {/* LIST */}
-{sorted.length > 0 ? (
-  sorted.map((r) => (
-    <div
-      key={r.id}
-      onClick={() => setViewing(r)}
-      className="bg-white rounded-xl px-3 py-2 border flex justify-between items-center cursor-pointer hover:bg-slate-50"
-    >
-      {/* LEFT */}
-<div className="flex items-center space-x-3">
-  {/* STATUS ICON */}
-  <div
-    className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-      r.status === 'synced'
-        ? 'bg-green-100 text-green-600'
-        : r.status === 'error'
-        ? 'bg-red-100 text-red-600'
-        : 'bg-amber-100 text-amber-600'
-    }`}
-  >
-    {r.status === 'synced' && <CheckCircle size={18} />}
-    {r.status === 'error' && <AlertTriangle size={18} />}
-    {r.status === 'pending' && <Clock size={18} />}
-  </div>
-
-  {/* RETRY ERROR */}
-  {r.status === 'error' && (
-    <button
-      disabled={retryingId === r.id}
-      onClick={(e) => {
-        e.stopPropagation();
-        setRetryingId(r.id);
-        onRetry(r.id);
-      }}
-      className={`p-2 rounded-lg ${
-        retryingId === r.id
-          ? 'bg-red-100 text-red-400 opacity-50 cursor-not-allowed'
-          : 'bg-red-100 text-red-600'
-      }`}
-    >
-      <RefreshCw
-        size={16}
-        className={retryingId === r.id ? 'animate-spin' : ''}
-      />
-    </button>
-  )}
-
-  {/* RETRY PENDING > 2 MIN */}
-  {r.status === 'pending' &&
-    isOver2Minutes(r.timestamp) && (
-      <button
-        disabled={retryingId === r.id}
-        onClick={(e) => {
-          e.stopPropagation();
-          setRetryingId(r.id);
-          onRetry(r.id);
-        }}
-        className={`p-2 rounded-lg ${
-          retryingId === r.id
-            ? 'bg-amber-100 text-amber-400 opacity-50 cursor-not-allowed'
-            : 'bg-amber-100 text-amber-600'
-        }`}
-      >
-        <RefreshCw
-          size={16}
-          className={retryingId === r.id ? 'animate-spin' : ''}
-        />
-      </button>
-    )}
-
-  {/* CONTAINER INFO */}
-  <div className="flex items-baseline gap-1.5 font-mono">
-    <div className="font-bold text-lg">
-      <span className="text-black">
-        {r.containerNumber.slice(0, 4)}
-      </span>
-      <span className="text-green-700">
-        {r.containerNumber.slice(4)}
-      </span>
-    </div>
-
-    <div className="text-[10.5px] text-slate-400 whitespace-nowrap">
-      {r.teamName} {formatDate(r.timestamp)}
-    </div>
-  </div>
-</div>
-
-{/* ACTION */}
-<div className="flex items-center">
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      onDelete(r.id);
-    }}
-    className="p-2 rounded-lg bg-red-50 text-red-500"
-  >
-    <Trash2 size={16} />
-  </button>
-</div>
-    </div>
-  ))
-) : (
-  <div className="text-center py-10 text-slate-500 italic">
-    Không có bản ghi nào khớp với bộ lọc hiện tại
-  </div>
-)}
+        {sorted.length > 0 ? (
+          <List
+            height={600}
+            itemCount={sorted.length}
+            itemSize={72}
+            width="100%"
+          >
+            {Row}
+          </List>
+        ) : (
+          <div className="text-center py-10 text-slate-500 italic">
+            Không có bản ghi nào khớp với bộ lọc hiện tại
+          </div>
+        )}
       </div>
 
       {viewing && (
-<ImageViewer
-  record={viewing}
-  onClose={() => setViewing(null)}
-  onRetry={(id) => {
-    setRetryingId(id);
-    onRetry(id);
-  }}
-  retryingId={retryingId}
-    onUpdate={(all, added) => {
-      const updated: RepairRecord = {
-        ...viewing,
-        images: all,
-        status: 'pending',
-      };
-      setViewing(updated);
-      onUpdateRecord(updated, added);
-    }}
-  />
-)}
+        <ImageViewer
+          record={viewing}
+          onClose={() => setViewing(null)}
+          onRetry={handleRetry}
+          retryingId={retryingId}
+          onUpdate={(all, added) => {
+            const updated: RepairRecord = {
+              ...viewing,
+              images: all,
+              status: 'pending',
+            };
+            setViewing(updated);
+            onUpdateRecord(updated, added);
+          }}
+        />
+      )}
     </>
   );
 };
 
 /* ================= IMAGE VIEWER ================= */
-const ImageViewer: React.FC<{
-  record: RepairRecord;
-  onClose: () => void;
-  onRetry: (id: string) => void;
-  retryingId: string | null;   // 👈 THÊM DÒNG NÀY
-  onUpdate: (all: string[], added: string[]) => void;
-}> = ({ record, onClose, onRetry, retryingId, onUpdate }) => {
+
+const ImageViewer: React.FC<any> = ({
+  record,
+  onClose,
+  onRetry,
+  retryingId,
+  onUpdate,
+}) => {
   const [images, setImages] = useState<string[]>(record.images);
   const [added, setAdded] = useState<string[]>([]);
 
@@ -320,35 +368,40 @@ const ImageViewer: React.FC<{
     setAdded([]);
   }, [record]);
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
+
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
       <div className="h-16 px-5 flex justify-between items-center bg-black/80 text-white">
         <div>
-        <div className="flex items-center gap-2">
-  <div className="font-mono font-bold text-lg">
-    {record.containerNumber}
-  </div>
-<button
-  disabled={retryingId === record.id}
-  onClick={() => onRetry(record.id)}
-  className={`p-1.5 rounded-lg ${
-    retryingId === record.id
-      ? 'bg-amber-100 text-amber-400 opacity-50'
-      : 'bg-amber-100 text-amber-600'
-  }`}
->
-  <RefreshCw
-    size={16}
-    className={retryingId === record.id ? 'animate-spin' : ''}
-  />
-</button>
-</div>
+          <div className="flex items-center gap-2">
+            <div className="font-mono font-bold text-lg">
+              {record.containerNumber}
+            </div>
+            <button
+              disabled={retryingId === record.id}
+              onClick={() => onRetry(record.id)}
+              className="p-1.5 rounded-lg bg-amber-100 text-amber-600"
+            >
+              <RefreshCw
+                size={16}
+                className={retryingId === record.id ? 'animate-spin' : ''}
+              />
+            </button>
+          </div>
+
           <div className="flex items-center text-xs text-slate-300 space-x-2">
             <Users size={12} />
             <span>{record.teamName}</span>
             <span>• {images.length} ảnh</span>
           </div>
         </div>
+
         <button onClick={onClose}>
           <X />
         </button>
@@ -358,8 +411,10 @@ const ImageViewer: React.FC<{
         <div className="grid grid-cols-4 gap-2">
           {images.map((img, i) => (
             <img
-              key={i}
+              key={img + i}
               src={img}
+              loading="lazy"
+              decoding="async"
               className="aspect-square object-cover rounded"
             />
           ))}
