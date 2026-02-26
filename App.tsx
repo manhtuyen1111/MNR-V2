@@ -183,10 +183,17 @@ const handleAddImage = async (imgData: string) => {
         body: JSON.stringify(payload)
       });
 
-      if (response.ok) {
-        return true;
-      }
-      return false;
+     if (!response.ok) {
+  throw new Error("HTTP Error");
+}
+
+const result = await response.json();
+
+if (result.success !== true) {
+  throw new Error("Server returned failure");
+}
+
+return true;
     } catch (e) {
       console.error("Sync error", e);
       return false;
@@ -268,48 +275,52 @@ const handleAddImage = async (imgData: string) => {
   };
 
   const handleRetry = async (id: string) => {
-    const record = records.find(r => r.id === id);
-    if (!record || !settings.googleScriptUrl) return;
+  const record = records.find(r => r.id === id);
+  if (!record || !settings.googleScriptUrl) return;
 
-    const startIdx = record.uploadedCount || 0;
-    const imagesToSync = record.images.slice(startIdx);
+  // Luôn gửi lại toàn bộ record
+  const imagesToSync = record.images;
 
-    if (imagesToSync.length === 0) {
-      const updated = { ...record, status: 'synced' as const };
+  let hashesToSync = record.imageHashes;
+  if (!hashesToSync || hashesToSync.length !== imagesToSync.length) {
+    hashesToSync = await Promise.all(imagesToSync.map(img => getImageHash(img)));
+  }
+
+  setRecords(prev =>
+    prev.map(r => r.id === id ? { ...r, status: 'pending' } : r)
+  );
+
+  setToast({
+    message: `Đang gửi lại ${imagesToSync.length} ảnh...`,
+    type: 'warning'
+  });
+
+  try {
+    const success = await syncRecordToSheet(record, imagesToSync, 0, hashesToSync);
+
+    if (success) {
+      const updated = {
+        ...record,
+        status: 'synced' as const,
+        uploadedCount: record.images.length
+      };
+
       await dbService.saveRecord(updated);
       setRecords(prev => prev.map(r => r.id === id ? updated : r));
-      setToast({ message: 'Dữ liệu đã đầy đủ. Cập nhật trạng thái.', type: 'success' });
-      return;
+
+      setToast({ message: 'Gửi lại thành công!', type: 'success' });
+    } else {
+      throw new Error();
     }
+  } catch {
+    const updated = { ...record, status: 'error' as const };
+    await dbService.saveRecord(updated);
+    setRecords(prev => prev.map(r => r.id === id ? updated : r));
 
-    // Lấy hoặc tính hashes cho phần ảnh cần retry
-    let hashesToSync = record.imageHashes?.slice(startIdx) || [];
-    if (hashesToSync.length !== imagesToSync.length) {
-      hashesToSync = await Promise.all(imagesToSync.map(img => getImageHash(img)));
-    }
-
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, status: 'pending' } : r));
-    setToast({ message: `Đang gửi tiếp ${imagesToSync.length} ảnh...`, type: 'warning' });
-
-    syncRecordToSheet(record, imagesToSync, startIdx, hashesToSync).then(async (success) => {
-      if (success) {
-        const updated = { 
-          ...record, 
-          status: 'synced' as const,
-          uploadedCount: record.images.length
-        };
-        await dbService.saveRecord(updated);
-        setRecords(prev => prev.map(r => r.id === id ? updated : r));
-        setToast({ message: 'Gửi thành công!', type: 'success' });
-      } else {
-        const updated = { ...record, status: 'error' as const };
-        await dbService.saveRecord(updated);
-        setRecords(prev => prev.map(r => r.id === id ? updated : r));
-        setToast({ message: 'Vẫn chưa gửi được.', type: 'error' });
-      }
-    });
-  };
-
+    setToast({ message: 'Server vẫn lỗi.', type: 'error' });
+  }
+};
+  
   const handleDeleteRecord = async (id: string) => {
     if (window.confirm('Bạn có chắc muốn xóa hồ sơ này?')) {
       await dbService.deleteRecord(id);
