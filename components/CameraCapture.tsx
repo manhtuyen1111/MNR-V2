@@ -283,8 +283,8 @@ ctx.filter = "none";
             <X className="w-6 h-6" />
           </button>
         </div>
-     <div
-  className="flex-1 relative bg-black flex items-center justify-center overflow-hidden"
+<div
+  className="flex-1 relative bg-black flex items-center justify-center overflow-hidden touch-none"
   onTouchStart={handleTouchStart}
   onTouchMove={handleTouchMove}
   onTouchEnd={handleTouchEnd}
@@ -311,7 +311,7 @@ ctx.filter = "none";
             : "bg-white/20 text-white"}
         `}
       >
-        {z.toFixed(0)}x
+        {z % 1 === 0 ? z.toFixed(0) : z.toFixed(1)}x
       </button>
     ))}
   </div>
