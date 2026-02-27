@@ -156,7 +156,7 @@ const ReportDashboard = () => {
           : 'text-gray-600'
       }`}
     >
-      Báo cáo Cont
+      BÁO CÁO SẢN LƯỢNG
     </button>
 
     <button
@@ -167,7 +167,7 @@ const ReportDashboard = () => {
           : 'text-gray-600'
       }`}
     >
-      Báo cáo Lương
+     BÁO CÁO SẢN PHẨM
     </button>
   </div>
 </div>
