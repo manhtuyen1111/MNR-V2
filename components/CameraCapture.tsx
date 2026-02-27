@@ -23,6 +23,10 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [isTorchSupported, setIsTorchSupported] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(1);
+  const [isZoomSupported, setIsZoomSupported] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -45,10 +49,19 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       setIsCameraOpen(true);
 
       const track = mediaStream.getVideoTracks()[0];
-      if (track) {
-        const capabilities = track.getCapabilities() as any;
-        setIsTorchSupported(!!capabilities?.torch);
-      }
+if (track) {
+  const capabilities = track.getCapabilities() as any;
+
+  setIsTorchSupported(!!capabilities?.torch);
+
+  // ===== ZOOM SUPPORT =====
+  if (capabilities?.zoom) {
+    setIsZoomSupported(true);
+    setMinZoom(capabilities.zoom.min || 1);
+    setMaxZoom(capabilities.zoom.max || 1);
+    setZoom(capabilities.zoom.min || 1);
+  }
+}
 
     } catch (err) {
       console.error("Error accessing camera:", err);
@@ -94,7 +107,23 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       console.log("Torch not supported");
     }
   };
+/* ================= SET ZOOM ================= */
+const setZoomCamera = async (value: number) => {
+  if (!stream) return;
 
+  const track = stream.getVideoTracks()[0];
+  if (!track) return;
+
+  try {
+    await (track as any).applyConstraints({
+      advanced: [{ zoom: value }]
+    });
+
+    setZoom(value);
+  } catch (err) {
+    console.log("Zoom not supported");
+  }
+};
   /* ================= CAPTURE PHOTO ================= */
   const capturePhoto = () => {
   if (!videoRef.current || !canvasRef.current) return;
@@ -193,15 +222,29 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
           </button>
         </div>
 
-        <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className="absolute w-full h-full object-cover"
-          />
-        </div>
+       <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+  <video
+    ref={videoRef}
+    autoPlay
+    playsInline
+    muted
+    className="absolute w-full h-full object-cover"
+  />
+
+  {isZoomSupported && (
+    <div className="absolute bottom-24 left-0 right-0 flex justify-center">
+      <input
+        type="range"
+        min={minZoom}
+        max={maxZoom}
+        step="0.1"
+        value={zoom}
+        onChange={(e) => setZoomCamera(Number(e.target.value))}
+        className="w-64 accent-white"
+      />
+    </div>
+  )}
+</div>
 
         <div className="h-48 bg-black/90 pb-safe flex flex-col shrink-0 border-t border-white/10">
           <div className="h-20 flex items-center px-4 space-x-3 overflow-x-auto scrollbar-hide bg-white/5">
