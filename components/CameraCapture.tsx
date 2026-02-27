@@ -24,6 +24,12 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [isTorchSupported, setIsTorchSupported] = useState(false);
   const [zoom, setZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(1);
+  const [isZoomSupported, setIsZoomSupported] = useState(false);
+  // ===== PINCH ZOOM STATE =====
+const initialPinchDistance = useRef<number | null>(null);
+const initialZoom = useRef<number>(1);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -44,10 +50,26 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
       setStream(mediaStream);
       setIsCameraOpen(true);
       setZoom(1);
-const track = mediaStream.getVideoTracks()[0];
+      const track = mediaStream.getVideoTracks()[0];
+
 if (track) {
   const capabilities = track.getCapabilities() as any;
+
+  // Torch
   setIsTorchSupported(!!capabilities?.torch);
+
+  // Zoom
+  if (capabilities?.zoom) {
+    setIsZoomSupported(true);
+    setMinZoom(capabilities.zoom.min || 1);
+    setMaxZoom(capabilities.zoom.max || 3);
+    setZoom(capabilities.zoom.min || 1);
+  } else {
+    setIsZoomSupported(false);
+    setMinZoom(1);
+    setMaxZoom(1);
+    setZoom(1);
+  }
 }
   }catch (err) {
       console.error("Error accessing camera:", err);
@@ -74,6 +96,10 @@ if (track) {
 
     setIsTorchOn(false);
     setIsCameraOpen(false);
+    setZoom(1);
+    setMinZoom(1);
+    setMaxZoom(1);
+    setIsZoomSupported(false);
   };
 
   /* ================= TOGGLE FLASH ================= */
@@ -93,6 +119,57 @@ if (track) {
       console.log("Torch not supported");
     }
   };
+  // ===== PINCH UTILS =====
+const getDistance = (touches: React.TouchList) => {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
+const handleTouchStart = (e: React.TouchEvent) => {
+  if (!isZoomSupported) return;
+
+  if (e.touches.length === 2) {
+    initialPinchDistance.current = getDistance(e.touches);
+    initialZoom.current = zoom;
+  }
+};
+
+const handleTouchMove = (e: React.TouchEvent) => {
+  if (!isZoomSupported) return;
+
+  if (e.touches.length === 2 && initialPinchDistance.current) {
+    e.preventDefault();
+
+    const currentDistance = getDistance(e.touches);
+    const scale = currentDistance / initialPinchDistance.current;
+
+    let newZoom = initialZoom.current * scale;
+
+    // clamp
+    newZoom = Math.max(minZoom, Math.min(maxZoom, newZoom));
+
+    handleZoomChange(newZoom);
+  }
+};
+
+const handleTouchEnd = () => {
+  initialPinchDistance.current = null;
+};
+  /* ================= HANDLE ZOOM ================= */
+const handleZoomChange = (value: number) => {
+  if (!stream) return;
+
+  const track = stream.getVideoTracks()[0];
+  if (!track) return;
+
+  // Không await để tránh delay khi pinch nhanh
+  (track as any).applyConstraints({
+    advanced: [{ zoom: value }]
+  }).catch(() => {});
+
+  setZoom(value);
+};
   /* ================= CAPTURE PHOTO ================= */
  const capturePhoto = () => {
   if (!videoRef.current || !canvasRef.current) return;
@@ -107,45 +184,23 @@ if (track) {
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
 
-  // === Crop theo zoom ===
-  const cropWidth = videoWidth / zoom;
-  const cropHeight = videoHeight / zoom;
+canvas.width = videoWidth;
+canvas.height = videoHeight;
 
-  const offsetX = (videoWidth - cropWidth) / 2;
-  const offsetY = (videoHeight - cropHeight) / 2;
+const ctx = canvas.getContext("2d");
+if (!ctx) return;
 
-  // === Resize output nếu quá lớn ===
-  let outputWidth = cropWidth;
-  let outputHeight = cropHeight;
+ctx.filter = "brightness(1.22) contrast(1.1) saturate(1.05)";
 
-  if (outputWidth > MAX_W || outputHeight > MAX_H) {
-    const scale = Math.min(MAX_W / outputWidth, MAX_H / outputHeight);
-    outputWidth = Math.round(outputWidth * scale);
-    outputHeight = Math.round(outputHeight * scale);
-  }
+ctx.drawImage(
+  video,
+  0,
+  0,
+  videoWidth,
+  videoHeight
+);
 
-  canvas.width = outputWidth;
-  canvas.height = outputHeight;
-
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-
-  // Giữ filter nếu bạn muốn ảnh sáng hơn
-  ctx.filter = "brightness(1.22) contrast(1.1) saturate(1.05)";
-
-  ctx.drawImage(
-    video,
-    offsetX,
-    offsetY,
-    cropWidth,
-    cropHeight,
-    0,
-    0,
-    outputWidth,
-    outputHeight
-  );
-
-  ctx.filter = "none";
+ctx.filter = "none";
 
   canvas.toBlob(
     (blob) => {
@@ -212,31 +267,33 @@ if (track) {
             <X className="w-6 h-6" />
           </button>
         </div>
-
-       <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
+     <div
+  className="flex-1 relative bg-black flex items-center justify-center overflow-hidden"
+  onTouchStart={handleTouchStart}
+  onTouchMove={handleTouchMove}
+  onTouchEnd={handleTouchEnd}
+>
 <video
   ref={videoRef}
   autoPlay
   playsInline
   muted
-  className="absolute w-full h-full object-cover transition-transform duration-100 ease-out will-change-transform"
-  style={{
-    transform: `scale(${zoom}) translateZ(0)`,
-    transformOrigin: 'center center'
-  }}
+  className="absolute w-full h-full object-cover"
 />
 
-<div className="absolute bottom-24 left-0 right-0 flex justify-center">
-  <input
-    type="range"
-    min={1}
-    max={3}
-    step="0.1"
-    value={zoom}
-    onChange={(e) => setZoom(Number(e.target.value))}
-    className="w-64 accent-white"
-  />
-</div>
+{isZoomSupported && (
+  <div className="absolute bottom-24 left-0 right-0 flex justify-center">
+    <input
+      type="range"
+      min={minZoom}
+      max={maxZoom}
+      step="0.1"
+      value={zoom}
+      onChange={(e) => handleZoomChange(Number(e.target.value))}
+      className="w-64 accent-white"
+    />
+  </div>
+)}
 </div>
 
         <div className="h-48 bg-black/90 pb-safe flex flex-col shrink-0 border-t border-white/10">
