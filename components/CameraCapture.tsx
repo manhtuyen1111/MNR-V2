@@ -292,9 +292,8 @@ ctx.filter = "none";
   muted
   className="absolute w-full h-full object-cover"
 />
-
 {isZoomSupported && (
-  <div className="absolute bottom-[200px] left-0 right-0 flex justify-center gap-4">
+  <div className="absolute bottom-52 left-0 right-0 flex justify-center gap-4 z-10">
     {ZOOM_PRESETS.map((z) => (
       <button
         key={z}
@@ -302,7 +301,7 @@ ctx.filter = "none";
         className={`
           w-14 h-14 rounded-full text-sm font-bold
           backdrop-blur-md transition-all
-     ${Math.abs(zoom - z) < 0.05
+          ${Math.abs(zoom - z) < 0.05
             ? "bg-white text-black scale-110"
             : "bg-white/20 text-white"}
         `}
