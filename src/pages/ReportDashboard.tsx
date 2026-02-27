@@ -20,7 +20,7 @@ const teamOrder = ["TỔ 1", "TỔ 2", "TỔ 3", "TỔ 4"];
 
 const ReportDashboard = () => {
   const [data, setData] = useState<ReportData>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
   const [rangeType, setRangeType] = useState("THIS_MONTH");
@@ -32,24 +32,31 @@ const ReportDashboard = () => {
   const [reportType, setReportType] = useState<'cont' | 'salary'>('cont');
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(
-          "https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec",
-          { cache: "force-cache" }
-        );
-        const result = await res.json();
-        if (result.success) {
-          setData(result.data || {});
-        }
-      } catch (err) {
-        console.error("Fetch error:", err);
-      } finally {
-        setLoading(false);
+ if (reportType !== 'cont' || Object.keys(data).length > 0) return;
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        "https://script.google.com/macros/s/AKfycbwRAOP4r12ZoBWH8Q__jdFG1u-mro3ecaWHJqgruk9MpY4IeI9iNsUXKhE8nWg7KC0W/exec",
+        { cache: "force-cache" }
+      );
+
+      const result = await res.json();
+
+      if (result.success) {
+        setData(result.data || {});
       }
-    };
-    fetchData();
-  }, []);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [reportType]);
 
   const formatNumber = (num: number) => num.toFixed(1);
 
