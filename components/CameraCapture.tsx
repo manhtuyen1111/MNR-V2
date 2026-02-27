@@ -294,7 +294,7 @@ ctx.filter = "none";
 />
 
 {isZoomSupported && (
-  <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-4">
+  <div className="absolute bottom-[200px] left-0 right-0 flex justify-center gap-4">
     {ZOOM_PRESETS.map((z) => (
       <button
         key={z}
