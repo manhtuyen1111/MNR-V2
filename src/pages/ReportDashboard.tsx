@@ -585,7 +585,7 @@ workerMap[name].teams.add(team);
   </div>
 </header>
 
-  <main className="flex-1 px-3 py-4 max-w-5xl mx-auto w-full space-y-3">
+<main className="flex-1 px-3 py-4 max-w-5xl mx-auto w-full space-y-3 pb-[calc(120px+env(safe-area-inset-bottom))]">
 
     {salaryReport.length === 0 && (
       <div className="text-center py-10 text-gray-500">
