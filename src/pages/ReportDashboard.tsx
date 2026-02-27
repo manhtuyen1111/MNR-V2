@@ -29,6 +29,7 @@ const ReportDashboard = () => {
 
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
+  const [reportType, setReportType] = useState<'cont' | 'salary'>('cont');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,12 +61,13 @@ const ReportDashboard = () => {
   };
 
   const teams = useMemo(() => {
-    const set = new Set<string>();
-    Object.values(data).forEach((day) =>
-      Object.keys(day).forEach((team) => set.add(team))
-    );
+  const set = new Set<string>();
+  Object.values(data).forEach((day) =>
+    Object.keys(day).forEach((team) => set.add(team))
+  );
+
   return ["ALL", ...teamOrder.filter((t) => set.has(t))];
-  }, [data]);
+}, [data]);
 
   const filteredDates = useMemo(() => {
     const allDates = Object.keys(data).sort((a, b) => b.localeCompare(a));
@@ -144,6 +146,33 @@ const ReportDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
       {/* Header - Sticky, siêu gọn, không title */}
+      <div className="px-3 pt-3">
+  <div className="flex bg-gray-200 p-1 rounded-xl">
+    <button
+      onClick={() => setReportType('cont')}
+      className={`flex-1 py-2 text-sm font-bold rounded-lg ${
+        reportType === 'cont'
+          ? 'bg-green-700 text-white'
+          : 'text-gray-600'
+      }`}
+    >
+      Báo cáo Cont
+    </button>
+
+    <button
+      onClick={() => setReportType('salary')}
+      className={`flex-1 py-2 text-sm font-bold rounded-lg ${
+        reportType === 'salary'
+          ? 'bg-green-700 text-white'
+          : 'text-gray-600'
+      }`}
+    >
+      Báo cáo Lương
+    </button>
+  </div>
+</div>
+      {reportType === 'cont' && (
+<>
       <header className="sticky top-0 z-20 bg-white shadow-md border-b border-gray-300">
         <div className="px-3 pt-2 pb-2.5 max-w-5xl mx-auto">
           {/* Filters + Summary - đẩy sát top */}
@@ -388,6 +417,16 @@ const ReportDashboard = () => {
           </div>
         )}
       </main>
+  </>
+)}
+      {reportType === 'salary' && (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <h2 className="text-xl font-bold mb-3">BÁO CÁO LƯƠNG</h2>
+      <p className="text-gray-600">Chưa xây dựng nội dung.</p>
+    </div>
+  </div>
+)}
     </div>
   );
 };
