@@ -363,7 +363,7 @@ workerMap[name].teams.add(team);
       </header>
 
       {/* Main - list danh sách */}
-      <main className="flex-1 px-3 py-3 max-w-5xl mx-auto w-full space-y-3 pb-32">
+      <main className="flex-1 px-3 py-3 max-w-5xl mx-auto w-full space-y-3 pb-[calc(100px+env(safe-area-inset-bottom))]">
         {filteredDates.map((date) => {
           const day = data[date] || {};
           const dayTeams = teamOrder.filter(
