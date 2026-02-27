@@ -94,35 +94,59 @@ if (track) {
     }
   };
   /* ================= CAPTURE PHOTO ================= */
-  const capturePhoto = () => {
+ const capturePhoto = () => {
   if (!videoRef.current || !canvasRef.current) return;
 
   const video = videoRef.current;
   const canvas = canvasRef.current;
 
+  const QUALITY = 0.8;
   const MAX_W = 1000;
   const MAX_H = 750;
-  const QUALITY = 0.65;
 
-  let w = video.videoWidth;
-  let h = video.videoHeight;
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
 
-  if (w > MAX_W || h > MAX_H) {
-    const scale = Math.min(MAX_W / w, MAX_H / h);
-    w = Math.round(w * scale);
-    h = Math.round(h * scale);
+  // === Crop theo zoom ===
+  const cropWidth = videoWidth / zoom;
+  const cropHeight = videoHeight / zoom;
+
+  const offsetX = (videoWidth - cropWidth) / 2;
+  const offsetY = (videoHeight - cropHeight) / 2;
+
+  // === Resize output nếu quá lớn ===
+  let outputWidth = cropWidth;
+  let outputHeight = cropHeight;
+
+  if (outputWidth > MAX_W || outputHeight > MAX_H) {
+    const scale = Math.min(MAX_W / outputWidth, MAX_H / outputHeight);
+    outputWidth = Math.round(outputWidth * scale);
+    outputHeight = Math.round(outputHeight * scale);
   }
 
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
 
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
+  // Giữ filter nếu bạn muốn ảnh sáng hơn
   ctx.filter = "brightness(1.22) contrast(1.1) saturate(1.05)";
-  ctx.drawImage(video, 0, 0, w, h);
+
+  ctx.drawImage(
+    video,
+    offsetX,
+    offsetY,
+    cropWidth,
+    cropHeight,
+    0,
+    0,
+    outputWidth,
+    outputHeight
+  );
+
   ctx.filter = "none";
-    
+
   canvas.toBlob(
     (blob) => {
       if (!blob) return;
@@ -133,14 +157,12 @@ if (track) {
       };
       reader.readAsDataURL(blob);
     },
-    'image/jpeg',
+    "image/jpeg",
     QUALITY
   );
 
-  // rung nhẹ khi chụp
   navigator.vibrate?.(30);
 };
-
   /* ================= EFFECTS ================= */
   useEffect(() => {
     if (isCameraOpen && videoRef.current && stream) {
@@ -197,9 +219,9 @@ if (track) {
   autoPlay
   playsInline
   muted
-  className="absolute w-full h-full object-cover transition-transform duration-200 will-change-transform"
+  className="absolute w-full h-full object-cover transition-transform duration-100 ease-out will-change-transform"
   style={{
-    transform: `scale(${zoom})`,
+    transform: `scale(${zoom}) translateZ(0)`,
     transformOrigin: 'center center'
   }}
 />
