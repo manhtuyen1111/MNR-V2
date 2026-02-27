@@ -24,10 +24,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [isTorchOn, setIsTorchOn] = useState(false);
   const [isTorchSupported, setIsTorchSupported] = useState(false);
   const [zoom, setZoom] = useState(1);
-  const [minZoom, setMinZoom] = useState(1);
-  const [maxZoom, setMaxZoom] = useState(1);
-  const [isZoomSupported, setIsZoomSupported] = useState(false);
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -47,23 +43,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
 
       setStream(mediaStream);
       setIsCameraOpen(true);
-
-      const track = mediaStream.getVideoTracks()[0];
+      setZoom(1);
+const track = mediaStream.getVideoTracks()[0];
 if (track) {
   const capabilities = track.getCapabilities() as any;
-
   setIsTorchSupported(!!capabilities?.torch);
-
-  // ===== ZOOM SUPPORT =====
-  if (capabilities?.zoom) {
-    setIsZoomSupported(true);
-    setMinZoom(capabilities.zoom.min || 1);
-    setMaxZoom(capabilities.zoom.max || 1);
-    setZoom(capabilities.zoom.min || 1);
-  }
 }
-
-    } catch (err) {
+  }catch (err) {
       console.error("Error accessing camera:", err);
       alert("Không thể mở camera. Vui lòng kiểm tra quyền truy cập.");
     }
@@ -107,23 +93,6 @@ if (track) {
       console.log("Torch not supported");
     }
   };
-/* ================= SET ZOOM ================= */
-const setZoomCamera = async (value: number) => {
-  if (!stream) return;
-
-  const track = stream.getVideoTracks()[0];
-  if (!track) return;
-
-  try {
-    await (track as any).applyConstraints({
-      advanced: [{ zoom: value }]
-    });
-
-    setZoom(value);
-  } catch (err) {
-    console.log("Zoom not supported");
-  }
-};
   /* ================= CAPTURE PHOTO ================= */
   const capturePhoto = () => {
   if (!videoRef.current || !canvasRef.current) return;
@@ -223,27 +192,29 @@ const setZoomCamera = async (value: number) => {
         </div>
 
        <div className="flex-1 relative bg-black flex items-center justify-center overflow-hidden">
-  <video
-    ref={videoRef}
-    autoPlay
-    playsInline
-    muted
-    className="absolute w-full h-full object-cover"
-  />
+<video
+  ref={videoRef}
+  autoPlay
+  playsInline
+  muted
+  className="absolute w-full h-full object-cover transition-transform duration-200 will-change-transform"
+  style={{
+    transform: `scale(${zoom})`,
+    transformOrigin: 'center center'
+  }}
+/>
 
-  {isZoomSupported && (
-    <div className="absolute bottom-24 left-0 right-0 flex justify-center">
-      <input
-        type="range"
-        min={minZoom}
-        max={maxZoom}
-        step="0.1"
-        value={zoom}
-        onChange={(e) => setZoomCamera(Number(e.target.value))}
-        className="w-64 accent-white"
-      />
-    </div>
-  )}
+<div className="absolute bottom-24 left-0 right-0 flex justify-center">
+  <input
+    type="range"
+    min={1}
+    max={3}
+    step="0.1"
+    value={zoom}
+    onChange={(e) => setZoom(Number(e.target.value))}
+    className="w-64 accent-white"
+  />
+</div>
 </div>
 
         <div className="h-48 bg-black/90 pb-safe flex flex-col shrink-0 border-t border-white/10">
