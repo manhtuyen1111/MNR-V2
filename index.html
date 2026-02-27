@@ -12,6 +12,9 @@
         background-color: #e2e8f0; /* Slate-200 -> Darker than before for contrast */
         overscroll-behavior-y: none; /* Prevent pull-to-refresh on mobile */
       }
+      html, body {
+  touch-action: manipulation;
+}
       .pb-safe {
         padding-bottom: env(safe-area-inset-bottom);
       }
