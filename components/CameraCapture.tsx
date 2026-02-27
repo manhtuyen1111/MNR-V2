@@ -177,7 +177,7 @@ const handleZoomChange = (value: number) => {
   const video = videoRef.current;
   const canvas = canvasRef.current;
 
-  const QUALITY = 0.8;
+  const QUALITY = 0.7;
 
   const videoWidth = video.videoWidth;
   const videoHeight = video.videoHeight;
