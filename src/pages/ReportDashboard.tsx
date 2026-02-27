@@ -80,6 +80,11 @@ useEffect(() => {
   fetchData();
 
 }, []);
+  useEffect(() => {
+  setRangeType("THIS_MONTH");
+  setFromDate("");
+  setToDate("");
+}, [reportType]);
   const formatNumber = (num: number) => num.toFixed(1);
 
   const formatDateDisplay = (dateStr: string) => {
@@ -516,40 +521,69 @@ workerMap[name].teams.add(team);
 )}
 {reportType === "salary" && (
 <>
-  <header className="sticky top-0 z-20 bg-white shadow-md border-b border-gray-300">
-    <div className="px-3 pt-2 pb-2.5 max-w-5xl mx-auto">
-      <div className="flex gap-2">
+<header className="sticky top-0 z-20 bg-white shadow-md border-b border-gray-300">
+  <div className="px-3 pt-2 pb-2.5 max-w-5xl mx-auto">
 
-        <select
-          value={rangeType}
-          onChange={(e) => setRangeType(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
-        >
-          <option value="TODAY">Hôm nay</option>
-          <option value="YESTERDAY">Hôm qua</option>
-          <option value="7D">7 ngày</option>
-          <option value="30D">30 ngày</option>
-          <option value="THIS_MONTH">Tháng này</option>
-          <option value="LAST_MONTH">Tháng trước</option>
-          <option value="CUSTOM">Tùy chọn</option>
-          <option value="ALL">Tất cả</option>
-        </select>
+    {/* Hàng select */}
+    <div className="flex gap-2">
 
-        <select
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
-        >
-          {teams.map((team) => (
-            <option key={team} value={team}>
-              {team === "ALL" ? "Tất cả tổ" : team}
-            </option>
-          ))}
-        </select>
+      <select
+        value={rangeType}
+        onChange={(e) => {
+          setRangeType(e.target.value);
 
-      </div>
+          // reset nếu không phải custom
+          if (e.target.value !== "CUSTOM") {
+            setFromDate("");
+            setToDate("");
+          }
+        }}
+        className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
+      >
+        <option value="TODAY">Hôm nay</option>
+        <option value="YESTERDAY">Hôm qua</option>
+        <option value="7D">7 ngày</option>
+        <option value="30D">30 ngày</option>
+        <option value="THIS_MONTH">Tháng này</option>
+        <option value="LAST_MONTH">Tháng trước</option>
+        <option value="CUSTOM">Tùy chọn</option>
+        <option value="ALL">Tất cả</option>
+      </select>
+
+      <select
+        value={selectedTeam}
+        onChange={(e) => setSelectedTeam(e.target.value)}
+        className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
+      >
+        {teams.map((team) => (
+          <option key={team} value={team}>
+            {team === "ALL" ? "Tất cả tổ" : team}
+          </option>
+        ))}
+      </select>
+
     </div>
-  </header>
+
+    {/* 👇 QUAN TRỌNG: THÊM ĐOẠN NÀY */}
+    {rangeType === "CUSTOM" && (
+      <div className="flex gap-2 mt-2">
+        <input
+          type="date"
+          value={fromDate}
+          onChange={(e) => setFromDate(e.target.value)}
+          className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
+        />
+        <input
+          type="date"
+          value={toDate}
+          onChange={(e) => setToDate(e.target.value)}
+          className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
+        />
+      </div>
+    )}
+
+  </div>
+</header>
 
   <main className="flex-1 px-3 py-4 max-w-5xl mx-auto w-full space-y-3">
 
