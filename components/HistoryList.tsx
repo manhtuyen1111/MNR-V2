@@ -472,7 +472,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[200]">
           <div className="bg-white rounded-xl p-5 w-80 space-y-3">
             <div className="font-semibold text-lg text-center">
-             VUI LÒNG NHẬP MÃ XÁC NHẬN TỪ QTV
+             VUI LÒNG NHẬP OTP TỪ QTV
             </div>
 
             <input
@@ -507,7 +507,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
               <button
                 onClick={() => {
                   const SECRET =
-                    import.meta.env.VITE_RETRY_SECRET || '123456';
+                    import.meta.env.VITE_RETRY_SECRET || '321';
 
                   if (secretInput === SECRET) {
                     setShowAuth(false);
@@ -517,7 +517,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({
                     setAuthError('Sai mật khẩu');
                   }
                 }}
-                className="flex-1 bg-amber-500 text-white rounded-lg py-2"
+                className="flex-1 bg-sky-700 text-white rounded-lg py-2"
               >
                 Xác nhận
               </button>
