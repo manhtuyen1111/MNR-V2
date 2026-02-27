@@ -28,14 +28,9 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [maxZoom, setMaxZoom] = useState(1);
   const [isZoomSupported, setIsZoomSupported] = useState(false);
   const ZOOM_PRESETS = isZoomSupported
-  ? [
-      minZoom,
-      1,
-      2,
-      maxZoom
-    ].filter(z => z >= minZoom && z <= maxZoom)
+  ? [0.5, 1, 2, 3].filter(z => z >= minZoom && z <= maxZoom)
   : [1];
-  
+
   // ===== PINCH ZOOM STATE =====
 const initialPinchDistance = useRef<number | null>(null);
 const initialZoom = useRef<number>(1);
