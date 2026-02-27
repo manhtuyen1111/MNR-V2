@@ -27,6 +27,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [minZoom, setMinZoom] = useState(1);
   const [maxZoom, setMaxZoom] = useState(1);
   const [isZoomSupported, setIsZoomSupported] = useState(false);
+  const ZOOM_PRESETS = isZoomSupported
+  ? [
+      Number(minZoom.toFixed(1)),
+      Number(((minZoom + maxZoom) / 2).toFixed(1)),
+      Number(maxZoom.toFixed(1)),
+    ]
+  : [1];
+  
   // ===== PINCH ZOOM STATE =====
 const initialPinchDistance = useRef<number | null>(null);
 const initialZoom = useRef<number>(1);
@@ -154,6 +162,16 @@ const handleTouchMove = (e: React.TouchEvent) => {
 };
 
 const handleTouchEnd = () => {
+if (!isZoomSupported) return;
+
+  if (ZOOM_PRESETS.length > 1) {
+    const closest = ZOOM_PRESETS.reduce((prev, curr) =>
+      Math.abs(curr - zoom) < Math.abs(prev - zoom) ? curr : prev
+    );
+
+    handleZoomChange(closest);
+  }
+
   initialPinchDistance.current = null;
 };
   /* ================= HANDLE ZOOM ================= */
@@ -234,7 +252,7 @@ ctx.filter = "none";
   /* ================= FULL SCREEN MODE ================= */
   if (isCameraOpen) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+     <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-[fadeIn_.25s_ease-out]">
         <canvas ref={canvasRef} className="hidden" />
 
         <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/80 to-transparent">
@@ -280,18 +298,25 @@ ctx.filter = "none";
 />
 
 {isZoomSupported && (
-  <div className="absolute bottom-24 left-0 right-0 flex justify-center">
-    <input
-      type="range"
-      min={minZoom}
-      max={maxZoom}
-      step="0.1"
-      value={zoom}
-      onChange={(e) => handleZoomChange(Number(e.target.value))}
-      className="w-64 accent-white"
-    />
+  <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-4">
+    {ZOOM_PRESETS.map((z) => (
+      <button
+        key={z}
+        onClick={() => handleZoomChange(z)}
+        className={`
+          w-14 h-14 rounded-full text-sm font-bold
+          backdrop-blur-md transition-all
+     ${Math.abs(zoom - z) < 0.05
+            ? "bg-white text-black scale-110"
+            : "bg-white/20 text-white"}
+        `}
+      >
+        {z.toFixed(0)}x
+      </button>
+    ))}
   </div>
 )}
+       
 </div>
 
         <div className="h-48 bg-black/90 pb-safe flex flex-col shrink-0 border-t border-white/10">
