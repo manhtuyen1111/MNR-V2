@@ -293,7 +293,7 @@ ctx.filter = "none";
   className="absolute w-full h-full object-cover"
 />
   {isZoomSupported && (
-  <div className="absolute left-0 right-0 bottom-16 flex justify-center gap-4 z-20 pb-safe">
+  <div className="absolute left-0 right-0 bottom-10 flex justify-center gap-4 z-20 pb-safe">
     {ZOOM_PRESETS.map((z) => (
       <button
         key={z}
