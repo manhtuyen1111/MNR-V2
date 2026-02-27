@@ -292,8 +292,8 @@ ctx.filter = "none";
   muted
   className="absolute w-full h-full object-cover"
 />
-{isZoomSupported && (
-  <div className="absolute left-0 right-0 top-[calc(100%-12rem)] -translate-y-4 flex justify-center gap-4 z-20">
+  {isZoomSupported && (
+  <div className="absolute left-0 right-0 bottom-36 flex justify-center gap-4 z-20 pb-safe">
     {ZOOM_PRESETS.map((z) => (
       <button
         key={z}
