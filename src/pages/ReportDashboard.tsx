@@ -64,14 +64,22 @@ const ReportDashboard = () => {
     Object.values(data).forEach((day) =>
       Object.keys(day).forEach((team) => set.add(team))
     );
-    return ["ALL", ...Array.from(set).sort()];
+  return ["ALL", ...teamOrder.filter((t) => set.has(t))];
   }, [data]);
 
   const filteredDates = useMemo(() => {
     const allDates = Object.keys(data).sort((a, b) => b.localeCompare(a));
     const today = new Date();
     const todayStr = today.toISOString().slice(0, 10);
-
+     // 🚫 Chặn chọn ngày sai
+  if (
+    rangeType === "CUSTOM" &&
+    fromDate &&
+    toDate &&
+    fromDate > toDate
+  ) {
+    return [];
+  }
     if (rangeType === "ALL") return allDates;
     if (rangeType === "TODAY") return allDates.filter((d) => d === todayStr);
     if (rangeType === "YESTERDAY") {
@@ -141,72 +149,69 @@ const ReportDashboard = () => {
           {/* Filters + Summary - đẩy sát top */}
           <div className="flex flex-col gap-2">
             {/* Range + Custom */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <select
-                  value={rangeType}
-                  onChange={(e) => {
-                    setRangeType(e.target.value);
-                    if (e.target.value !== "CUSTOM") {
-                      setFromDate("");
-                      setToDate("");
-                    }
-                  }}
-                  className="w-full px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="TODAY">Hôm nay</option>
-                  <option value="YESTERDAY">Hôm qua</option>
-                  <option value="7D">7 ngày</option>
-                  <option value="30D">30 ngày</option>
-                  <option value="THIS_MONTH">Tháng này</option>
-                  <option value="LAST_MONTH">Tháng trước</option>
-                  <option value="CUSTOM">Tùy chọn</option>
-                  <option value="ALL">Tất cả</option>
-                </select>
-              </div>
+           {/* Filters gộp 1 dòng */}
+<div className="flex gap-2">
 
-              {rangeType === "CUSTOM" && (
-                <div className="flex gap-2">
-                  <input
-                    type="date"
-                    value={fromDate}
-                    onChange={(e) => setFromDate(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                  <input
-                    type="date"
-                    value={toDate}
-                    onChange={(e) => setToDate(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                </div>
-              )}
-            </div>
+  {/* Range select */}
+  <select
+    value={rangeType}
+    onChange={(e) => {
+      setRangeType(e.target.value);
+      setExpandedDate(null);
+      setExpandedTeam(null);
+      if (e.target.value !== "CUSTOM") {
+        setFromDate("");
+        setToDate("");
+      }
+    }}
+    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+  >
+    <option value="TODAY">Hôm nay</option>
+    <option value="YESTERDAY">Hôm qua</option>
+    <option value="7D">7 ngày</option>
+    <option value="30D">30 ngày</option>
+    <option value="THIS_MONTH">Tháng này</option>
+    <option value="LAST_MONTH">Tháng trước</option>
+    <option value="CUSTOM">Tùy chọn</option>
+    <option value="ALL">Tất cả</option>
+  </select>
 
-            {/* Team chips */}
-            <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide">
-              {teams.map((team) => (
-                <button
-                  key={team}
-                  onClick={() => {
-                    setSelectedTeam(team);
-                    setExpandedDate(null);
-                    setExpandedTeam(null);
-                  }}
-                  className={`px-3.5 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all active:scale-95 min-w-[70px] text-center ${
-                    selectedTeam === team
-                      ? "bg-green-800 text-white shadow"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {team === "ALL" ? "Tất cả" : team}
-                </button>
-              ))}
-            </div>
+  {/* Team select */}
+  <select
+    value={selectedTeam}
+    onChange={(e) => {
+      setSelectedTeam(e.target.value);
+      setExpandedDate(null);
+      setExpandedTeam(null);
+    }}
+    className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+  >
+    {teams.map((team) => (
+      <option key={team} value={team}>
+        {team === "ALL" ? "Tất cả tổ" : team}
+      </option>
+    ))}
+  </select>
 
+</div>
+            {rangeType === "CUSTOM" && (
+  <div className="flex gap-2 mt-2">
+    <input
+      type="date"
+      value={fromDate}
+      onChange={(e) => setFromDate(e.target.value)}
+      className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
+    />
+    <input
+      type="date"
+      value={toDate}
+      onChange={(e) => setToDate(e.target.value)}
+      className="flex-1 px-3 py-2 text-sm bg-white border border-gray-300 rounded-lg"
+    />
+  </div>
+)}
+
+    
             {/* Summary - 1 dòng ngang */}
             <div className="flex items-center gap-3 mt-1">
               <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center gap-2">
