@@ -80,11 +80,12 @@ useEffect(() => {
   fetchData();
 
 }, []);
-  useEffect(() => {
-  setRangeType("THIS_MONTH");
-  setFromDate("");
-  setToDate("");
-}, [reportType]);
+  // XÓA K RESET BỘ LỌC hoặc COMMENT đoạn này đi
+  //useEffect(() => {
+  // setRangeType("THIS_MONTH");
+  //setFromDate("");
+  // setToDate("");
+  // }, [reportType]);
   const formatNumber = (num: number) => num.toFixed(1);
 
   const formatDateDisplay = (dateStr: string) => {
