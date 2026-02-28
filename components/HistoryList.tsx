@@ -136,7 +136,8 @@ const HistoryList: React.FC<HistoryListProps> = ({
   onDelete,
   onUpdateRecord,
 }) => {
-  const [viewing, setViewing] = useState<RepairRecord | null>(null);
+const [viewing, setViewing] = useState<RepairRecord | null>(null);
+const [isMaintenanceMode, setIsMaintenanceMode] = useState(true);  // Đặt là true để giả lập chế độ bảo trì
   const [filterTeam, setFilterTeam] = useState('all');
   const [quickDate, setQuickDate] =
     useState<'all' | 'today' | 'yesterday' | 'custom'>('today');
@@ -242,18 +243,26 @@ const Row = ({ index, style }: ListChildComponentProps) => {
     );
   };
 
-  return (
-    <>
-      <div className="p-4 space-y-3 pb-28 relative">
-        <div className="absolute top-3 right-4 z-10 pointer-events-none">
-          <div className="bg-white/90 backdrop-blur-sm shadow-sm border px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
-            <span className="font-semibold text-indigo-600">
-              {sorted.length}
-            </span>
-            <span className="text-slate-500">/</span>
-            <span className="text-slate-500">{records.length}</span>
-          </div>
+ return (
+  <>
+    <div className="p-4 space-y-3 pb-28 relative">
+      {isMaintenanceMode && (
+        <div className="absolute top-0 left-0 w-full bg-red-500 text-white text-center p-3 font-bold">
+          BẢO TRÌ HỆ THỐNG - VUI LÒNG QUAY LẠI SAU!
         </div>
+      )}
+
+      {/* Phần giao diện khác */}
+      <div className="absolute top-3 right-4 z-10 pointer-events-none">
+        <div className="bg-white/90 backdrop-blur-sm shadow-sm border px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5">
+          <span className="font-semibold text-indigo-600">
+            {sorted.length}
+          </span>
+          <span className="text-slate-500">/</span>
+          <span className="text-slate-500">{records.length}</span>
+        </div>
+      </div>
+
 
         {/* FILTER */}
         <div className="bg-white rounded-xl border p-3 space-y-2">
@@ -262,6 +271,7 @@ const Row = ({ index, style }: ListChildComponentProps) => {
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Tìm container..."
             className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
+            disabled={isMaintenanceMode} // Vô hiệu hóa input khi bảo trì
           />
 
           <div className="grid grid-cols-2 gap-2">
@@ -269,6 +279,7 @@ const Row = ({ index, style }: ListChildComponentProps) => {
               value={filterTeam}
               onChange={(e) => setFilterTeam(e.target.value)}
               className="border rounded-lg p-2 text-xs font-semibold"
+               disabled={isMaintenanceMode} // Vô hiệu hóa dropdown khi bảo trì
             >
               <option value="all">Tất cả tổ đội</option>
               {teams.map((t) => (
