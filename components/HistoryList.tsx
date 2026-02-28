@@ -137,7 +137,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
   onUpdateRecord,
 }) => {
 const [viewing, setViewing] = useState<RepairRecord | null>(null);
-const [isMaintenanceMode, setIsMaintenanceMode] = useState(true);  // Đặt là true để giả lập chế độ bảo trì
+const [isMaintenanceMode] = useState(true); // Không cần setIsMaintenanceMode
   const [filterTeam, setFilterTeam] = useState('all');
   const [quickDate, setQuickDate] =
     useState<'all' | 'today' | 'yesterday' | 'custom'>('today');
