@@ -256,7 +256,7 @@ workerMap[name].teams.add(team);
           : 'text-gray-600'
       }`}
     >
-      BÁO CÁO SẢN LƯỢNG
+    B/C SẢN LƯỢNG CONT
     </button>
 
     <button
@@ -267,7 +267,7 @@ workerMap[name].teams.add(team);
           : 'text-gray-600'
       }`}
     >
-     BÁO CÁO SẢN PHẨM
+     B/C LƯƠNG SẢN PHẨM
     </button>
   </div>
 </div>
