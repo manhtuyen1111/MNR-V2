@@ -97,9 +97,7 @@ useEffect(() => {
   fetchData();
 
 }, []);
- useEffect(() => {
-  setRangeType("THIS_MONTH");
-}, []);
+
   const formatNumber = (num: number) => num.toFixed(1);
 
   const formatDateDisplay = (dateStr: string) => {
@@ -141,9 +139,14 @@ useEffect(() => {
     }
 
     let compareDate = new Date();
+if (rangeType === "7D") {
+  compareDate.setDate(today.getDate() - 6);
+} else if (rangeType === "30D") {
+  compareDate.setDate(today.getDate() - 29);
+} else if (rangeType === "THIS_MONTH") {
+  compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
+}
 
-    if (rangeType === "7D") compareDate.setDate(today.getDate() - 7);
-    else if (rangeType === "30D") compareDate.setDate(today.getDate() - 30);
     else if (rangeType === "THIS_MONTH")
       compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
     else if (rangeType === "LAST_MONTH") {
@@ -250,10 +253,8 @@ workerMap[name].teams.add(team);
 
     const baseSalary = hours * unitPrice;
 
-    let overtimeSalary = 0;
-    if (hours > BONUS_THRESHOLD) {
-      overtimeSalary = (hours - BONUS_THRESHOLD) * BONUS_PER_HOUR;
-    }
+    const overtimeHours = Math.max(0, hours - BONUS_THRESHOLD);
+const overtimeSalary = overtimeHours * BONUS_PER_HOUR;
 
     const totalSalary = baseSalary + overtimeSalary;
 
