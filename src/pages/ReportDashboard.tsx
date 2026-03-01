@@ -53,6 +53,8 @@ const ReportDashboard = () => {
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedTeam, setExpandedTeam] = useState<string | null>(null);
   const [reportType, setReportType] = useState<'cont' | 'salary'>('cont');
+  const [showContainerList, setShowContainerList] = useState(false);
+const [containerSearch, setContainerSearch] = useState("");
 
 useEffect(() => {
 
@@ -145,25 +147,54 @@ useEffect(() => {
     const compareStr = compareDate.toISOString().slice(0, 10);
     return allDates.filter((d) => d >= compareStr);
   }, [data, rangeType, fromDate, toDate]);
-
   const { totalContainers, totalHours } = useMemo(() => {
+  let containers = 0;
+  let hours = 0;
 
-    let containers = 0;
-    let hours = 0;
+  filteredDates.forEach((date) => {
+    const day = data[date] || {};
 
-    filteredDates.forEach((date) => {
-      const day = data[date] || {};
-      Object.entries(day).forEach(([team, val]) => {
-        if (selectedTeam === "ALL" || selectedTeam === team) {
-          containers += val.containers || 0;
-          hours += val.hours || 0;
-        }
-        
-      });
+    Object.entries(day).forEach(([team, val]) => {
+      if (selectedTeam === "ALL" || selectedTeam === team) {
+        containers += val.containers || 0;
+        hours += val.hours || 0;
+      }
     });
+  });
 
-    return { totalContainers: containers, totalHours: hours };
-  }, [filteredDates, data, selectedTeam]);
+  return { totalContainers: containers, totalHours: hours };
+}, [filteredDates, data, selectedTeam]);
+ const allFilteredContainers = useMemo(() => {
+  const list: { container: string; hours: number; date: string; team: string }[] = [];
+
+  filteredDates.forEach((date) => {
+    const day = data[date] || {};
+
+    Object.entries(day).forEach(([team, val]) => {
+      if (selectedTeam === "ALL" || selectedTeam === team) {
+        (val.details || []).forEach((item) => {
+          list.push({
+            container: item.container,
+            hours: item.hours,
+            date,
+            team,
+          });
+        });
+      }
+    });
+  });
+
+  return list.sort((a, b) => a.container.localeCompare(b.container));
+}, [filteredDates, data, selectedTeam]);
+
+  const filteredContainerList = useMemo(() => {
+  if (!containerSearch) return allFilteredContainers;
+
+  return allFilteredContainers.filter((item) =>
+    item.container.toLowerCase().includes(containerSearch.toLowerCase())
+  );
+}, [containerSearch, allFilteredContainers]);
+
   const salaryReport = useMemo(() => {
   const result: {
     name: string;
@@ -416,7 +447,10 @@ const exportExcel = () => {
     
             {/* Summary - 1 dòng ngang */}
             <div className="flex items-center gap-3 mt-1">
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center gap-2">
+            <div
+  onClick={() => setShowContainerList(!showContainerList)}
+  className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition"
+>
                 <svg className="w-6 h-6 text-green-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                 </svg>
@@ -463,7 +497,49 @@ const exportExcel = () => {
           </div>
         </div>
       </header>
+{showContainerList && (
+  <div className="max-w-5xl mx-auto px-3 mt-2">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-3 space-y-3">
 
+      {/* Ô tìm kiếm */}
+      <input
+        type="text"
+        placeholder="Tìm container..."
+        value={containerSearch}
+        onChange={(e) => setContainerSearch(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+      />
+
+      {/* Danh sách */}
+      <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
+        {filteredContainerList.map((item, idx) => (
+          <div
+            key={idx}
+            className="flex justify-between items-center py-2 text-sm"
+          >
+            <div>
+              <div className="font-medium">{item.container}</div>
+              <div className="text-xs text-gray-500">
+                {item.team} • {formatDateDisplay(item.date)}
+              </div>
+            </div>
+
+            <div className="text-blue-700 font-medium">
+              {formatNumber(item.hours)} h
+            </div>
+          </div>
+        ))}
+
+        {filteredContainerList.length === 0 && (
+          <div className="text-center py-4 text-gray-500 text-sm">
+            Không tìm thấy container
+          </div>
+        )}
+      </div>
+
+    </div>
+  </div>
+)}
       {/* Main - list danh sách */}
       <main className="flex-1 px-3 py-3 max-w-5xl mx-auto w-full space-y-3 pb-[calc(100px+env(safe-area-inset-bottom))]">
         {filteredDates.map((date) => {
