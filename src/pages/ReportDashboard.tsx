@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 type WorkerSalary = {
   [workerName: string]: number;
 };
@@ -228,7 +230,44 @@ workerMap[name].teams.add(team);
   return result.sort((a, b) => b.totalSalary - a.totalSalary);
 
 }, [filteredDates, data, selectedTeam]);
+const exportExcel = () => {
+  const rows: any[] = [];
 
+  filteredDates.forEach((date) => {
+    const day = data[date] || {};
+
+    Object.entries(day).forEach(([team, val]) => {
+      if (selectedTeam === "ALL" || selectedTeam === team) {
+        (val.details || []).forEach((item) => {
+          rows.push({
+            Ngày: date,
+            Tổ: team,
+            Container: item.container,
+            Giờ: item.hours,
+            Link: item.link || "",
+          });
+        });
+      }
+    });
+  });
+
+  if (rows.length === 0) return;
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const file = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  saveAs(file, `BaoCao_${rangeType}.xlsx`);
+};
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center px-4">
@@ -359,7 +398,31 @@ workerMap[name].teams.add(team);
                 </svg>
                 <div>
                   <div className="text-xs text-gray-500 uppercase">Tổng giờ</div>
-                  <div className="text-lg font-bold text-blue-900">{formatNumber(totalHours)} h</div>
+                <div className="flex items-center gap-2">
+  <div className="text-lg font-bold text-blue-900">
+    {formatNumber(totalHours)} h
+  </div>
+
+  <button
+    onClick={exportExcel}
+    className="p-1 rounded hover:bg-blue-100 active:bg-blue-200 transition"
+    title="Xuất Excel"
+  >
+    <svg
+      className="w-4 h-4 text-blue-700"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 16v-8m0 8l-3-3m3 3l3-3M4 20h16"
+      />
+    </svg>
+  </button>
+</div>
                 </div>
               </div>
             </div>
