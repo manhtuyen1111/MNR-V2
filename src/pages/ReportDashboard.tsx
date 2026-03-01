@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { FixedSizeList as List } from "react-window";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 type WorkerSalary = {
@@ -83,10 +84,20 @@ useEffect(() => {
       );
 
       const result = await res.json();
+if (result.success) {
+  const raw = result.data || {};
 
-      if (result.success) {
-        setData(result.data || {});
-      }
+  Object.keys(raw).forEach((date) => {
+    Object.keys(raw[date]).forEach((team) => {
+      raw[date][team].details?.sort((a, b) =>
+        a.container.localeCompare(b.container)
+      );
+    });
+  });
+
+  setData(raw);
+}
+      
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -357,7 +368,28 @@ const exportExcel = () => {
       </div>
     );
   }
+  const Row = React.memo(
+    ({ index, style, data }: any) => {
+      const item = data[index];
 
+      return (
+        <div style={style} className="px-2">
+          <div className="flex justify-between items-center py-2 text-sm border-b border-gray-100">
+            <div>
+              <div className="font-medium">{item.container}</div>
+              <div className="text-xs text-gray-500">
+                {item.team} • {formatDateDisplay(item.date)}
+              </div>
+            </div>
+
+            <div className="text-blue-700 font-medium">
+              {formatNumber(item.hours)} h
+            </div>
+          </div>
+        </div>
+      );
+    }
+  );
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col text-gray-900">
       {/* Header - Sticky, siêu gọn, không title */}
@@ -522,24 +554,18 @@ const exportExcel = () => {
       />
 
       {/* Danh sách */}
-      <div className="max-h-72 overflow-y-auto divide-y divide-gray-100">
-        {filteredContainerList.map((item, idx) => (
-          <div
-            key={idx}
-            className="flex justify-between items-center py-2 text-sm"
-          >
-            <div>
-              <div className="font-medium">{item.container}</div>
-              <div className="text-xs text-gray-500">
-                {item.team} • {formatDateDisplay(item.date)}
-              </div>
-            </div>
-
-            <div className="text-blue-700 font-medium">
-              {formatNumber(item.hours)} h
-            </div>
-          </div>
-        ))}
+     <div className="max-h-72 overflow-hidden">
+  <List
+    height={300}
+    itemCount={filteredContainerList.length}
+    itemSize={60}
+    width="100%"
+    overscanCount={5}
+    itemData={filteredContainerList}
+  >
+    {Row}
+  </List>
+</div>
 
         {filteredContainerList.length === 0 && (
           <div className="text-center py-4 text-gray-500 text-sm">
@@ -616,10 +642,7 @@ const exportExcel = () => {
                   {dayTeams.map((team) => {
                     const teamKey = date + team;
                     const isTeamOpen = expandedTeam === teamKey;
-                    const details = [...(day[team]?.details || [])].sort((a, b) =>
-                      a.container.localeCompare(b.container)
-                    );
-
+                    const details = day[team]?.details || [];
                     return (
                       <div key={team} className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
                         <button
