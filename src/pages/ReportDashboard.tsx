@@ -696,9 +696,17 @@ const exportExcel = () => {
   {/* Tổng lương */}
   <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center justify-between">
     <div className="flex items-center gap-2">
-      <svg className="w-6 h-6 text-green-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-4 0-8 2-8 6s4 6 8 6 8-2 8-6-4-6-8-6z" />
-      </svg>
+     <svg
+  className="w-6 h-6 text-green-800 flex-shrink-0"
+  fill="none"
+  viewBox="0 0 24 24"
+  stroke="currentColor"
+  strokeWidth={2}
+>
+  <rect x="2" y="6" width="20" height="12" rx="2" />
+  <circle cx="12" cy="12" r="3" />
+  <path strokeLinecap="round" strokeLinejoin="round" d="M6 9h.01M18 15h.01" />
+</svg>
       <div>
         <div className="text-xs text-gray-500 uppercase">Tổng lương</div>
         <div className="text-lg font-bold text-green-900">
