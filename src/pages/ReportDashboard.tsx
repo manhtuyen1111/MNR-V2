@@ -268,6 +268,34 @@ const exportExcel = () => {
 
   saveAs(file, `BaoCao_${rangeType}.xlsx`);
 };
+  const exportExcelSalary = () => {
+  if (!salaryReport || salaryReport.length === 0) return;
+
+  const rows = salaryReport.map((item: any, index: number) => ({
+    STT: index + 1,
+    "Họ tên": item.name,
+    "Tổ": item.team,
+    "Tổng giờ": item.hours,
+    "Lương sản phẩm": item.baseSalary,
+    "Lương vượt giờ": item.overtimeSalary,
+    "Tổng lương": item.totalSalary,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Salary Report");
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const file = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  saveAs(file, `BaoCao_Luong_${rangeType}.xlsx`);
+};
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center px-4">
@@ -644,7 +672,27 @@ const exportExcel = () => {
         />
       </div>
     )}
-
+    <div className="flex justify-end mt-2">
+      <button
+        onClick={exportExcelSalary}
+        className="p-1 rounded hover:bg-green-100 active:bg-green-200 transition"
+        title="Xuất Excel lương"
+      >
+        <svg
+          className="w-4 h-4 text-green-700"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 16v-8m0 8l-3-3m3 3l3-3M4 20h16"
+          />
+        </svg>
+      </button>
+    </div>
   </div>
 </header>
 
