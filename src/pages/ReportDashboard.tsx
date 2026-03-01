@@ -167,7 +167,6 @@ useEffect(() => {
     return { totalContainers: containers, totalHours: hours };
   }, [filteredDates, data, selectedTeam]);
   const salaryReport = useMemo(() => {
-
   const result: {
     name: string;
     team: string;
@@ -230,6 +229,15 @@ workerMap[name].teams.add(team);
   return result.sort((a, b) => b.totalSalary - a.totalSalary);
 
 }, [filteredDates, data, selectedTeam]);
+const { totalSalaryHours, totalSalaryAmount } = useMemo(() => {
+  const totalHours = salaryReport.reduce((sum, item) => sum + item.hours, 0);
+  const totalMoney = salaryReport.reduce((sum, item) => sum + item.totalSalary, 0);
+
+  return {
+    totalSalaryHours: totalHours,
+    totalSalaryAmount: totalMoney,
+  };
+}, [salaryReport]);
 const exportExcel = () => {
   const rows: any[] = [];
 
@@ -672,27 +680,57 @@ const exportExcel = () => {
         />
       </div>
     )}
-    <div className="flex justify-end mt-2">
-      <button
-        onClick={exportExcelSalary}
-        className="p-1 rounded hover:bg-green-100 active:bg-green-200 transition"
-        title="Xuất Excel lương"
-      >
-        <svg
-          className="w-4 h-4 text-green-700"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 16v-8m0 8l-3-3m3 3l3-3M4 20h16"
-          />
-        </svg>
-      </button>
+<div className="flex items-center gap-3 mt-3">
+
+  {/* Tổng giờ */}
+  <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center gap-2">
+    <svg className="w-6 h-6 text-blue-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+      <div className="text-xs text-gray-500 uppercase">Tổng giờ công</div>
+      <div className="text-lg font-bold text-blue-900">
+        {totalSalaryHours.toFixed(2)} h
+      </div>
     </div>
+  </div>
+
+  {/* Tổng lương */}
+  <div className="flex-1 bg-white border border-gray-200 rounded-lg p-2.5 shadow-sm flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <svg className="w-6 h-6 text-green-800 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-4 0-8 2-8 6s4 6 8 6 8-2 8-6-4-6-8-6z" />
+      </svg>
+      <div>
+        <div className="text-xs text-gray-500 uppercase">Tổng lương</div>
+        <div className="text-lg font-bold text-green-900">
+          {totalSalaryAmount.toLocaleString()} đ
+        </div>
+      </div>
+    </div>
+
+    <button
+      onClick={exportExcelSalary}
+      className="p-1 rounded hover:bg-green-100 active:bg-green-200 transition"
+      title="Xuất Excel lương"
+    >
+      <svg
+        className="w-4 h-4 text-green-700"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 16v-8m0 8l-3-3m3 3l3-3M4 20h16"
+        />
+      </svg>
+    </button>
+  </div>
+
+</div>
   </div>
 </header>
 
@@ -703,14 +741,6 @@ const exportExcel = () => {
         Không có dữ liệu lương
       </div>
     )}
-{salaryReport.length > 0 && (
-  <div className="bg-green-50 border border-green-200 rounded-xl p-4 font-bold text-green-900">
-    Tổng lương toàn bộ:{" "}
-    {salaryReport
-      .reduce((sum, item) => sum + item.totalSalary, 0)
-      .toLocaleString()} đ
-  </div>
-)}
     {salaryReport.map((item, idx) => (
       <div
         key={item.name}
