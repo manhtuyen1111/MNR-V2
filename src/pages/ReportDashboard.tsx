@@ -575,7 +575,6 @@ const exportExcel = () => {
       </div>
 
     </div>
-  </div>
 )}
       {/* Main - list danh sách */}
       <main className="flex-1 px-3 py-3 max-w-5xl mx-auto w-full space-y-3 pb-[calc(100px+env(safe-area-inset-bottom))]">
