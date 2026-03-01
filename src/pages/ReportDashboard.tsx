@@ -46,6 +46,12 @@ const ReportDashboard = () => {
   const [loading, setLoading] = useState(false);
 
   const [selectedTeam, setSelectedTeam] = useState("ALL");
+  const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
   const [rangeType, setRangeType] = useState("THIS_MONTH");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -108,7 +114,7 @@ useEffect(() => {
   const filteredDates = useMemo(() => {
     const allDates = Object.keys(data).sort((a, b) => b.localeCompare(a));
     const today = new Date();
-    const todayStr = today.toISOString().slice(0, 10);
+   const todayStr = formatLocalDate(today);
      // 🚫 Chặn chọn ngày sai
   if (
     rangeType === "CUSTOM" &&
@@ -123,7 +129,7 @@ useEffect(() => {
     if (rangeType === "YESTERDAY") {
       const yesterday = new Date(today);
       yesterday.setDate(today.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      const yesterdayStr = formatLocalDate(yesterday);
       return allDates.filter((d) => d === yesterdayStr);
     }
 
@@ -138,13 +144,12 @@ useEffect(() => {
       const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
       return allDates.filter(
         (d) =>
-          d >= compareDate.toISOString().slice(0, 10) &&
-          d <= lastMonthEnd.toISOString().slice(0, 10)
+        d >= formatLocalDate(compareDate) &&
+        d <= formatLocalDate(lastMonthEnd)
       );
     } else if (rangeType === "CUSTOM" && fromDate && toDate)
       return allDates.filter((d) => d >= fromDate && d <= toDate);
-
-    const compareStr = compareDate.toISOString().slice(0, 10);
+    const compareStr = formatLocalDate(compareDate);
     return allDates.filter((d) => d >= compareStr);
   }, [data, rangeType, fromDate, toDate]);
   const { totalContainers, totalHours } = useMemo(() => {
