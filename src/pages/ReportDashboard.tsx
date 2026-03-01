@@ -82,11 +82,9 @@ useEffect(() => {
   fetchData();
 
 }, []);
-  useEffect(() => {
+ useEffect(() => {
   setRangeType("THIS_MONTH");
-  setFromDate("");
-  setToDate("");
-}, [reportType]);
+}, []);
   const formatNumber = (num: number) => num.toFixed(1);
 
   const formatDateDisplay = (dateStr: string) => {
