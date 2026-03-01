@@ -143,9 +143,7 @@ if (rangeType === "7D") {
   compareDate.setDate(today.getDate() - 6);
 } else if (rangeType === "30D") {
   compareDate.setDate(today.getDate() - 29);
-} else if (rangeType === "THIS_MONTH") {
-  compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
-}
+} 
 
     else if (rangeType === "THIS_MONTH")
       compareDate = new Date(today.getFullYear(), today.getMonth(), 1);
