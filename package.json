@@ -26,7 +26,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
     "vite-plugin-pwa": "^0.20.0",
-    "@types/react-window": "^1.8.5"
+    "@types/react-window": "^1.8.5",
+    "@types/file-saver": "^2.0.5"
 
   }
 }
